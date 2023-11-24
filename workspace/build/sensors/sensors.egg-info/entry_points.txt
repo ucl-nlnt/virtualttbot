@@ -1,0 +1,5 @@
+[console_scripts]
+mess_test = sensors.message_receive_test:main
+sensors = sensors.sensors:main
+timer_node = sensors.timer_node:main
+
