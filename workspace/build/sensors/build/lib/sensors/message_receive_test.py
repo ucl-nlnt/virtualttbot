@@ -39,7 +39,9 @@ class SensorsSubscriber(Node):
 
         
         self.sock = socket.socket()
-        server_ip = "10.158.38.95"; server_port = 50000; 
+        server_ip = "192.168.68.60" # Gab's PC at boarding house
+        # server_ip = "10.158.38.95" # Gab's RoboticsClass network address
+        server_port = 50000; 
         flag_connected = False
         
         try:
@@ -63,8 +65,7 @@ class SensorsSubscriber(Node):
         if msg == None: return
         
         t = time.time()
-        if not t - self.time_last_frame >= 0.2: # at most, the data should be 5Hz.
-            return
+        time.sleep(0.1)
 
         dt = t - self.time_last_frame
         self.time_last_frame = time.time()
@@ -79,21 +80,10 @@ class SensorsSubscriber(Node):
         data_len = ('@' + data_len + 'X' * (8 - len(data_len))).encode() # padded on the right, 1234XXXX as an example
 
         self.sock.send(data_len)
-        print('waiting for reply')
+        print("sending data length:",data_len)
         self.sock.recv(5) # wait for reply from server
-        print('reply received')
-        
-        i = 0    
-        data_len = len(data)
-        while i < data_len:
-            if data_len - i >= 1024:
-                print("sending", data[i:i+1024])
-                self.sock.send(data[i:i+1024])
-                i += 1024
-            else:
-                print("sending", data[i:len(data)])
-                self.sock.send(data[i:len(data)])
-                break
+        print("sending data:",data)
+        self.sock.sendall(data)
     
     def cmd_vel_listener(self, msg = None):
 

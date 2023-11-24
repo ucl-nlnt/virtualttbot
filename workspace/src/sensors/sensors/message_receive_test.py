@@ -25,7 +25,7 @@ File has been updated to work on Turtlebot3
 
 class SensorsSubscriber(Node):
 
-    def __init__(self):
+    def __init__(self, server_ip_address):
 
         super().__init__('sensors_subscriber')
         
@@ -39,20 +39,22 @@ class SensorsSubscriber(Node):
 
         
         self.sock = socket.socket()
-        server_ip = "10.158.38.95"; server_port = 50000; 
+        server_ip = server_ip_address
+
+        server_port = 50000; 
         flag_connected = False
         
         try:
             self.sock.connect((server_ip, server_port))
-            print("Connected to server.")
+            print("[SensorsSubscriber] Connected to server.")
             flag_connected = True
         
         except Exception as e:
             print(e)
-            print("Error has occured when trying to connect to server.")
+            print("[SensorsSubscriber] Error has occured when trying to connect to server.")
 
         if not flag_connected:
-            print("Exiting program...")
+            print("[SensorsSubscriber] Exiting program...")
             sys.exit() # Close program if unable to connect to server
 
 
@@ -63,8 +65,7 @@ class SensorsSubscriber(Node):
         if msg == None: return
         
         t = time.time()
-        if not t - self.time_last_frame >= 0.2: # at most, the data should be 5Hz.
-            return
+        time.sleep(0.1)
 
         dt = t - self.time_last_frame
         self.time_last_frame = time.time()
@@ -79,21 +80,10 @@ class SensorsSubscriber(Node):
         data_len = ('@' + data_len + 'X' * (8 - len(data_len))).encode() # padded on the right, 1234XXXX as an example
 
         self.sock.send(data_len)
-        print('waiting for reply')
+        print("sending data length:",data_len)
         self.sock.recv(5) # wait for reply from server
-        print('reply received')
-        
-        i = 0    
-        data_len = len(data)
-        while i < data_len:
-            if data_len - i >= 1024:
-                print("sending", data[i:i+1024])
-                self.sock.send(data[i:i+1024])
-                i += 1024
-            else:
-                print("sending", data[i:len(data)])
-                self.sock.send(data[i:len(data)])
-                break
+        print("sending data:",data)
+        self.sock.sendall(data)
     
     def cmd_vel_listener(self, msg = None):
 
@@ -101,11 +91,59 @@ class SensorsSubscriber(Node):
 
         self.linear_x, self.linear_y, self.linear_z = msg.linear.x, msg.linear.y, msg.linear.z
         self.angular_x, self.angular_y, self.angular_z = msg.angular.x, msg.angular.y, msg.angular.z
+
+class VelocityServer(Node):
+
+    """
+    # This was created to simplify the process of harvesting data later on. Since simple actions are all that are needed
+    for the POC, scripts need to be created to automate the movement of the Turtlebot, i.e., forward, backward, etc. Blend
+    measured with human-controlled data perhaps?
+    """
+
+    def __init__(self, server_ip_address):
+
+        self.sock = socket.socket()
+        server_ip = server_ip_address
+    
+        server_port = 42000; 
+        self.flag_connected = False
         
+        try:
+            self.sock.connect((server_ip, server_port))
+            print("[VelocityServer] Connected to server.")
+            self.flag_connected = True
+        
+        except Exception as e:
+            print(e)
+            print("[VelocityServer] Error has occured when trying to connect to server.")
+
+        if not self.flag_connected:
+            print("[VelocityServer] Exiting program...")
+            sys.exit() # Close program if unable to connect to server
+
+        self.listening_thread = threading.Thread(target=self.listen_for_orders)
+
+    def listen_for_orders(self):
+
+        if not self.flag_connected:
+            return
+
+        # TODO: fixed length movement
+        # 5 bytes per entry in dict, 1 separators -> X.XXXX Y.YYYYY
+        # when 2 or 3 digit: XX.XXX YYY.YY
+        # total length per vel server input: 12 bytes long
+        # VelocityServer sends ACK back to before client can send extra movement commands
+
+        while True:
+
+            self.sock.recv()
+
+            
 def main(args=None):
 
+    server_ip_address = "192.168.68.60"
     rclpy.init(args=args)
-    sensors_subscriber = SensorsSubscriber()
+    sensors_subscriber = SensorsSubscriber(server_ip_address=server_ip_address)
     rclpy.spin(sensors_subscriber)
     sensors_subscriber.destroy_node()
 
