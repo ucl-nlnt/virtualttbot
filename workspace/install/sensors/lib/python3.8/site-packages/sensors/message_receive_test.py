@@ -1,21 +1,14 @@
 import rclpy
-# import time
-# import datetime
-# import numpy as np
-# import cv2
-# import threading
-# import socket
-# import sys
-# from math import pi
-# import random
+import time
+import threading
+import socket
+import sys
 
 from rclpy.node import Node
 from sensor_msgs.msg import Imu, BatteryState
 from sensor_msgs.msg import LaserScan
 from rclpy.qos import qos_profile_sensor_data
-# from geometry_msgs.msg import Twist
-# import json
-
+from geometry_msgs.msg import Twist
 
 """
 Note that the following code was tested in a simulator and might not necessarily work on a real, physical turtlebot.
@@ -23,8 +16,11 @@ If the process requires anything GPU-related, I am 99% certain that it will not 
 
 Test system specs:
 Processor: AMD Ryzen 5 5600H
-RAM: 16GB LPDDR4 3200MHz
+RAM: 16GB LPDDR4 3200MHz (Dual-channel)
 GPU: Nvidia RTX 3050ti
+
+Edit (Nov. 24, 2023)
+File has been updated to work on Turtlebot3
 """
 
 class SensorsSubscriber(Node):
@@ -32,23 +28,61 @@ class SensorsSubscriber(Node):
     def __init__(self):
 
         super().__init__('sensors_subscriber')
-        #self.create_subscription(LaserScan, 'scan', self.scan_listener, qos_profile_sensor_data)
-        #self.create_subscription(Imu,'imu', self.imu_listener, qos_profile_sensor_data)
-        #self.scan_timer = self.create_timer(10, self.scan_listener) # input args = (delay in seconds, function to be called)
-        #self.imu_timer = self.create_timer(5, self.imu_listener)
-        print(help(self.create_timer))
-    def scan_listener(self, msg = None):
+        
+        # self.create_subscription(LaserScan, 'scan', self.scan_listener, qos_profile_sensor_data)
+        self.create_subscription(Imu,'imu', self.imu_listener, qos_profile_sensor_data)
+        self.create_subscription(Twist,'cmd_vel', self.cmd_vel_listener, qos_profile_sensor_data)
+        self.time_last_frame = 0
+        
+        self.linear_x, self.linear_y, self.linear_z = 0, 0, 0
+        self.angular_x, self.angular_y, self.angular_z = 0, 0, 0
 
-        if msg != None:
-            print('msg received')
+        """
+        self.sock = socket.socket()
+        server_ip = "10.158.38.95"; server_port = 50000; 
+        flag_connected = False
+        
+        try:
+            self.sock.connect((server_ip, server_port))
+            print("Connected to server.")
+            flag_connected = True
+        
+        except Exception as e:
+            print("Error has occured when trying to connect to server.")
+
+        if not flag_connected:
+            print("Exiting program...")
+            sys.exit() # Close program if unable to connect to server
+        """
+
+
+    # LIDAR is disabled for now, not needed for basic proof-of-concept
 
     def imu_listener(self, msg = None):
         
-        print("Angular: ", msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z) # rad/s
-        print("Linear Acceleration: ", msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z) # Measured in m/s^2
-        print("Orientation: ", msg.orientation.x, msg.orientation.y, msg.orientation.z) # meters?
+        if msg == None: return
         
+        t = time.time()
+        if not t - self.time_last_frame >= 0.2: # at most, the data should be 5Hz.
+            return
 
+        dt = t - self.time_last_frame
+        self.time_last_frame = time.time()
+        
+        # print("Angular: ", msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z) # rad/s
+        # print("Linear Acceleration: ", msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z) # Measured in m/s^2
+        # print("Orientation: ", msg.orientation.x, msg.orientation.y, msg.orientation.z) # meters?
+
+        data = f"[PLACEHOLDER] {msg.orientation.x} {msg.orientation.y} {msg.orientation.z} gx gy gz {self.linear_x} {self.linear_y} {self.linear_z} {self.angular_x} {self.angular_y} {self.angular_z} {dt} phase".encode("utf-8")
+        print(data)
+    
+    def cmd_vel_listener(self, msg = None):
+
+        if msg == None: return
+
+        self.linear_x, self.linear_y, self.linear_z = msg.linear.x, msg.linear.y, msg.linear.z
+        self.angular_x, self.angular_y, self.angular_z = msg.angular.x, msg.angular.y, msg.angular.z
+        
 def main(args=None):
 
     rclpy.init(args=args)

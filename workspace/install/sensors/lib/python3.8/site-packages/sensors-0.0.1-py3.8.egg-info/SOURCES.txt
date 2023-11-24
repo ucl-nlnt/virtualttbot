@@ -11,6 +11,8 @@ setup.py
 resource/sensors
 sensors/__init__.py
 sensors/message_receive_test.py
+sensors/opencv_test.py
+sensors/picamtest.py
 test/test_copyright.py
 test/test_flake8.py
 test/test_pep257.py

@@ -1,0 +1,32 @@
+[8.691s] Invoking command in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors': PYTHONPATH=/home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/prefix_override:/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build install --record /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[10.529s] running egg_info
+[10.533s] writing ../../build/sensors/sensors.egg-info/PKG-INFO
+[10.537s] writing dependency_links to ../../build/sensors/sensors.egg-info/dependency_links.txt
+[10.539s] writing entry points to ../../build/sensors/sensors.egg-info/entry_points.txt
+[10.543s] writing requirements to ../../build/sensors/sensors.egg-info/requires.txt
+[10.545s] writing top-level names to ../../build/sensors/sensors.egg-info/top_level.txt
+[10.860s] reading manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[10.868s] writing manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[10.869s] running build
+[10.871s] running build_py
+[10.872s] copying sensors/picamtest.py -> /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build/lib/sensors
+[10.877s] copying sensors/opencv_test.py -> /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build/lib/sensors
+[10.879s] copying sensors/message_receive_test.py -> /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build/lib/sensors
+[10.883s] running install
+[10.889s] running install_lib
+[10.899s] copying /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build/lib/sensors/picamtest.py -> /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[10.901s] copying /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build/lib/sensors/opencv_test.py -> /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[10.903s] copying /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build/lib/sensors/message_receive_test.py -> /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[10.908s] byte-compiling /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/picamtest.py to picamtest.cpython-38.pyc
+[10.922s] byte-compiling /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/opencv_test.py to opencv_test.cpython-38.pyc
+[10.925s] byte-compiling /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/message_receive_test.py to message_receive_test.cpython-38.pyc
+[10.930s] running install_data
+[10.934s] running install_egg_info
+[10.946s] removing '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[10.950s] Copying ../../build/sensors/sensors.egg-info to /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[10.961s] running install_scripts
+[11.144s] Installing mess_test script to /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/sensors
+[11.146s] Installing sensors script to /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/sensors
+[11.149s] Installing timer_node script to /home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/sensors
+[11.156s] writing list of installed files to '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/install.log'
+[11.366s] Invoked command in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/prefix_override:/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build install --record /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed

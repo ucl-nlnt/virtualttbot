@@ -1,0 +1,129 @@
+[18.735s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--packages-select', 'sensors']
+[18.736s] DEBUG:colcon:Parsed command line arguments: Namespace(allow_overriding=[], ament_cmake_args=None, base_paths=['.'], build_base='build', catkin_cmake_args=None, catkin_skip_building_tests=False, cmake_args=None, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, cmake_target=None, cmake_target_skip_unavailable=False, continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0xffffa0a1cbe0>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=['sensors'], packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=4, paths=None, symlink_install=False, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0xffffa0a1cbe0>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0xffffa0a38100>)
+[19.722s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[19.723s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[19.724s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[19.724s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[19.724s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[19.725s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[19.725s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace'
+[19.726s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[19.727s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[19.727s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[19.728s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[19.728s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[19.729s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[19.729s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[19.730s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[19.730s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[19.880s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[19.881s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[19.881s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[19.882s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[19.882s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[19.883s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[19.884s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[19.885s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[19.886s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[19.887s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[19.888s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[19.889s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[19.890s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[19.891s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[19.892s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[19.893s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[19.893s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[19.894s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[19.895s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[19.895s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[19.896s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[19.896s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[19.896s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[19.897s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[19.898s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[19.898s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[19.899s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[19.899s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[19.900s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extensions ['ignore', 'ignore_ament_install']
+[19.901s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extension 'ignore'
+[19.902s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extension 'ignore_ament_install'
+[19.903s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extensions ['colcon_pkg']
+[19.903s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extension 'colcon_pkg'
+[19.904s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extensions ['colcon_meta']
+[19.904s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extension 'colcon_meta'
+[19.905s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extensions ['ros']
+[19.906s] Level 1:colcon.colcon_core.package_identification:_identify(src/sensors) by extension 'ros'
+[19.941s] DEBUG:colcon.colcon_core.package_identification:Package 'src/sensors' with type 'ros.ament_python' and name 'sensors'
+[19.941s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[19.942s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[19.942s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[19.943s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[19.943s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[21.577s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[21.577s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[22.177s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 7 installed packages in /home/ubuntu/turtlebot3_ws/install
+[22.468s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 171 installed packages in /opt/ros/foxy
+[22.477s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[23.690s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'cmake_args' from command line to 'None'
+[23.691s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'cmake_target' from command line to 'None'
+[23.691s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[23.691s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'cmake_clean_cache' from command line to 'False'
+[23.691s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'cmake_clean_first' from command line to 'False'
+[23.691s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'cmake_force_configure' from command line to 'False'
+[23.692s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'ament_cmake_args' from command line to 'None'
+[23.692s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'catkin_cmake_args' from command line to 'None'
+[23.692s] Level 5:colcon.colcon_core.verb:set package 'sensors' build argument 'catkin_skip_building_tests' from command line to 'False'
+[23.692s] DEBUG:colcon.colcon_core.verb:Building package 'sensors' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors', 'merge_install': False, 'path': '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors', 'symlink_install': False, 'test_result_base': None}
+[23.967s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[24.250s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[24.253s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors' with build type 'ament_python'
+[24.254s] Level 1:colcon.colcon_core.shell:create_environment_hook('sensors', 'ament_prefix_path')
+[24.600s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[24.603s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/hook/ament_prefix_path.ps1'
+[24.614s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/hook/ament_prefix_path.dsv'
+[24.620s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/hook/ament_prefix_path.sh'
+[25.045s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[25.045s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[28.087s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors'
+[28.397s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[28.397s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[32.946s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors': PYTHONPATH=/home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/prefix_override:/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build install --record /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[35.622s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/prefix_override:/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/build install --record /home/ubuntu/nlnt_workspace/virtualttbot/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[36.011s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors' for CMake module files
+[36.018s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors' for CMake config files
+[36.025s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib'
+[36.027s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/bin'
+[36.028s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/pkgconfig/sensors.pc'
+[36.030s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages'
+[36.031s] Level 1:colcon.colcon_core.shell:create_environment_hook('sensors', 'pythonpath')
+[36.335s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/hook/pythonpath.ps1'
+[36.338s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/hook/pythonpath.dsv'
+[36.342s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/hook/pythonpath.sh'
+[36.348s] Level 1:colcon.colcon_core.environment:checking '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/bin'
+[36.349s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(sensors)
+[36.670s] INFO:colcon.colcon_core.shell:Creating package script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/package.ps1'
+[36.682s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/package.dsv'
+[36.689s] INFO:colcon.colcon_core.shell:Creating package script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/package.sh'
+[36.697s] INFO:colcon.colcon_core.shell:Creating package script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/package.bash'
+[36.706s] INFO:colcon.colcon_core.shell:Creating package script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/sensors/package.zsh'
+[36.715s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/sensors/share/colcon-core/packages/sensors)
+[36.718s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[36.721s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[36.722s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[36.723s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[37.117s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[37.119s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[37.120s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[37.120s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[37.559s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.Notifications was not provided by any .service files
+[37.560s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[37.852s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/local_setup.ps1'
+[37.863s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/_local_setup_util_ps1.py'
+[37.878s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/setup.ps1'
+[38.182s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/local_setup.sh'
+[38.188s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/_local_setup_util_sh.py'
+[38.193s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/setup.sh'
+[38.495s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/local_setup.bash'
+[38.501s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/setup.bash'
+[38.804s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/local_setup.zsh'
+[38.810s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ubuntu/nlnt_workspace/virtualttbot/workspace/install/setup.zsh'
