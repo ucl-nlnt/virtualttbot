@@ -37,7 +37,7 @@ class SensorsSubscriber(Node):
         self.linear_x, self.linear_y, self.linear_z = 0, 0, 0
         self.angular_x, self.angular_y, self.angular_z = 0, 0, 0
 
-        """
+        
         self.sock = socket.socket()
         server_ip = "10.158.38.95"; server_port = 50000; 
         flag_connected = False
@@ -48,12 +48,12 @@ class SensorsSubscriber(Node):
             flag_connected = True
         
         except Exception as e:
+            print(e)
             print("Error has occured when trying to connect to server.")
 
         if not flag_connected:
             print("Exiting program...")
             sys.exit() # Close program if unable to connect to server
-        """
 
 
     # LIDAR is disabled for now, not needed for basic proof-of-concept
@@ -74,7 +74,26 @@ class SensorsSubscriber(Node):
         # print("Orientation: ", msg.orientation.x, msg.orientation.y, msg.orientation.z) # meters?
 
         data = f"[PLACEHOLDER] {msg.orientation.x} {msg.orientation.y} {msg.orientation.z} gx gy gz {self.linear_x} {self.linear_y} {self.linear_z} {self.angular_x} {self.angular_y} {self.angular_z} {dt} phase".encode("utf-8")
-        print(data)
+        data_len = str(len(data))
+        
+        data_len = ('@' + data_len + 'X' * (8 - len(data_len))).encode() # padded on the right, 1234XXXX as an example
+
+        self.sock.send(data_len)
+        print('waiting for reply')
+        self.sock.recv(5) # wait for reply from server
+        print('reply received')
+        
+        i = 0    
+        data_len = len(data)
+        while i < data_len:
+            if data_len - i >= 1024:
+                print("sending", data[i:i+1024])
+                self.sock.send(data[i:i+1024])
+                i += 1024
+            else:
+                print("sending", data[i:len(data)])
+                self.sock.send(data[i:len(data)])
+                break
     
     def cmd_vel_listener(self, msg = None):
 
