@@ -26,47 +26,53 @@ File has been updated to work on Turtlebot3 (MIGHT BE SLOW)
 
 class SensorsSubscriber(Node):
 
-    def __init__(self, server_ip_address,transmit_to_server = True):
+    def __init__(self, server_ip_address, transmit_to_server = True):
 
         super().__init__('sensors_subscriber')
-        
+
         # Subscriptions
         # self.create_subscription(LaserScan, 'scan', self.scan_listener, qos_profile_sensor_data)
         # self.create_subscription(Twist,'cmd_vel', self.cmd_vel_listener, qos_profile_sensor_data)
         # ^ does not seem to contribute much -Gab
-        self.create_subscription(Imu,'imu', self.imu_listener, qos_profile_sensor_data)
+        # self.create_subscription(Imu,'imu', self.imu_listener, qos_profile_sensor_data) # IMU data doesn't seem to be useful currently
+
         self.create_subscription(Odometry, 'odom', self.odometry_listener, qos_profile_sensor_data)
-        self.time_last_frame = 0
-        
+        self.create_publisher(Twist, '/cmd_vel',10)
+        self.order_clear_timer = self.create_timer(0.1, self.order_clear)
         # IMU variables:
-        self.linear_vel_imu = (0,0,0)
-        self.angular_vel_imu = (0,0,0)
-        self.orientation_imu = (0,0,0)
+        # self.linear_vel_imu = (0,0,0)
+        # self.angular_vel_imu = (0,0,0)
+        # self.orientation_imu = (0,0,0)
 
         # Odometry variables:
-        self.position_odom = (0,0,0)
-        self.rotation_odom = (0,0,0)
+        self.position_odom = [None,None,None]
+        self.rotation_odom = None
+
+        # Instruction variables
+        self.last_order = '@0000'
+        self.time_last_order_issued = 0.0
+        self.velocity_change = False
+        
+        self.twist_msg = [None, None] # linear x, angular z
 
         # Scanner variables:
         # empty for now
-        # 
-        self.last_time_frame = -1
-        
-        self.transmission_thread_sensor_data = threading.Thread(target=self.data_bridge_sensor_data)
 
         self.transmit_to_server = transmit_to_server
+
         if self.transmit_to_server:
             self.sock = socket.socket()
             server_ip = server_ip_address
 
-            server_port = 50000; 
+            server_port = 50000;
             flag_connected = False
-            
+            self.send_lock = True # signals that new data is allowed to be transmitted
+
             try:
                 self.sock.connect((server_ip, server_port))
                 print("[SensorsSubscriber] Connected to server.")
                 flag_connected = True
-            
+
             except Exception as e:
                 print(e)
                 print("[SensorsSubscriber] Error has occured when trying to connect to server.")
@@ -75,106 +81,65 @@ class SensorsSubscriber(Node):
                 print("[SensorsSubscriber] Exiting program...")
                 sys.exit() # Close program if unable to connect to server
 
-        self.transmission_thread_sensor_data.start()
+    def order_clear(self):
+        if time.time() - self.time_last_order_issued >= 0.1:
+            pass
 
-    # LIDAR is disabled for now, not needed for basic proof-of-concept
-
-    def imu_listener(self, msg = None):
+    def twist_listener(self, msg = None):
         
         if msg == None: return
-            
-        # print("Angular: ", msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z) # rad/s
-        # print("Linear Acceleration: ", msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z) # Measured in m/s^2
-        # print("Orientation: ", msg.orientation.x, msg.orientation.y, msg.orientation.z) # meters?
+        
+        self.twist_msg = [msg.linear.x, msg.angular.z]
 
-        # assuming that the plane is level, orientation x and y are equal to zero, so might be truncated in full Turtlebot3 implementation TO CONFIRM
-        # linear x, y, z do not indicate anything along with angular x, y, and z TO CONFIRM
-
-        self.linear_vel_imu = (round(msg.linear_acceleration.x,2), round(msg.linear_acceleration.y,2), round(msg.linear_acceleration.z,2))
-        self.angular_vel_imu = (round(msg.angular_velocity.x,2), round(msg.angular_velocity.y,2), round(msg.angular_velocity.z,2))
-        self.orientation_imu = (round(msg.orientation.x,2), round(msg.orientation.y,2), round(msg.orientation.z,2))
-
-        return
-    
     def odometry_listener(self, msg = None):
-        
+
         if msg == None: return
+        # Odometer listener
 
-        self.position_odom = (round(msg.pose.pose.position.x,2), round(msg.pose.pose.position.y,2), round(msg.pose.pose.position.z,2))
-        self.rotation_odom = (round(msg.pose.pose.orientation.x,2), round(msg.pose.pose.orientation.y,2), round(msg.pose.pose.orientation.z,2))
-
-        return
-    
-    def data_bridge_sensor_data(self):
+        self.position_odom = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.orientation.z] # x, y, phi
+       
+    def data_bridge_tx_TwistOdometry(self):
 
         if not self.transmit_to_server: return # error handling
+
+        
         while True:
 
-            data = f"{self.linear_vel_imu},{self.angular_vel_imu},{self.orientation_imu}///{self.position_odom},{self.rotation_odom}".encode()
-            # ^it is important to round the data to 2 decimal places to keep input prompts the the LLM small and concise.
+            # STATE 3
+
+            print('connected')
+            transmission_size, encoded_data = self.parse_for_transmit_str(str(self.position_odom))
+            self.sock.sendall(transmission_size)
+            self.sock.recv(2) # wait for OK
+            self.sock.sendall(encoded_data)
             
-            data_len = str(len(data))
-            data_len = ('@' + data_len + 'X' * (8 - len(data_len))).encode() # padded on the right, 1234XXXX as an example
+            # STATE 4
+            
+            # loop back to STATE 3, wait for next prompt
 
-            self.sock.send(data_len)
-            print("sending data length:",data_len)
-            self.sock.recv(5) # wait for reply from server
-            print("sending data:",data)
-            self.sock.sendall(data)
-            time.sleep(0.1)
+    def parse_for_transmit_str(self,msg_str: str):
+        
+        data_encoded = msg_str.encode()
+        data_size = str(len(data_encoded)) # For this system, the other end expects a data identifier length of 5, ex. @1234. Maximum STR length of 9999 chars.
+        dat_size_transmit = '@' + ((4 - len(data_size)) * 'X') + data_size
 
-class VelocityServer(Node):
+        return (dat_size_transmit.encode(), data_encoded)
 
-    """
-    # This was created to simplify the process of harvesting data later on. Since simple actions are all that are needed
-    for the POC, scripts need to be created to automate the movement of the Turtlebot, i.e., forward, backward, etc. Blend
-    measured with human-controlled data perhaps?
-    """
-
-    def __init__(self, server_ip_address):
-
-        self.sock = socket.socket()
-        server_ip = server_ip_address
+    def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
     
-        server_port = 42000; 
-        self.flag_connected = False
+        data = Twist()
+        data.linear.x = linear_x
+        data.angular.z = angular_z
+        self.movement_publisher.publish(data)
         
-        try:
-            self.sock.connect((server_ip, server_port))
-            print("[VelocityServer] Connected to server.")
-            self.flag_connected = True
-        
-        except Exception as e:
-            print(e)
-            print("[VelocityServer] Error has occured when trying to connect to server.")
+        return
 
-        if not self.flag_connected:
-            print("[VelocityServer] Exiting program...")
-            sys.exit() # Close program if unable to connect to server
-
-        self.listening_thread = threading.Thread(target=self.listen_for_orders)
-
-    def listen_for_orders(self):
-
-        if not self.flag_connected:
-            return
-
-        # TODO: fixed length movement
-        # 5 bytes per entry in dict, 1 separators -> X.XXXX Y.YYYYY
-        # when 2 or 3 digit: XX.XXX YYY.YY
-        # total length per vel server input: 12 bytes long
-        # VelocityServer sends ACK back to before client can send extra movement commands
-
-        while True:
-
-            self.sock.recv()
-
-            
 def main(args=None):
+
 
     server_ip_address = "192.168.68.60" # Gab's boarding house IP address
     rclpy.init(args=args)
-    sensors_subscriber = SensorsSubscriber(server_ip_address=server_ip_address, transmit_to_server=True)
+    sensors_subscriber = SensorsSubscriber(server_ip_address = server_ip_address)
     rclpy.spin(sensors_subscriber)
     sensors_subscriber.destroy_node()
 

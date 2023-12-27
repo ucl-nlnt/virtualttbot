@@ -1,0 +1,18 @@
+running develop
+running egg_info
+writing sensors.egg-info/PKG-INFO
+writing dependency_links to sensors.egg-info/dependency_links.txt
+writing entry points to sensors.egg-info/entry_points.txt
+writing requirements to sensors.egg-info/requires.txt
+writing top-level names to sensors.egg-info/top_level.txt
+reading manifest file 'sensors.egg-info/SOURCES.txt'
+writing manifest file 'sensors.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages/site.py
+Creating /home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages/sensors.egg-link (link to .)
+Installing mess_test script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+Installing sensors script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+Installing timer_node script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+
+Installed /home/gabriel/virt_ttb/workspace/build/sensors
+running install_data

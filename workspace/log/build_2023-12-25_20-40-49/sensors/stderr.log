@@ -1,0 +1,5 @@
+  File "/home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages/sensors/message_receive_test.py", line 85
+    if time.time() - self.time_last_order_issued >= 0.1
+                                                      ^
+SyntaxError: invalid syntax
+

@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
 		'sensors = sensors.sensors:main',
 		'timer_node = sensors.timer_node:main',
-		'mess_test = sensors.message_receive_test:main'
+		'mess_test = sensors.message_receive_test:main',
+		'movement_prot = sensors.movement_prot:main'
         ],
     },
 )
