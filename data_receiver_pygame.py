@@ -54,6 +54,7 @@ class turtlebot_controller:
                 if event.type == pygame.QUIT:
                     self.killswitch = True
                     self.send_data('@KILL')
+                    print('Killing program...')
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
@@ -87,6 +88,7 @@ class turtlebot_controller:
         @STRT - start recording data
         @STOP - stop recording data
         @KILL - stop program
+        @RNDM - randomize position, -5 <= x,y <= 5, 0 <= theta <= 2pi
 
         Each data send starts with sending an 8-byte long size indicator. Each data segment is sent in 1024-byte-sized chunks.
         Once all is received, receiver sends an 'OK' to sender to indicate that is done processing whatever data was
@@ -107,7 +109,6 @@ class turtlebot_controller:
             print("START good... receiving origin data...")
             data_logs = [self.receive_data().decode()]
             print(f"Origin data received: {data_logs}")
-
             while self.is_collecting_data and not self.killswitch:
 
                 # print(self.is_collecting_data, self.killswitch, self.keyboard_input)
@@ -139,24 +140,22 @@ class turtlebot_controller:
                         print("Data collection finished. Restarting loop.")
 
                     elif self.keyboard_input == '=':
-                        
-                        self.send_data('@ODOM')
-                        before = self.receive_data()
-                        print('before:',before.decode())
-                        print("Sending randomizer message... Please wait a moment.")
+                    
                         self.send_data('@RNDM')
-                        time.sleep(1)
-                        self.send_data('@ODOM')
-                        after = self.receive_data()
-                        print('after:',after.decode())
+                        # user-side waits for Turtlebot to randomize position.
+
+                        # wait for READY signal
+                        go_signal = self.receive_data() # wait for @RNDM
                        
                 else: pass
 
-            filename = os.path.join(os.getcwd(),'datalogs',self.generate_random_filename())
-            
-            with open(filename, 'w') as f:
-                f.write(str({'label':self.text_display_content, 'data_points':data_logs}))
-                print(f'Data written to {filename}.')
+            if not self.killswitch:
+
+                filename = os.path.join(os.getcwd(),'datalogs',self.generate_random_filename())
+                
+                with open(filename, 'w') as f:
+                    f.write(str({'label':self.text_display_content, 'data_points':data_logs}))
+                    print(f'Data written to {filename}.')
 
     def generate_random_filename(self):
         random_filename = str(uuid.uuid4().hex)[:16]
