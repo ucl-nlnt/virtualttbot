@@ -70,7 +70,8 @@ class SensorsSubscriber(Node):
         # DEBUG LOCKS
         self.debug_send_data = False
         self.debug_odometer = False
-        self.debug_randomizer = True
+        self.debug_randomizer = False
+        self.debug_movement = False
 
         self.twist_msg = [None, None] # linear x, angular z
 
@@ -150,21 +151,33 @@ class SensorsSubscriber(Node):
                 print('exiting...') 
                 data_is_collecting = False 
                 self.killswitch = True
+            
+            elif inst == b'@ROTT': # used during automated data-gathering
+            
+                self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
+                self.send_data('@ROTT') # tell the other side that the rotation is complete
+            
+            elif inst == b'@AFWD': # used during automated data-gathering
                 
+                self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
+                self.send_data('@AFWD') # tell the other side that the rotation is complete
+
             elif inst == b'@RNDM':
                 
-            
                 x, y = random.uniform(-5,5), random.uniform(-5,5)
                 theta = random.uniform(-1,1) * 3.14159
 
                 print(f'Randomizing position... {x} | {y} | {theta}')
 
                 dx, dy = x - self.position_odom[0], y - self.position_odom[1]
-                dtheta = math.atan(dy/dx)
+                dtheta = math.atan2(dy,dx)
 
                 self.movement_rotate_until(dtheta,tolerance=0.1,rotation_s=0.1)
                 distance = math.sqrt(dx**2 + dy**2)
                 self.movement_forward_until_distance(distance,tolerance=0.1,linear_s=0.22)
+                self.movement_rotate_until(theta,tolerance=0.1,rotation_s=0.1)
+                print(f'Movement Complete. {self.position_odom}')
+
                 self.send_data('@RNDM')
 
             else: continue
@@ -263,7 +276,7 @@ class SensorsSubscriber(Node):
             current_x, current_y = self.position_odom[0], self.position_odom[1]
 
             # Calculate the difference in radians
-            print(f'current: {current_x}, {current_y} | goal: {target_x}, {target_y}')
+            if self.debug_movement: print(f'current: {current_x}, {current_y} | goal: {target_x}, {target_y}')
             diff_x, diff_y = target_x - current_x, target_y - current_y
             current_distance = math.sqrt(diff_x**2 + diff_y**2)
             # Check if the TurtleBot is within the tolerance of the target orientation
@@ -271,13 +284,13 @@ class SensorsSubscriber(Node):
             if (math.isclose(diff_x, 0, abs_tol=tolerance) and math.isclose(diff_y, 0, abs_tol=tolerance)): print('b')
             if (math.isclose(target_x,self.position_odom[0], abs_tol=tolerance) and math.isclose(target_y,self.position_odom[1], abs_tol=tolerance)):
                 self.movement(0.0, 0.0)
-                if self.debug_randomizer: print('movement complete')
+                if self.debug_movement: print('movement complete')
                 break
 
             # Determine rotation direction for the shortest path
             if diff_x > 0:
-                print('continuing advance')
-                if self.debug_randomizer: self.movement(linear_s, 0.0)
+                if self.debug_movement: print('continuing advance')
+                self.movement(linear_s, 0.0)
                 time.sleep(0.25)
 
     def movement_forward_until_distance(self, target_distance, tolerance=0.1, linear_s=0.22):
@@ -286,9 +299,9 @@ class SensorsSubscriber(Node):
         while True:
             
             distance_traveled = math.sqrt((self.position_odom[0] - starting_x)**2 + (self.position_odom[1] - starting_y)**2)
-            print(f'distance traveled: {distance_traveled}, goal: {target_distance}')
+            if self.debug_movement: print(f'distance traveled: {distance_traveled}, goal: {target_distance}')
             if distance_traveled > target_distance or math.isclose(distance_traveled, target_distance, abs_tol=tolerance):
-                if self.debug_randomizer: print('movement complete')
+                if self.debug_movement: print('movement complete')
                 self.movement(0.0,0.0)
                 break
 

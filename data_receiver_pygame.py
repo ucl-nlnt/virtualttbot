@@ -135,7 +135,6 @@ class turtlebot_controller:
                         data_logs.append(odometry_data.decode())
 
                     elif self.keyboard_input == '/': # stop recording and save data points
-                        self.send_data('@STOP')
                         self.is_collecting_data = False
                         print("Data collection finished. Restarting loop.")
 
@@ -146,7 +145,7 @@ class turtlebot_controller:
 
                         # wait for READY signal
                         go_signal = self.receive_data() # wait for @RNDM
-                       
+                    
                 else: pass
 
             if not self.killswitch:
@@ -154,7 +153,7 @@ class turtlebot_controller:
                 filename = os.path.join(os.getcwd(),'datalogs',self.generate_random_filename())
                 
                 with open(filename, 'w') as f:
-                    f.write(str({'label':self.text_display_content, 'data_points':data_logs}))
+                    f.write(str({'label':self.label, 'data_points':data_logs}))
                     print(f'Data written to {filename}.')
 
     def generate_random_filename(self):

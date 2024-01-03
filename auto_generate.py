@@ -76,13 +76,9 @@ class turtlebot_controller_automatic:
                     if instruction[0] == '@STOP': break
                     elif instruction[0] == '@STRT': continue
                     elif instruction[0] == '@ODOM': continue
-                    elif instruction[0] == '@TURN': continue
-                    elif instruction[0] == '@RAND': continue
-                    elif instruction[0] == '@RSET': continue
-                    elif instruction[0] == '@RPOS': continue
-                    elif instruction[0] == '@RVEL': continue
-                    elif instruction[0] == '@RANG': continue
-                    elif instruction[0] == '@RANG': continue
+                    elif instruction[0] == '@ROTT': continue
+                    elif instruction[0] == '@AFWD': continue
+                    
                     x = self.receive_data().decode()
                     data_points.append(x)
             self.total_passes -= 1

@@ -151,10 +151,20 @@ class SensorsSubscriber(Node):
                 print('exiting...') 
                 data_is_collecting = False 
                 self.killswitch = True
+            
+            elif inst == b'@ROTT': # used during automated data-gathering
+            
+                self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
+                self.send_data('@ROTT') # tell the other side that the rotation is complete
+            
+            elif inst == b'@AFWD': # used during automated data-gathering
                 
+                self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
+                self.send_data('@AFWD') # tell the other side that the rotation is complete
+
             elif inst == b'@RNDM':
                 
-                x, y = random.uniform(-5,5), random.uniform(-5,5)
+                x, y = random.uniform(-3,3), random.uniform(-3,3)
                 theta = random.uniform(-1,1) * 3.14159
 
                 print(f'Randomizing position... {x} | {y} | {theta}')
@@ -162,10 +172,10 @@ class SensorsSubscriber(Node):
                 dx, dy = x - self.position_odom[0], y - self.position_odom[1]
                 dtheta = math.atan2(dy,dx)
 
-                self.movement_rotate_until(dtheta,tolerance=0.1,rotation_s=0.1)
+                self.movement_rotate_until(dtheta,tolerance=0.05,rotation_s=0.1)
                 distance = math.sqrt(dx**2 + dy**2)
                 self.movement_forward_until_distance(distance,tolerance=0.1,linear_s=0.22)
-                self.movement_rotate_until(theta,tolerance=0.1,rotation_s=0.1)
+                self.movement_rotate_until(theta,tolerance=0.05,rotation_s=0.1)
                 print(f'Movement Complete. {self.position_odom}')
 
                 self.send_data('@RNDM')
@@ -243,19 +253,27 @@ class SensorsSubscriber(Node):
 
             # Check if the TurtleBot is within the tolerance of the target orientation
             if math.isclose(diff_radians, 0, abs_tol=tolerance):
+            
                 self.movement(0.0, 0.0)
                 break
-
+            
             # Determine rotation direction for the shortest path
-            if diff_radians > 0:
-                rotation_speed = rotation_s  # Positive value for clockwise rotation
+            if (diff_radians >= 0):
+            
+                if abs(diff_radians) >= 0.25: rotation_speed = rotation_s * 4
+                elif abs(diff_radians) <= 0.25 and abs(diff_radians) >= 0.1: rotation_speed = rotation_s
+                else: rotation_speed = rotation_s / 4  # Positive value for clockwise rotation
+            
             else:
-                rotation_speed = -rotation_s  # Negative value for counterclockwise rotation
+            
+                if abs(diff_radians) >= 0.25: rotation_speed = rotation_s * 4
+                elif abs(diff_radians) <= 0.25 and abs(diff_radians) >= 0.1: rotation_speed = rotation_s
+                else: rotation_speed = -rotation_s / 4  # Negative value for counterclockwise rotation
 
             # Execute the rotation
             if self.debug_randomizer: print(f'rotating to goal... current: {current_radians}, goal: {target_radians}')
             self.movement(0.0, rotation_speed)
-            time.sleep(0.25)
+            time.sleep(0.1)
 
     def movement_forward_until_xy(self, target_x, target_y, tolerance = 0.2, linear_s = 0.22):
 
@@ -290,6 +308,11 @@ class SensorsSubscriber(Node):
             
             distance_traveled = math.sqrt((self.position_odom[0] - starting_x)**2 + (self.position_odom[1] - starting_y)**2)
             if self.debug_movement: print(f'distance traveled: {distance_traveled}, goal: {target_distance}')
+            
+            if (distance_traveled / target_distance) < 0.9: # accelerate while still far away
+                linear_s = 0.22
+            else: linear_s = 0.11
+
             if distance_traveled > target_distance or math.isclose(distance_traveled, target_distance, abs_tol=tolerance):
                 if self.debug_movement: print('movement complete')
                 self.movement(0.0,0.0)
