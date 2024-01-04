@@ -1,0 +1,26 @@
+Instructions: // all data instructions are 5 bytes wide
+@XXXX, where the 4 X's are the instructions to be sent to the robot.
+@0000 - Stop
+@FRWD - Forward
+@LEFT - Turn Left
+@RGHT - Turn Right
+@ODOM - ask for odometry data
+@STRT - start recording data
+@STOP - stop recording data
+@KILL - stop program
+@RNDM - randomize position, -3 <= x,y <= 3, -pi <= theta <= pi 
+
+the format of an instruction in the instructions.txt is as follows:
+[@XXXX,dt], where @XXXX is an instruction and dt is a time delay (in seconds) until the next instruction is given.
+
+to create an entry, the format is:
+"label":[[@XXXX,dt],[@XXXX,dt],...]
+
+thus, to create a list of entries:
+"label1":[[@XXXX,dt],[@XXXX,dt],...]
+"label2":[[@XXXX,dt],[@XXXX,dt],...]
+...
+"labelN":[[@XXXX,dt],[@XXXX,dt],...]
+
+It can be noted that after each instruction [@XXXX,dt] the program will automatically log an odometry entry.
+The program will also automatically use @RNDM as well before each iteration to randomize the starting position.
