@@ -21,6 +21,6 @@ Step 3: RUNNING THE DATA COLLECTING STUFF
 - Compile the program: `colcon build && . install/setup.bash`
     > NOTE: You need to run this every time you restart your Ubuntu 20.04. I know it's silly, but otherwise ROS2 will not detect the program.
 - In another terminal (again), navigate to where the same directory that contains workspace; i.e., the one that contains `data_receiver_pygame.py` and `auto_generate.py`
-    > NOTE: To create your own automations with auto_generate.py, make sure that you edit `instructions.txt`. I have included examples in the commited file.
+    > NOTE: To create your own automations with auto_generate.py, make sure that you edit `instructions.txt`. I have included examples in the commited file and some documentation in `instruction_documentation.txt`.
 - Run either program with `python3 data_receiver_pygame.py` or `python3 auto_generate.py`
 - Run the Turtlebot3-side program that allows the reciever/auto generator to interface with the Turtlebot: `ros2 run sensors mess_test`
