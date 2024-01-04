@@ -16,7 +16,8 @@ Step 2: CLONE THE REPOSITORY
 
 Step 3: RUNNING THE DATA COLLECTING STUFF
 - Open a terminal: `ctrl + alt + t`
-- In the terminal, run: `ros2 launch turtlebot3_gazebo empty_world.launch.py`
+- In the terminal, open a ROS2 Gazebo world: `ros2 launch turtlebot3_gazebo empty_world.launch.py`
+    > For the purposes of this tutorial I just launched an empty world, but you can choose to open any other one that you wish in the future.
 - Open another terminal. In it, navigate to the workspace directory where you cloned the virtualttbot project: `cd SomePath/workspace`
 - Compile the program: `colcon build && . install/setup.bash`
     > NOTE: You need to run this every time you restart your Ubuntu 20.04. I know it's silly, but otherwise ROS2 will not detect the program.
