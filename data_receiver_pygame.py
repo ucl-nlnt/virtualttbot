@@ -1,4 +1,4 @@
-import pygame, sys, threading, time, socket, struct, uuid, os
+import pygame, sys, threading, time, socket, struct, uuid, os, ast
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
@@ -43,7 +43,7 @@ class turtlebot_controller:
         pygame.display.set_caption('Turtlebot Controller')
         self.pygame_font = pygame.font.SysFont('Arial', 20)
         self.text_color = (25, 25, 25)
-        self.text_display_content = 'DEFAULT TEXT'
+        self.text_display_content = 'Enter prompt in Python Terminal.'
         self.is_collecting_data = False
 
         # Cap the frame rate
@@ -100,14 +100,14 @@ class turtlebot_controller:
 
             print("starting new data collection loop...")
             self.label = input('Enter data label: ')
-            self.text_display_content = "Now collecting Data." + '\nLabel:{}\n'.format(self.label) 
+            self.text_display_content = "Now collecting Data." + ' Label: {}'.format(self.label) 
             self.is_collecting_data = True
             
             print("Sending START signal...")
             self.send_data('@STRT')
 
             print("START good... receiving origin data...")
-            data_logs = [self.receive_data().decode()]
+            data_logs = [ast.literal_eval(self.receive_data().decode())]
             print(f"Origin data received: {data_logs}")
             while self.is_collecting_data and not self.killswitch:
 
@@ -130,9 +130,8 @@ class turtlebot_controller:
 
                     elif self.keyboard_input == 'o': # retrieve current odometry
                         self.send_data('@ODOM')
-                        odometry_data = self.receive_data()
-                        self.text_display_content += '\n' + str(odometry_data)
-                        data_logs.append(odometry_data.decode())
+                        odometry_data = self.receive_data().decode()
+                        data_logs.append(ast.literal_eval(odometry_data))
 
                     elif self.keyboard_input == '/': # stop recording and save data points
                         self.is_collecting_data = False

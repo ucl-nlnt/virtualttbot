@@ -1,8 +1,8 @@
 import sys, threading, time, socket, struct, uuid, os
-import json
+import json, ast
 
-if not os.path.exists("datalogs"):
-    os.mkdir("datalogs")
+if not os.path.exists("datalogs-auto"):
+    os.mkdir("datalogs-auto")
 
 # This an automated version of the data_receiver_pygame.py file
 # It will automatically collect data from the turtlebot and save it to a file given a
@@ -10,22 +10,35 @@ if not os.path.exists("datalogs"):
 #  "label1" : [[action1, deltaT1],[action2, deltaT2],...] 
 #  "label2" : [[action1, deltaT1],[action2, deltaT2],...]
 
-def read_labels(labels_file='data_labels.txt'):
+# Possitble actions:
+# @RNDM: Randomize turtlebot position and orientation
+# @ODOM: Record turtlebot odometry
+# @0000: Do nothing (Turtlebot stops moving)
+# @KILL: Kill the program
+# @FRWD: Move turtlebot forward (about 0.22 m/s)
+# @LEFT: Turn turtlebot left (about 0.75 rad/s)
+# @RGHT: Turn turtlebot right (about -0.75 rad/s)
+# @STRT: similar to @ODOM. Retrieves Turtlebot Odometry
 
-    entries = {}
+# NOTE: The Turtlebot will randomize its position and orientation before each label entry.
     
-    try:
-        with open(labels_file, 'r') as f:
-            for line in f.readlines():
-                line = line.strip()
-                if line == '': continue
-                entries.update(json.loads(line)) 
-        return entries
-    
-    except Exception as e:
-        print(f'ERROR: {e}')
-        return None
-    
+def parse_line(line):
+    # Split the line into key and value parts
+    key, value = line.split(':')
+    # Remove extra whitespace and the enclosing quotes from the key
+    key = key.strip().strip('"')
+    # Convert the string representation of the list to an actual list
+    value = eval(value.strip())
+    return key, value
+
+def read_labels(filename='instructions.txt'):
+    data_dict = {}
+    with open(filename, 'r') as file:
+        for line in file:
+            key, value = parse_line(line)
+            data_dict[key] = value
+    return data_dict
+
 class turtlebot_controller_automatic:
 
     def __init__(self):
@@ -41,7 +54,7 @@ class turtlebot_controller_automatic:
         print('Client copnnected from', client_address)
 
         # debug locks:
-        self.debug = True
+        self.debug = False
 
         # read data labels from file here
         self.prompts = read_labels()
@@ -52,7 +65,7 @@ class turtlebot_controller_automatic:
         """
 
         # set number of iterations here:
-        self.total_passes = 10 # default value: 10. Will need hundred of thousands of data points to train a good model. Each pass is slow, so this is a good number to start with.
+        self.total_passes = 2 # default value: 10. Will need hundred of thousands of data points to train a good model. Each pass is slow, so this is a good number to start with.
 
         # multithreading processes
         self.listener_thread = threading.Thread(target = self.data_listener)
@@ -60,27 +73,72 @@ class turtlebot_controller_automatic:
 
     def data_listener(self):
         
+        #  {"label1" : [[action1, deltaT1],[action2, deltaT2],...], "label2" : [[action1, deltaT1],[action2, deltaT2],...], ...}
+        data_points = []
         while self.total_passes:
 
-            data_points = []
+            print('==================================' + '\n' + 'Starting new pass...')
+            
             for entry in self.prompts.items():
+
+                print(time.ctime() + ': ' + f'clearing data points... {data_points}')
+                data_points = []
+                print(time.ctime() + ': ' + f'Data points cleared. {data_points}')
+                print(time.ctime() + ': ' + f'Processing: {entry}')
+                
+                print(time.ctime() + ': ' + 'Randomizing...')
+                self.send_data('@RNDM')
+                self.receive_data() # wait for ACK
+                print(time.ctime() + ': ' + 'Randomized. Starting data collection...')
                 
                 # receive initial conditions
+                print(time.ctime() + ': ' + f'Starting new data collection... {entry}; pass: {self.total_passes}')
                 self.send_data('@STRT')
-                x = self.receive_data().decode()
+                x = ast.literal_eval(self.receive_data().decode()) # preliminary data point
                 data_points.append(x)
+                print(time.ctime() + ': ' + f'Initial conditions received. {x}')
 
+                
                 for instruction in entry[1]:
-                    self.send_data(instruction[0])
-                    time.sleep(instruction[1])
-                    if instruction[0] == '@STOP': break
-                    elif instruction[0] == '@STRT': continue
-                    elif instruction[0] == '@ODOM': continue
-                    elif instruction[0] == '@ROTT': continue
-                    elif instruction[0] == '@AFWD': continue
+
+                    action = instruction[0]
+                    dt = instruction[1]
                     
-                    x = self.receive_data().decode()
-                    data_points.append(x)
+                    if instruction[0] == '@KILL': print('Killing...'); self.send_data('@0000'); self.send_data('@KILL'); break
+                    
+                    elif instruction[0] == '@RAND':
+
+                        print(time.ctime() + ': ' + 'Randomizing...')
+                        self.send_data('@RAND')
+                        self.receive_data() # wait for ACK
+                        print(time.ctime() + ': ' + 'Randomized.')
+                        time.sleep(0.1)
+
+                    elif instruction[0] == '@ODOM':
+
+                        print(time.ctime() + ': ' + 'Reading Odometer data...')
+                        self.send_data('@ODOM')
+                        data_points.append(ast.literal_eval(self.receive_data().decode()))
+                        print(time.ctime() + ': ' + f'Odometry Data saved. Current buffer: {data_points}')
+                    
+                    else:
+
+                        print(time.ctime() + ': ' + f'Sending {action} for {dt} seconds...')
+                        self.send_data(action)
+                        time.sleep(dt)
+                        self.send_data('@0000')
+                        self.send_data('@ODOM')
+                        data_points.append(ast.literal_eval(self.receive_data().decode()))
+                        print(time.ctime() + ': ' + f'Data saved. Current buffer: {data_points}')
+                        print(time.ctime() + ': ' + 'Done.')
+
+                self.send_data('@0000')
+                fname = self.generate_random_filename()
+                with open(os.path.join(os.getcwd(), 'datalogs-auto', fname), 'w') as f:
+                    print(time.ctime() + ': ' + f'SAVED:', str({'label':entry[0], 'data_points':data_points}))
+                    f.write(str({'label':entry[0], 'data_points':data_points}))
+                    print(time.ctime() + ': ' + f'Data written to {fname}.')
+
             self.total_passes -= 1
     
     def generate_random_filename(self):
@@ -132,3 +190,5 @@ class turtlebot_controller_automatic:
         self.client.send(b'OK') # unblock other end
         if self.debug: print('[R] ACK sent.')
         return data # up to user to interpret the data
+    
+x = turtlebot_controller_automatic()

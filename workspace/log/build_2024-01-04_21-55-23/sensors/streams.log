@@ -1,0 +1,24 @@
+[0.712s] Invoking command in '/home/gabriel/virt_ttb/workspace/src/sensors': PYTHONPATH=/home/gabriel/virt_ttb/workspace/build/sensors/prefix_override:/home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/gabriel/virt_ttb/workspace/build/sensors/build install --record /home/gabriel/virt_ttb/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[0.855s] running egg_info
+[0.855s] writing ../../build/sensors/sensors.egg-info/PKG-INFO
+[0.856s] writing dependency_links to ../../build/sensors/sensors.egg-info/dependency_links.txt
+[0.856s] writing entry points to ../../build/sensors/sensors.egg-info/entry_points.txt
+[0.856s] writing requirements to ../../build/sensors/sensors.egg-info/requires.txt
+[0.856s] writing top-level names to ../../build/sensors/sensors.egg-info/top_level.txt
+[0.880s] reading manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[0.881s] writing manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[0.881s] running build
+[0.881s] running build_py
+[0.882s] running install
+[0.882s] running install_lib
+[0.883s] running install_data
+[0.884s] running install_egg_info
+[0.885s] removing '/home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[0.885s] Copying ../../build/sensors/sensors.egg-info to /home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[0.886s] running install_scripts
+[0.898s] Installing mess_test script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+[0.898s] Installing movement_prot script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+[0.898s] Installing sensors script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+[0.898s] Installing timer_node script to /home/gabriel/virt_ttb/workspace/install/sensors/lib/sensors
+[0.898s] writing list of installed files to '/home/gabriel/virt_ttb/workspace/build/sensors/install.log'
+[0.915s] Invoked command in '/home/gabriel/virt_ttb/workspace/src/sensors' returned '0': PYTHONPATH=/home/gabriel/virt_ttb/workspace/build/sensors/prefix_override:/home/gabriel/virt_ttb/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/gabriel/virt_ttb/workspace/build/sensors/build install --record /home/gabriel/virt_ttb/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed

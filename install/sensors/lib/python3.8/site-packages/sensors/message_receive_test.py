@@ -146,21 +146,22 @@ class SensorsSubscriber(Node):
             elif inst == b'@RGHT': self.movement(0.0,-0.75)
             elif inst == b'@ODOM': 
                 self.send_data(f'{self.position_odom}')
-            elif inst == b'@STOP': self.movement(0.0,0.0); data_is_collecting = False
+            # elif inst == b'@STOP': self.movement(0.0,0.0); data_is_collecting = False
             elif inst == b'@KILL':
                 print('exiting...') 
+                self.movement(0.0,0.0)
                 data_is_collecting = False 
                 self.killswitch = True
             
-            elif inst == b'@ROTT': # used during automated data-gathering
+            #elif inst == b'@ROTT': # used during automated data-gathering
             
-                self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
-                self.send_data('@ROTT') # tell the other side that the rotation is complete
+            #    self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
+            #    self.send_data('@ROTT') # tell the other side that the rotation is complete
             
-            elif inst == b'@AFWD': # used during automated data-gathering
+            #elif inst == b'@AFWD': # used during automated data-gathering
                 
-                self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
-                self.send_data('@AFWD') # tell the other side that the rotation is complete
+            #    self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
+            #    self.send_data('@AFWD') # tell the other side that the rotation is complete
 
             elif inst == b'@RNDM':
                 

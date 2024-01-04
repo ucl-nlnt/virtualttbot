@@ -134,40 +134,43 @@ class SensorsSubscriber(Node):
         if not self.transmit_to_server: return # error handling
         data_is_collecting = True
 
+        while self.position_odom == [None,None,None]: time.sleep(1); print('waiting for odometer to warm up...') # wait for odometer to initialize
 
         while data_is_collecting:
 
             inst = self.receive_data()
             print(inst)
-            if inst == b'@STRT': self.send_data(f'{self.position_odom}')
+            if inst == b'@STRT': self.send_data(f'{self.position_odom}'.encode()); print('Odom:', self.position_odom)
             elif inst == b'@0000': self.movement(0.0,0.0)
             elif inst == b'@FRWD': self.movement(0.22,0.0)
             elif inst == b'@LEFT': self.movement(0.0,0.75)
             elif inst == b'@RGHT': self.movement(0.0,-0.75)
             elif inst == b'@ODOM': 
-                self.send_data(f'{self.position_odom}')
-            elif inst == b'@STOP': self.movement(0.0,0.0); data_is_collecting = False
+                self.send_data(f'{self.position_odom}'.encode())
+                print('Odom:', self.position_odom)
+            # elif inst == b'@STOP': self.movement(0.0,0.0); data_is_collecting = False
             elif inst == b'@KILL':
                 print('exiting...') 
+                self.movement(0.0,0.0)
                 data_is_collecting = False 
                 self.killswitch = True
             
-            elif inst == b'@ROTT': # used during automated data-gathering
+            #elif inst == b'@ROTT': # used during automated data-gathering
             
-                self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
-                self.send_data('@ROTT') # tell the other side that the rotation is complete
+            #    self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
+            #    self.send_data('@ROTT') # tell the other side that the rotation is complete
             
-            elif inst == b'@AFWD': # used during automated data-gathering
+            #elif inst == b'@AFWD': # used during automated data-gathering
                 
-                self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
-                self.send_data('@AFWD') # tell the other side that the rotation is complete
+            #    self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
+            #    self.send_data('@AFWD') # tell the other side that the rotation is complete
 
             elif inst == b'@RNDM':
                 
                 x, y = random.uniform(-3,3), random.uniform(-3,3)
                 theta = random.uniform(-1,1) * 3.14159
 
-                print(f'Randomizing position... {x} | {y} | {theta}')
+                print(f'Randomizing position... [{x}, {y}, {theta}]')
 
                 dx, dy = x - self.position_odom[0], y - self.position_odom[1]
                 dtheta = math.atan2(dy,dx)
@@ -190,46 +193,57 @@ class SensorsSubscriber(Node):
             data = data.encode()
 
         # NOTE: data may or may not be in string format.
+        try:
+            length_bytes = struct.pack('!I', len(data))
             
-        length_bytes = struct.pack('!I', len(data))
+            if self.debug_send_data: print('[S] Sending byte length...')
+            self.client.sendall(length_bytes)
+            ack = self.client.recv(2) # wait for other side to process data size
+            if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+            if self.debug_send_data: print('[S] ACK good')
+
+            if self.debug_send_data: print('[S] Sending data...')
+            self.client.sendall(data) # send data
+            if self.debug_send_data: print('[S] Data sent; waiting for ACK...')
+            ack = self.client.recv(2) # wait for other side to process data size
+            if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+            if self.debug_send_data: print('[S] ACK good. Data send success.')
+
+        except Exception as e:
+            print(e)
+            self.killswitch = True
+            return None
         
-        if self.debug_send_data: print('[S] Sending byte length...')
-        self.client.sendall(length_bytes)
-        ack = self.client.recv(2) # wait for other side to process data size
-        if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-        if self.debug_send_data: print('[S] ACK good')
-
-        if self.debug_send_data: print('[S] Sending data...')
-        self.client.sendall(data) # send data
-        if self.debug_send_data: print('[S] Data sent; waiting for ACK...')
-        ack = self.client.recv(2) # wait for other side to process data size
-        if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-        if self.debug_send_data: print('[S] ACK good. Data send success.')
-
     def receive_data(self):
 
         # NOTE: Returns data in BINARY. You must decode it on your own
+        try:
+        
+            if self.debug_send_data: print('[R] Waiting for byte length...')
+            length_bytes = self.client.recv(4)
+            length = struct.unpack('!I', length_bytes)[0]
+            if self.debug_send_data: print(f'[R] Byte length received. Expecting: {length}')
+            data, data_size = b'', 0
 
-        if self.debug_send_data: print('[R] Waiting for byte length...')
-        length_bytes = self.client.recv(4)
-        length = struct.unpack('!I', length_bytes)[0]
-        if self.debug_send_data: print(f'[R] Byte length received. Expecting: {length}')
-        data, data_size = b'', 0
+            self.client.send(b'OK') # allow other side to send over the data
+            if self.debug_send_data: print(f'[R] ACK sent.')
+            while data_size < length:
 
-        self.client.send(b'OK') # allow other side to send over the data
-        if self.debug_send_data: print(f'[R] ACK sent.')
-        while data_size < length:
+                chunk_size = min(2048, length - data_size)
+                data_size += chunk_size
+                data += self.client.recv(chunk_size)
+                if self.debug_send_data: print(f'[R] RECV {chunk_size}')
 
-            chunk_size = min(2048, length - data_size)
-            data_size += chunk_size
-            data += self.client.recv(chunk_size)
-            if self.debug_send_data: print(f'[R] RECV {chunk_size}')
-
-        if self.debug_send_data: print('[R] Transmission received successfull. Sending ACK')       
-        self.client.send(b'OK') # unblock other end
-        if self.debug_send_data: print('[R] ACK sent.')
-        return data # up to user to interpret the data
-    
+            if self.debug_send_data: print('[R] Transmission received successfull. Sending ACK')       
+            self.client.send(b'OK') # unblock other end
+            if self.debug_send_data: print('[R] ACK sent.')
+            return data # up to user to interpret the data
+        
+        except Exception as e:
+            print(e)
+            self.killswitch = True
+            return None
+        
     def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
     
         data = Twist()

@@ -1,0 +1,3 @@
+"move forward by 1 meter":[['@FRWD', 4.55]]
+"move forward by 2 meter":[['@FRWD', 9.10]]
+"move forward by 1 meter, then turn left":[['@FRWD', 4.55],['@RGHT', 2.094]]
