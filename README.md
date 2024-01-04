@@ -9,7 +9,9 @@ Step 2: CLONE THE REPOSITORY
 - If you do not have git installed, install it: `sudo apt install git`
 - Clone the repository into a folder/directory of your choice:
     > Optional: `mkdir <some directory>`
+    
     > `git clone https://github.com/ucl-nlnt/virtualttbot`
+    
     > NOTE: Make sure you are logged into the github CLI before cloning, since this is a private repository!
 
 Step 3: RUNNING THE DATA COLLECTING STUFF
