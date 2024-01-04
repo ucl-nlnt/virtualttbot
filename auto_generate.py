@@ -65,7 +65,7 @@ class turtlebot_controller_automatic:
         """
 
         # set number of iterations here:
-        self.total_passes = 2 # default value: 10. Will need hundred of thousands of data points to train a good model. Each pass is slow, so this is a good number to start with.
+        self.total_passes = 30 # default value: 10. Will need hundred of thousands of data points to train a good model. Each pass is slow, so this is a good number to start with.
 
         # multithreading processes
         self.listener_thread = threading.Thread(target = self.data_listener)
