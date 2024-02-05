@@ -10,6 +10,8 @@ setup.py
 ../../build/sensors/sensors.egg-info/zip-safe
 resource/sensors
 sensors/__init__.py
+sensors/inference_prog.py
+sensors/level_test.py
 sensors/message_receive_test.py
 sensors/movement_prot.py
 sensors/opencv_test.py

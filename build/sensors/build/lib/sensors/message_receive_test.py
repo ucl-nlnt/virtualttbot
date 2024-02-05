@@ -84,7 +84,7 @@ class SensorsSubscriber(Node):
             self.client = socket.socket()
             server_ip = server_ip_address
 
-            server_port = 50000;
+            server_port = 50000
             flag_connected = False
             self.send_lock = True # signals that new data is allowed to be transmitted
 
@@ -183,10 +183,10 @@ class SensorsSubscriber(Node):
                 dx, dy = x - self.position_odom[0], y - self.position_odom[1]
                 dtheta = math.atan2(dy,dx)
 
-                self.movement_rotate_until(dtheta,tolerance=0.05,rotation_s=0.1)
+                self.movement_rotate_until(dtheta,tolerance=0.01,rotation_s=0.1)
                 distance = math.sqrt(dx**2 + dy**2)
-                self.movement_forward_until_distance(distance,tolerance=0.1,linear_s=0.22)
-                self.movement_rotate_until(theta,tolerance=0.05,rotation_s=0.1)
+                self.movement_forward_until_distance(distance,tolerance=0.01,linear_s=0.22)
+                self.movement_rotate_until(theta,tolerance=0.01,rotation_s=0.1)
                 print(f'Movement Complete. {self.position_odom}')
 
                 self.send_data('@RNDM')
