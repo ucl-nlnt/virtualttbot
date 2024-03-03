@@ -3,7 +3,7 @@ How to use:
 Step 1: INSTALL ROS2 FOXY
 - Notes: ROS2 Foxy will only work with `Ubuntu 20.04`, NOT 22.04 or any of the other versions of Ubuntu.
 - For instructions, see the Foxy installation guide in: `https://emanual.robotis.com/docs/en/platform/turtlebot3/quick-start/#`
-    > You do not need to install anything else in the Turtlebot except for the programs under `PC Setup in the Quickstart Guide`
+    > You do not need to install anything else in your computer except for the programs under `PC Setup in the Quickstart Guide`
 
 Step 2: CLONE THE REPOSITORY
 - If you do not have git installed, install it: `sudo apt install git`
