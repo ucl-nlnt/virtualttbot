@@ -136,7 +136,8 @@ class SensorsSubscriber(Node):
 
     def compile_to_json(self):
 
-        # prevent variable was not declared errors
+        # Runs asynchronously.
+        # Prevent variable was not declared errors.
         laserscan_msg_jsonized = None
         twist_msg_jsonized = None
         imu_msg_jsonized = None
@@ -203,7 +204,9 @@ class SensorsSubscriber(Node):
                     "current":self.battery_state_msg.current,
                 }
             
-            print(battery_state_msg_jsonized)
+            super_json = {"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}
+            # TODO: convert to bytestream and interface with Pygame receiver.
+
             time.sleep(1)
     # DEPRECATED: do not use
 
