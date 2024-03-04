@@ -184,7 +184,7 @@ class SensorsSubscriber(Node):
                 
                 msg_pose = self.odometry_msg.pose.pose
                 position, orientation = msg_pose.position, msg_pose.orientation
-                msg_pose_covariance = self.odometry_msg.covariance
+                msg_pose_covariance = self.odometry_msg.pose.covariance
 
                 odometry_msg_jsonized = {
                     "time_sec":self.odometry_msg.header.stamp.sec,
@@ -194,8 +194,6 @@ class SensorsSubscriber(Node):
                     "object_covariance":[i for i in msg_pose_covariance]
                 }
 
-                print(odometry_msg_jsonized)
-
             if self.battery_state_msg != None:
 
                 battery_state_msg_jsonized = {
@@ -204,6 +202,8 @@ class SensorsSubscriber(Node):
                     "temperature":self.battery_state_msg.temperature,
                     "current":self.battery_state_msg.current,
                 }
+            
+            print(battery_state_msg_jsonized)
             time.sleep(1)
     # DEPRECATED: do not use
 
