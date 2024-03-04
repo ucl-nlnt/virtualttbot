@@ -1,6 +1,4 @@
 [console_scripts]
-inference_prog = sensors.inference_prog:main
-level_test = sensors.level_test:main
-mess_test = sensors.message_receive_test:main
+capstone = sensors.capstone:main
 sensors = sensors.sensors:main
 

@@ -1,0 +1,50 @@
+[1.946s] Invoking command in '/home/ubuntu/virtualttbot/workspace/src/sensors': PYTHONPATH=/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/virtualttbot/workspace/build/sensors/build install --prefix /home/ubuntu/virtualttbot/workspace/install/sensors --record /home/ubuntu/virtualttbot/workspace/build/sensors/install.log --single-version-externally-managed
+[3.644s] running egg_info
+[3.649s] writing ../../build/sensors/sensors.egg-info/PKG-INFO
+[3.652s] writing dependency_links to ../../build/sensors/sensors.egg-info/dependency_links.txt
+[3.654s] writing entry points to ../../build/sensors/sensors.egg-info/entry_points.txt
+[3.656s] writing requirements to ../../build/sensors/sensors.egg-info/requires.txt
+[3.657s] writing top-level names to ../../build/sensors/sensors.egg-info/top_level.txt
+[3.996s] reading manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[4.004s] writing manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[4.006s] running build
+[4.006s] running build_py
+[4.016s] copying sensors/__init__.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.017s] copying sensors/picamtest.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.021s] copying sensors/inference_prog.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.026s] copying sensors/opencv_test.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.027s] copying sensors/movement_prot.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.030s] copying sensors/level_test.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.033s] copying sensors/message_receive_test.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.036s] copying sensors/capstone.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.041s] running install
+[4.047s] running install_lib
+[4.060s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/__init__.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.061s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/picamtest.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.063s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/inference_prog.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.065s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/opencv_test.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.066s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/movement_prot.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.068s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/level_test.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.069s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/message_receive_test.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.071s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/capstone.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.078s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/__init__.py to __init__.cpython-38.pyc
+[4.081s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/picamtest.py to picamtest.cpython-38.pyc
+[4.085s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/inference_prog.py to inference_prog.cpython-38.pyc
+[4.103s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/opencv_test.py to opencv_test.cpython-38.pyc
+[4.105s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/movement_prot.py to movement_prot.cpython-38.pyc
+[4.109s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/level_test.py to level_test.cpython-38.pyc
+[4.114s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/message_receive_test.py to message_receive_test.cpython-38.pyc
+[4.129s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/capstone.py to capstone.cpython-38.pyc
+[4.143s] running install_data
+[4.150s] copying resource/sensors -> /home/ubuntu/virtualttbot/workspace/install/sensors/share/ament_index/resource_index/packages
+[4.152s] copying package.xml -> /home/ubuntu/virtualttbot/workspace/install/sensors/share/sensors
+[4.154s] running install_egg_info
+[4.168s] removing '/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[4.172s] Copying ../../build/sensors/sensors.egg-info to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[4.184s] running install_scripts
+[4.345s] Installing inference_prog script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors
+[4.348s] Installing level_test script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors
+[4.350s] Installing mess_test script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors
+[4.351s] Installing sensors script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors
+[4.356s] writing list of installed files to '/home/ubuntu/virtualttbot/workspace/build/sensors/install.log'
+[4.557s] Invoked command in '/home/ubuntu/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/virtualttbot/workspace/build/sensors/build install --prefix /home/ubuntu/virtualttbot/workspace/install/sensors --record /home/ubuntu/virtualttbot/workspace/build/sensors/install.log --single-version-externally-managed

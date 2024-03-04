@@ -1,0 +1,5 @@
+  File "/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/capstone.py", line 168
+    "angular":self.twist_msg.angular
+    ^
+SyntaxError: invalid syntax
+

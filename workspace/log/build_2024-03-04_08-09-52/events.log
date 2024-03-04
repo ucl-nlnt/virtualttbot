@@ -1,0 +1,14 @@
+[0.000000] (-) TimerEvent: {}
+[0.001758] (sensors) JobQueued: {'identifier': 'sensors', 'dependencies': OrderedDict()}
+[0.003736] (sensors) JobStarted: {'identifier': 'sensors'}
+[0.098499] (-) TimerEvent: {}
+[0.200068] (-) TimerEvent: {}
+[0.301493] (-) TimerEvent: {}
+[0.402843] (-) TimerEvent: {}
+[0.504100] (-) TimerEvent: {}
+[0.607480] (-) TimerEvent: {}
+[0.708669] (-) TimerEvent: {}
+[0.809913] (-) TimerEvent: {}
+[0.911513] (-) TimerEvent: {}
+[0.936739] (sensors) JobEnded: {'identifier': 'sensors', 'rc': 0}
+[0.944934] (-) EventReactorShutdown: {}

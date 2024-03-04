@@ -1,0 +1,25 @@
+[1.957s] Invoking command in '/home/ubuntu/virtualttbot/workspace/src/sensors': PYTHONPATH=/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/virtualttbot/workspace/build/sensors/build install --prefix /home/ubuntu/virtualttbot/workspace/install/sensors --record /home/ubuntu/virtualttbot/workspace/build/sensors/install.log --single-version-externally-managed
+[3.696s] running egg_info
+[3.700s] writing ../../build/sensors/sensors.egg-info/PKG-INFO
+[3.701s] writing dependency_links to ../../build/sensors/sensors.egg-info/dependency_links.txt
+[3.703s] writing entry points to ../../build/sensors/sensors.egg-info/entry_points.txt
+[3.704s] writing requirements to ../../build/sensors/sensors.egg-info/requires.txt
+[3.706s] writing top-level names to ../../build/sensors/sensors.egg-info/top_level.txt
+[4.056s] reading manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[4.066s] writing manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[4.067s] running build
+[4.068s] running build_py
+[4.071s] copying sensors/capstone.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors
+[4.074s] running install
+[4.088s] running install_lib
+[4.108s] copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/capstone.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[4.124s] byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/capstone.py to capstone.cpython-38.pyc
+[4.151s] running install_data
+[4.167s] running install_egg_info
+[4.184s] removing '/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[4.187s] Copying ../../build/sensors/sensors.egg-info to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[4.200s] running install_scripts
+[4.361s] Installing capstone script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors
+[4.363s] Installing sensors script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors
+[4.368s] writing list of installed files to '/home/ubuntu/virtualttbot/workspace/build/sensors/install.log'
+[4.570s] Invoked command in '/home/ubuntu/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/ubuntu/virtualttbot/workspace/build/sensors/build install --prefix /home/ubuntu/virtualttbot/workspace/install/sensors --record /home/ubuntu/virtualttbot/workspace/build/sensors/install.log --single-version-externally-managed

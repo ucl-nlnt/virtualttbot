@@ -21,10 +21,11 @@ setup(
     entry_points={
         'console_scripts': [
 		'sensors = sensors.sensors:main',
-		'mess_test = sensors.message_receive_test:main',
+		'capstone = sensors.capstone:main',
+		# 'mess_test = sensors.message_receive_test:main',
 		# 'movement_prot = sensors.movement_prot:main',
-        'inference_prog = sensors.inference_prog:main',
-        'level_test = sensors.level_test:main',
+        #'inference_prog = sensors.inference_prog:main',
+        #'level_test = sensors.level_test:main',
         ],
     },
 )

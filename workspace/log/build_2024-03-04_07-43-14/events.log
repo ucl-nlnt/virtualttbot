@@ -1,0 +1,86 @@
+[0.000000] (-) TimerEvent: {}
+[0.002052] (sensors) JobQueued: {'identifier': 'sensors', 'dependencies': OrderedDict()}
+[0.004438] (sensors) JobStarted: {'identifier': 'sensors'}
+[0.098449] (-) TimerEvent: {}
+[0.200635] (-) TimerEvent: {}
+[0.302219] (-) TimerEvent: {}
+[0.403482] (-) TimerEvent: {}
+[0.504948] (-) TimerEvent: {}
+[0.606372] (-) TimerEvent: {}
+[0.707671] (-) TimerEvent: {}
+[0.809105] (-) TimerEvent: {}
+[0.910365] (-) TimerEvent: {}
+[1.011632] (-) TimerEvent: {}
+[1.112859] (-) TimerEvent: {}
+[1.214098] (-) TimerEvent: {}
+[1.315293] (-) TimerEvent: {}
+[1.416815] (-) TimerEvent: {}
+[1.518080] (-) TimerEvent: {}
+[1.619296] (-) TimerEvent: {}
+[1.720545] (-) TimerEvent: {}
+[1.821895] (-) TimerEvent: {}
+[1.888853] (sensors) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'egg_info', '--egg-base', '../../build/sensors', 'build', '--build-base', '/home/ubuntu/virtualttbot/workspace/build/sensors/build', 'install', '--prefix', '/home/ubuntu/virtualttbot/workspace/install/sensors', '--record', '/home/ubuntu/virtualttbot/workspace/build/sensors/install.log', '--single-version-externally-managed'], 'cwd': '/home/ubuntu/virtualttbot/workspace/src/sensors', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'ubuntu', 'SSH_CLIENT': '10.158.39.147 40856 22', 'XDG_SESSION_TYPE': 'tty', 'GIT_ASKPASS': '/home/ubuntu/.vscode-server/cli/servers/Stable-903b1e9d8990623e3d7da1df3d33db3e42d80eda/server/extensions/git/dist/askpass.sh', 'SHLVL': '2', 'LD_LIBRARY_PATH': '/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/lib/aarch64-linux-gnu:/opt/ros/foxy/lib', 'BROWSER': '/home/ubuntu/.vscode-server/cli/servers/Stable-903b1e9d8990623e3d7da1df3d33db3e42d80eda/server/bin/helpers/browser.sh', 'MOTD_SHOWN': 'pam', 'HOME': '/home/ubuntu', 'OLDPWD': '/home/ubuntu/virtualttbot/workspace/src', 'TERM_PROGRAM_VERSION': '1.86.2', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-d701ec72-19d4-4e18-9ee9-5aff1f142452.sock', 'ROS_PYTHON_VERSION': '3', 'VSCODE_GIT_ASKPASS_MAIN': '/home/ubuntu/.vscode-server/cli/servers/Stable-903b1e9d8990623e3d7da1df3d33db3e42d80eda/server/extensions/git/dist/askpass-main.js', 'VSCODE_GIT_ASKPASS_NODE': '/home/ubuntu/.vscode-server/cli/servers/Stable-903b1e9d8990623e3d7da1df3d33db3e42d80eda/server/node', 'SSL_CERT_FILE': '/usr/lib/ssl/certs/ca-certificates.crt', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'COLCON_PREFIX_PATH': '/home/ubuntu/virtualttbot/workspace/install:/home/ubuntu/turtlebot3_ws/install', 'ROS_DISTRO': 'foxy', 'LOGNAME': 'ubuntu', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'TERM': 'xterm-256color', 'XDG_SESSION_ID': '1', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/home/ubuntu/.vscode-server/cli/servers/Stable-903b1e9d8990623e3d7da1df3d33db3e42d80eda/server/bin/remote-cli:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin', 'XDG_RUNTIME_DIR': '/run/user/1000', 'SSL_CERT_DIR': '/usr/lib/ssl/certs', 'LANG': 'en_US.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'VSCODE_GIT_IPC_HANDLE': '/run/user/1000/vscode-git-daa24abf3b.sock', 'TERM_PROGRAM': 'vscode', 'ROS_DOMAIN_ID': '30', 'AMENT_PREFIX_PATH': '/home/ubuntu/virtualttbot/workspace/install/sensors:/home/ubuntu/turtlebot3_ws/install/turtlebot3:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_bringup:/home/ubuntu/turtlebot3_ws/install/turtlebot3_node:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/home/ubuntu/turtlebot3_ws/install/turtlebot3_description:/opt/ros/foxy', 'SHELL': '/bin/bash', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'VSCODE_GIT_ASKPASS_EXTRA_ARGS': '', 'PWD': '/home/ubuntu/virtualttbot/workspace/build/sensors', 'OPENCR_PORT': '/dev/ttyACM0', 'TURTLEBOT3_MODEL': 'burger', 'LC_ALL': 'en_US.UTF-8', 'SSH_CONNECTION': '10.158.39.147 40856 10.158.14.210 22', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:/home/ubuntu/turtlebot3_ws/build/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop/lib/python3.8/site-packages:/home/ubuntu/turtlebot3_ws/build/turtlebot3_example:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/home/ubuntu/turtlebot3_ws/install/turtlebot3:/home/ubuntu/turtlebot3_ws/install/turtlebot3_bringup:/home/ubuntu/turtlebot3_ws/install/turtlebot3_node:/home/ubuntu/turtlebot3_ws/install/turtlebot3_description'}, 'shell': False}
+[1.925623] (-) TimerEvent: {}
+[2.028616] (-) TimerEvent: {}
+[2.129844] (-) TimerEvent: {}
+[2.231044] (-) TimerEvent: {}
+[2.332434] (-) TimerEvent: {}
+[2.434974] (-) TimerEvent: {}
+[2.536394] (-) TimerEvent: {}
+[2.637575] (-) TimerEvent: {}
+[2.738807] (-) TimerEvent: {}
+[2.840230] (-) TimerEvent: {}
+[2.942576] (-) TimerEvent: {}
+[3.044822] (-) TimerEvent: {}
+[3.146626] (-) TimerEvent: {}
+[3.248254] (-) TimerEvent: {}
+[3.350578] (-) TimerEvent: {}
+[3.452265] (-) TimerEvent: {}
+[3.554975] (-) TimerEvent: {}
+[3.656736] (-) TimerEvent: {}
+[3.758698] (-) TimerEvent: {}
+[3.862019] (-) TimerEvent: {}
+[3.963691] (-) TimerEvent: {}
+[4.065513] (-) TimerEvent: {}
+[4.167834] (-) TimerEvent: {}
+[4.267131] (sensors) StdoutLine: {'line': b'running egg_info\n'}
+[4.269344] (-) TimerEvent: {}
+[4.273794] (sensors) StdoutLine: {'line': b'writing ../../build/sensors/sensors.egg-info/PKG-INFO\n'}
+[4.279443] (sensors) StdoutLine: {'line': b'writing dependency_links to ../../build/sensors/sensors.egg-info/dependency_links.txt\n'}
+[4.287138] (sensors) StdoutLine: {'line': b'writing entry points to ../../build/sensors/sensors.egg-info/entry_points.txt\n'}
+[4.292008] (sensors) StdoutLine: {'line': b'writing requirements to ../../build/sensors/sensors.egg-info/requires.txt\n'}
+[4.295917] (sensors) StdoutLine: {'line': b'writing top-level names to ../../build/sensors/sensors.egg-info/top_level.txt\n'}
+[4.369848] (-) TimerEvent: {}
+[4.471870] (-) TimerEvent: {}
+[4.574003] (-) TimerEvent: {}
+[4.675629] (-) TimerEvent: {}
+[4.758085] (sensors) StdoutLine: {'line': b"reading manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'\n"}
+[4.769594] (sensors) StdoutLine: {'line': b"writing manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'\n"}
+[4.773490] (sensors) StdoutLine: {'line': b'running build\n'}
+[4.775143] (sensors) StdoutLine: {'line': b'running build_py\n'}
+[4.776609] (-) TimerEvent: {}
+[4.786250] (sensors) StdoutLine: {'line': b'copying sensors/capstone.py -> /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors\n'}
+[4.788272] (sensors) StdoutLine: {'line': b'running install\n'}
+[4.792463] (sensors) StdoutLine: {'line': b'running install_lib\n'}
+[4.807488] (sensors) StdoutLine: {'line': b'copying /home/ubuntu/virtualttbot/workspace/build/sensors/build/lib/sensors/capstone.py -> /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[4.819357] (sensors) StdoutLine: {'line': b'byte-compiling /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/capstone.py to capstone.cpython-38.pyc\n'}
+[4.852924] (sensors) StdoutLine: {'line': b'running install_data\n'}
+[4.860753] (sensors) StdoutLine: {'line': b'running install_egg_info\n'}
+[4.877050] (-) TimerEvent: {}
+[4.882955] (sensors) StdoutLine: {'line': b"removing '/home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)\n"}
+[4.889362] (sensors) StdoutLine: {'line': b'Copying ../../build/sensors/sensors.egg-info to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info\n'}
+[4.914819] (sensors) StdoutLine: {'line': b'running install_scripts\n'}
+[4.977376] (-) TimerEvent: {}
+[5.079296] (-) TimerEvent: {}
+[5.126964] (sensors) StdoutLine: {'line': b'Installing capstone script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors\n'}
+[5.128820] (sensors) StdoutLine: {'line': b'Installing sensors script to /home/ubuntu/virtualttbot/workspace/install/sensors/lib/sensors\n'}
+[5.134463] (sensors) StdoutLine: {'line': b"writing list of installed files to '/home/ubuntu/virtualttbot/workspace/build/sensors/install.log'\n"}
+[5.179813] (-) TimerEvent: {}
+[5.281820] (-) TimerEvent: {}
+[5.385145] (-) TimerEvent: {}
+[5.488681] (-) TimerEvent: {}
+[5.572950] (sensors) CommandEnded: {'returncode': 0}
+[5.588968] (-) TimerEvent: {}
+[5.694218] (-) TimerEvent: {}
+[5.742265] (sensors) JobEnded: {'identifier': 'sensors', 'rc': 0}
+[5.756206] (-) EventReactorShutdown: {}
