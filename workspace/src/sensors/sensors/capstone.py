@@ -144,6 +144,7 @@ class SensorsSubscriber(Node):
         battery_state_msg_jsonized = None
 
         while True:
+
             if self.laserscan_msg != None:
 
                 laserscan_msg_jsonized = {
@@ -179,7 +180,30 @@ class SensorsSubscriber(Node):
                     "linear_acceleration_covariance": [i for i in self.imu_msg.linear_acceleration_covariance]
                 }
             
-            
+            if self.odometry_msg != None:
+                
+                msg_pose = self.odometry_msg.pose.pose
+                position, orientation = msg_pose.position, msg_pose.orientation
+                msg_pose_covariance = self.odometry_msg.covariance
+
+                odometry_msg_jsonized = {
+                    "time_sec":self.odometry_msg.header.stamp.sec,
+                    "time_nano":self.odometry_msg.header.stamp.nanosec,
+                    "pose_position":(position.x, position.y, position.z),
+                    "pose_orientation_quarternion":(orientation.x, orientation.y, orientation.z, orientation.w),
+                    "object_covariance":[i for i in msg_pose_covariance]
+                }
+
+                print(odometry_msg_jsonized)
+
+            if self.battery_state_msg != None:
+
+                battery_state_msg_jsonized = {
+                    "percentage":self.battery_state_msg.percentage,
+                    "voltage":self.battery_state_msg.voltage,
+                    "temperature":self.battery_state_msg.temperature,
+                    "current":self.battery_state_msg.current,
+                }
             time.sleep(1)
     # DEPRECATED: do not use
 
