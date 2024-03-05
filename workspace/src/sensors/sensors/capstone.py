@@ -204,8 +204,8 @@ class SensorsSubscriber(Node):
                     "current":self.battery_state_msg.current,
                 }
             
-            super_json = {"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}
-            # TODO: convert to bytestream and interface with Pygame receiver.
+            super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}).encode()
+
 
             time.sleep(1)
     # DEPRECATED: do not use
@@ -289,6 +289,8 @@ class SensorsSubscriber(Node):
 
         print('THREAD CLOSED')
 
+    # TODO: modify send_data and receive_data to accept port parameter
+        
     def send_data(self, data: bytes):
 
         if isinstance(data, str):
