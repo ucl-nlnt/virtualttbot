@@ -1,8 +1,10 @@
-import picamera
+from KNetworking import DataBridgeClient_TCP, DataBridgeServer_TCP
 
-try:
-    with picamera.PiCamera() as picam:
-        print("Camera exists")
-except Exception as e:
-    print(e)
-    print("No Camera Detected.")
+server = DataBridgeServer_TCP(50000, True, enable_acks=False)
+
+x = 0
+while True:
+    data = server.receive_data()
+    print(f"{data}: {x}")
+    x += 1
+    server.send_data('lmao'.encode())

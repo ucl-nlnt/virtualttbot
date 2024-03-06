@@ -79,6 +79,7 @@ class SensorsSubscriber(Node):
         self.battery_state_msg = None
 
         if self.transmit_to_server:
+            
             self.client = socket.socket()
             server_ip = server_ip_address
 
@@ -104,6 +105,7 @@ class SensorsSubscriber(Node):
         #self.transmission_thread = threading.Thread(target=self.data_bridge_tx_TwistOdometry)
         #self.transmission_thread.start()
         
+        # Compile Data and Transmit to Server
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
         self.compilation_thread.start()
 
@@ -135,6 +137,7 @@ class SensorsSubscriber(Node):
         self.battery_state_msg = msg
 
     def compile_to_json(self):
+
 
         # Runs asynchronously.
         # Prevent variable was not declared errors.
