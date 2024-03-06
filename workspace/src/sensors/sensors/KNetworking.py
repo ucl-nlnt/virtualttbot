@@ -107,8 +107,10 @@ def send_data_subroutine(socket_object: socket.socket, data, destination_port: i
 
     # NOTE: data may or may not be in string format.
     try:
+
         length_bytes = struct.pack('!I', len(data))
         
+        # BUG: If length is greater than 64K Bytes, then need to bisect into smaller sizes first.
         if debug: print(f'[S: Destination:{destination_port}] Sending byte length...')
         socket_object.sendall(length_bytes)
         if send_acks:
