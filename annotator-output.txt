@@ -1,2 +1,3 @@
 {"timestamp":1709806863,"username":"red","instance_id":"ttbot-1","prompt":"move forward 1 meter","sensor_data":"x:0, y:0, phi: 0\nx:1, y:0, phi: 0"}
 {"timestamp":1709807074,"username":"red","instance_id":"ttbot-1","prompt":"move 5 meters north","sensor_data":"x:0, y:0, phi: 0\nx:1, y:0, phi: 0"}
+{"timestamp":1709808040,"username":"","instance_id":"","prompt":"","sensor_data":""}

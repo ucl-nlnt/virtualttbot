@@ -167,6 +167,10 @@ while is_running:
                 prompt = prompt_box.get_text()
                 sensor_data = data_text.get_text()
 
+                image = cam.get_image()
+                pygame.image.save(image, f"cam-output/{unix_timestamp}.png")
+                # TODO: update image saving format/ frequency
+
                 new_data = {"timestamp": unix_timestamp,
                             "username": username, "instance_id": instance_id, "prompt": prompt, "sensor_data": sensor_data}
 
