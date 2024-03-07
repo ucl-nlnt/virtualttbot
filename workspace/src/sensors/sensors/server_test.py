@@ -1,4 +1,4 @@
-from KNetworking import DataBridgeClient_TCP, DataBridgeServer_TCP
+from KNetworking import DataBridgeClient_TCP, DataBridgeServer_TCP, time
 
 server = DataBridgeServer_TCP(50000, True, enable_acks=False)
 
@@ -13,9 +13,12 @@ def generate_random_string(length):
     random_string = ''.join(random.choice(letters) for i in range(length))
     return random_string
 
-test = generate_random_string(64000)
+print('creating test message')
+test = generate_random_string(10000000) # test data
 while True:
+    print('waiting for data from client')
     data = server.receive_data()
-    print(f"{data}: {x}")
     x += 1
+    print("sending data to client")
     server.send_data(test.encode())
+    print(x)

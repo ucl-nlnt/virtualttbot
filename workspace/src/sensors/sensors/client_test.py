@@ -10,8 +10,10 @@ def generate_random_string(length):
     letters = string.ascii_letters + string.digits  # Includes both letters and numbers
     random_string = ''.join(random.choice(letters) for i in range(length))
     return random_string
-test = generate_random_string(64000)
+print("creating test message")
+test = generate_random_string(64000) # test data
 while True:
+    print("sending test data")
     client.send_data(test.encode())
+    print("receiving data from server")
     data = client.receive_data().decode()
-    print(data)

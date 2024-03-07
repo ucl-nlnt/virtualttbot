@@ -97,40 +97,59 @@ if not flag_connected:
 ###
 
 
-def send_data_subroutine(socket_object: socket.socket, data, destination_port: int, debug: bool = False, send_acks: bool = False):
+global_data_tcp_size = 1460
+
+def find_optimal_data_bisection(packet_size: int):
+
+    tcp_max = 64000 # ensure that the limit is not reached
+    return tcp_max - (tcp_max % packet_size)
+
+def send_data_subroutine(socket_object: socket.socket, data, destination_port: int, debug: bool = False, send_acks: bool = False, packet_size: int = 1460):
 
     if isinstance(data, str):
         data = data.encode()
 
-    if not (isinstance(data, bytes) or isinstance(data, str)):
+    if not isinstance(data, bytes):
         raise TypeError("object.send_data() requires String or Bytes as input.")
 
-    # NOTE: data may or may not be in string format.
     try:
 
         length_bytes = struct.pack('!I', len(data))
-        
-        # BUG: If length is greater than 64K Bytes, then need to bisect into smaller sizes first.
         if debug: print(f'[S: Destination:{destination_port}] Sending byte length...')
-        socket_object.sendall(length_bytes)
-        if send_acks:
-            ack = socket_object.recv(2) # wait for other side to process data size
-            if ack != b'OK': print(f'[S: Destination:{destination_port}] ERROR: unmatched send ACK. Received: {ack}')
-            if debug: print(f'[S: Destination:{destination_port}] ACK good')
 
-        if debug: print(f'[S: Destination:{destination_port}] Sending data...')
-        socket_object.sendall(data) # send data
-        if send_acks:
-            ack = socket_object.recv(2) # wait for other side to process data size
-            if ack != b'OK': print(f'[S: Destination:{destination_port}] ERROR: unmatched send ACK. Received: {ack}')
-            if debug: print(f'[S: Destination:{destination_port}] ACK good')
+        # Bisect into segments if length is greater than ~64KB.
+        data_length = len(data)
+        remainder = data_length % find_optimal_data_bisection(packet_size) # may not by 64KB; depends on packet size
 
+        socket_object.sendall(length_bytes) # tell destination total file size
+        for i in range(0,data_length - remainder,packet_size):
+            if send_acks:
+                ack = socket_object.recv(2) # wait for other side to process data size
+                if ack != b'OK': print(f'[S: Destination:{destination_port}] ERROR: unmatched send ACK. Received: {ack}')
+                if debug: print(f'[S: Destination:{destination_port}] ACK good')
+
+            if debug: print(f'[S: Destination:{destination_port}] Sending data...')
+            socket_object.sendall(data[i:i+packet_size]) # send data
+            if send_acks:
+                ack = socket_object.recv(2) # wait for other side to process data size
+                if ack != b'OK': print(f'[S: Destination:{destination_port}] ERROR: unmatched send ACK. Received: {ack}')
+                if debug: print(f'[S: Destination:{destination_port}] ACK good')
+
+        if remainder: 
+            socket_object.sendall(data[data_length - remainder:])
+            if debug: print(f"sending Remainder {remainder}")
+            if send_acks:
+                ack = socket_object.recv(2) # wait for other side to process data size
+                if ack != b'OK': print(f'[S: Destination:{destination_port}] ERROR: unmatched send ACK. Received: {ack}')
+                if debug: print(f'[S: Destination:{destination_port}] ACK good')
+
+        if debug: print(f"Transmission done.")
     except Exception as e:
         print("Send data subroutine failed, port:", destination_port)
         print(e)
         return True
     
-def receive_data_subroutine(socket_object: socket.socket, destination_port: int, debug: bool = False, send_acks: bool = False):
+def receive_data_subroutine(socket_object: socket.socket, destination_port: int, debug: bool = False, send_acks: bool = False, packet_size: int = 1460):
 
         try:
         
@@ -146,11 +165,22 @@ def receive_data_subroutine(socket_object: socket.socket, destination_port: int,
 
             while data_size < length:
 
-                chunk_size = min(1400, length - data_size)
-                data_size += chunk_size
-                data += socket_object.recv(chunk_size)
-                if debug: print(f'[R: Destination:{destination_port}] RECV {chunk_size}')
+                chunk_size = min(packet_size, length - data_size)
+                chunk_data = b''
 
+                # Section added by GPT-4; apparently, socket.socket.recv() sometimes received partial datagrams only. weird.
+                # the following while loop made sure that each iteration or each assumed TCP packet gave the complete data
+
+                while len(chunk_data) < chunk_size:
+                    packet = socket_object.recv(chunk_size - len(chunk_data))
+                    if not packet:
+                        raise RuntimeError("Connection closed by the server")
+                    chunk_data += packet
+                    
+                data += chunk_data
+                data_size += len(chunk_data)
+                if debug: print(f"[R: Destination:{destination_port}] Received chunk of size {len(chunk_data)}. Total received: {data_size}")
+                
             if send_acks:
                 if debug: print(f'[R: Destination:{destination_port}] Transmission received successfull. Sending ACK')       
                 socket_object.send(b'OK') # unblock other end
@@ -169,12 +199,13 @@ class DataBridgeClient_TCP:
     
     # TODO: Add reconnection options; optimized data flow and possibly remove 'OK' ack messages. Redundant in TCP.
 
-    def __init__(self, destination_port:int, destination_ip_address:str = "127.0.0.1", enable_acks:bool = False,debug:bool = False):
+    def __init__(self, destination_port:int, destination_ip_address:str = "127.0.0.1", enable_acks:bool = False,debug:bool = False, packet_size:int = 1460):
 
         self.destination_port = destination_port
         self.destination_ip_address = destination_ip_address
         self.debug = debug
         self.enable_acks = enable_acks
+        self.packet_size = packet_size
 
         self.client = socket.socket()
             
@@ -201,16 +232,17 @@ class DataBridgeClient_TCP:
 
     def receive_data(self):
 
-        return receive_data_subroutine(self.client, destination_port=self.destination_ip_address, debug=self.debug, send_acks=self.enable_acks)
+        return receive_data_subroutine(self.client, destination_port=self.destination_ip_address, debug=self.debug, send_acks=self.enable_acks, packet_size=self.packet_size)
 
 class DataBridgeServer_TCP:
 
-    def __init__(self, port_number: int = 50000, reuse_address: bool = True, enable_acks = False, debug:bool = False):
+    def __init__(self, port_number: int = 50000, reuse_address: bool = True, enable_acks = False, debug:bool = False, packet_size: int = 1460):
         
         self.port_number = port_number
         self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.enable_acks = enable_acks
         self.debug = debug
+        self.packet_size = packet_size
 
         if reuse_address: self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_sock.bind(('0.0.0.0', port_number))
@@ -224,8 +256,8 @@ class DataBridgeServer_TCP:
     
     def send_data(self, data: bytes):
 
-        send_data_subroutine(socket_object=self.client, data=data, destination_port=self.port_number, debug=self.debug, send_acks=self.enable_acks)
+        send_data_subroutine(socket_object=self.client, data=data, destination_port=self.port_number, debug=self.debug, send_acks=self.enable_acks, packet_size=self.packet_size)
 
     def receive_data(self):
 
-        return receive_data_subroutine(socket_object=self.client, destination_port=self.port_number, debug=self.debug, send_acks=self.enable_acks)
+        return receive_data_subroutine(socket_object=self.client, destination_port=self.port_number, debug=self.debug, send_acks=self.enable_acks, packet_size=self.packet_size)
