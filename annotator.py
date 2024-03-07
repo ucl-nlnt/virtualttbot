@@ -50,7 +50,7 @@ time_delta = 0
 tick_counter = 0
 
 # global variables
-sensor_text = "Lorem Ipsum"
+sensor_text = ""
 
 # UI elements
 start_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*4, screen_height-screen_margins-button_height), (button_width, button_height)),
@@ -153,6 +153,7 @@ while is_running:
                 instance_id = instance_box.get_text()
                 prompt = prompt_box.get_text()
                 sensor_data = data_text.get_text()
+
                 new_data = {"timestamp": unix_timestamp,
                             "username": username, "instance_id": instance_id, "prompt": prompt, "sensor_data": sensor_data}
 
@@ -162,11 +163,9 @@ while is_running:
                 except FileNotFoundError:
                     existing_data = ""
 
-                # Update the existing data with new data
                 output = existing_data + '\n' + \
                     json.dumps(new_data, separators=(",", ":"))
 
-                # Write the updated data back to the file
                 with open('annotator-output.txt', 'w') as file:
                     json.dump(output, file)
 
