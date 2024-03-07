@@ -1,43 +1,62 @@
-# Example file showing a circle moving on screen
+# imports
+from pygame.locals import *
+import pygame.camera
 import pygame
+import datetime
+import pygame_gui
+
+# config variables
+WIDTH = 1280
+HEIGHT = 720
+BACKGROUND_COLOR = '#000000'
 
 # pygame setup
+pygame.camera.init()
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+background = pygame.Surface((WIDTH, HEIGHT))
+background.fill(pygame.Color(BACKGROUND_COLOR))
+pygame.display.set_caption("NLNT Turtlebot Data Annotator Studio")
+manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
-running = True
-dt = 0
 
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+# state variables setup
+is_running = True
+""" (bool): if the program is running or not """
+time_delta = 0
 
-while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
+# global variables
+
+
+# BUTTONS
+hello_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 275), (100, 50)),
+                                            text='Say Hello',
+                                            manager=manager)
+
+
+while is_running:
+    time_delta = clock.tick(60) / 1000  # limits FPS to 60
+
+    current_time = datetime.datetime.now()
+    unix_timestamp = int(current_time.timestamp())
+
+    # event handler
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            is_running = False
 
-    # fill the screen with a color to wipe away anything from last frame
-    screen.fill("purple")
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == hello_button:
+                print('Hello World!')
 
-    pygame.draw.circle(screen, "red", player_pos, 40)
+        manager.process_events(event)
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
-        player_pos.y -= 300 * dt
-    if keys[pygame.K_s]:
-        player_pos.y += 300 * dt
-    if keys[pygame.K_a]:
-        player_pos.x -= 300 * dt
-    if keys[pygame.K_d]:
-        player_pos.x += 300 * dt
+    manager.update(time_delta)
 
-    # flip() the display to put your work on screen
-    pygame.display.flip()
+    screen.blit(background, (0, 0))
+    manager.draw_ui(screen)
 
-    # limits FPS to 60
-    # dt is delta time in seconds since last frame, used for framerate-
-    # independent physics.
-    dt = clock.tick(60) / 1000
+    pygame.display.update()
+
 
 pygame.quit()
