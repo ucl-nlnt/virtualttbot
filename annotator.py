@@ -50,7 +50,17 @@ time_delta = 0
 tick_counter = 0
 
 # global variables
+ping = 20
+"""network latency between turtlebot and client PC in ms"""
+ping_text = f'Status: CONNECTED Ping: {ping} ms'
+battery = 80
+"""battery capacity of the turtlebot"""
+battery_text = f'{battery}%'
+sensor_data = [{}]
+"""enter sensor data into this dict list"""
 sensor_text = ""
+"""enter sensor data into this string"""
+# TODO: save sensor data into the above global variables
 
 # UI elements
 start_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*4, screen_height-screen_margins-button_height), (button_width, button_height)),
@@ -94,21 +104,21 @@ instance_box = UITextEntryLine(relative_rect=pygame.Rect((200, 100), (150, 50)),
                                placeholder_text="instance_id",
                                manager=manager,)
 
-connection_text = UILabel(relative_rect=pygame.Rect((25, 25), (300, 50)),
-                          text="Status: CONNECTED Ping: 20 ms",
-                          manager=manager, object_id=ObjectID(class_id='@text_input',
-                                                              object_id='#connection_text'),)
+connection_label = UILabel(relative_rect=pygame.Rect((25, 25), (300, 50)),
+                           text=ping_text,
+                           manager=manager, object_id=ObjectID(class_id='@text_input',
+                                                               object_id='#connection_text'),)
 
 
-battery_text = UILabel(relative_rect=pygame.Rect((725, 25), (125, 50)),
-                       text="Battery: 100%",
-                       manager=manager, object_id=ObjectID(class_id='@text_input',
-                                                           object_id='#battery_text'),)
+battery_label = UILabel(relative_rect=pygame.Rect((725, 25), (125, 50)),
+                        text=battery_text,
+                        manager=manager, object_id=ObjectID(class_id='@text_input',
+                                                            object_id='#battery_text'),)
 
-time_text = UILabel(relative_rect=pygame.Rect((1075, 25), (200, 50)),
-                    text="Time:",
-                    manager=manager, object_id=ObjectID(class_id='@text_input',
-                                                        object_id='#battery_text'),)
+time_label = UILabel(relative_rect=pygame.Rect((1075, 25), (200, 50)),
+                     text=f"Time: {int(datetime.datetime.now().timestamp())}",
+                     manager=manager, object_id=ObjectID(class_id='@text_input',
+                                                         object_id='#battery_text'),)
 
 while is_running:
     time_delta = clock.tick(60) / 1000  # limits FPS to 60
@@ -117,7 +127,10 @@ while is_running:
     if (tick_counter > 0):
         current_time = datetime.datetime.now()
         unix_timestamp = int(current_time.timestamp())
-        time_text.set_text(f'Time: {unix_timestamp}')
+        time_label.set_text(f'Time: {unix_timestamp}')
+        data_text.set_text(sensor_text)
+        connection_label.set_text(ping_text)
+        battery_label.set_text(battery_text)
 
     # update image output every 2 ticks (30 fps video feed at 60 fps game output)
     if (tick_counter % 2 == 0):
@@ -157,6 +170,8 @@ while is_running:
                 new_data = {"timestamp": unix_timestamp,
                             "username": username, "instance_id": instance_id, "prompt": prompt, "sensor_data": sensor_data}
 
+                # TODO: update data format here depending on our needs
+
                 try:
                     with open('annotator-output.txt', 'r') as file:
                         existing_data = file.read()
@@ -167,7 +182,7 @@ while is_running:
                     json.dumps(new_data, separators=(",", ":"))
 
                 with open('annotator-output.txt', 'w') as file:
-                    json.dump(output, file)
+                    file.write(output)
 
                 data_text.set_text("")
                 is_recording = False
