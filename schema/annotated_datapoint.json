@@ -1,0 +1,10 @@
+{
+    "timestamp": "lorem",
+    "username": "red",
+    "instance_id": "ttbot-1",
+    "prompt":"hello",
+    "image": "../filepath.png",
+    "data": {
+        "sensor_a": 1231
+    }
+}

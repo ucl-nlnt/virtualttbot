@@ -1,15 +1,24 @@
-import pygame, sys, threading, time, socket, struct, uuid, os, ast
+import pygame
+import sys
+import threading
+import time
+import socket
+import struct
+import uuid
+import os
+import ast
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
 
+
 class turtlebot_controller:
 
-    def __init__(self, manual_control = True):
+    def __init__(self, manual_control=True):
 
         # will be useful once data gathering autmation is started
         self.manual_control = manual_control
-        
+
         # keyboard stuff
         self.keyboard_input = None
         self.keyboard_impulse = False
@@ -29,12 +38,10 @@ class turtlebot_controller:
         print('Client copnnected from', client_address)
 
         # multithreading processes
-        self.window_thread = threading.Thread(target = self.window_process)
+        self.window_thread = threading.Thread(target=self.window_process)
         self.window_thread.start()
-        self.listener_thread = threading.Thread(target = self.kb_listener)
+        self.listener_thread = threading.Thread(target=self.kb_listener)
         self.listener_thread.start()
-
-
 
     def window_process(self):
 
@@ -48,7 +55,7 @@ class turtlebot_controller:
 
         # Cap the frame rate
         pygame.time.Clock().tick(60)
-        
+
         while not self.killswitch:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -58,25 +65,27 @@ class turtlebot_controller:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-                    self.keyboard_input = event.unicode; self.keyboard_impulse = True
-                    if self.debug_window_process: print(f"pressed {self.keyboard_input}")
+                    self.keyboard_input = event.unicode
+                    self.keyboard_impulse = True
+                    if self.debug_window_process:
+                        print(f"pressed {self.keyboard_input}")
                 elif event.type == pygame.KEYUP:
-                    self.keyboard_input = None; self.keyboard_impulse = True
-                    if self.debug_window_process: print("Released key.")
+                    self.keyboard_input = None
+                    self.keyboard_impulse = True
+                    if self.debug_window_process:
+                        print("Released key.")
             # Fill the screen with a background color
             self.screen.fill((255, 255, 255))
 
             # Render and display the text input
-            text_surface = self.pygame_font.render(self.text_display_content, True, self.text_color)
+            text_surface = self.pygame_font.render(
+                self.text_display_content, True, self.text_color)
             self.screen.blit(text_surface, (10, 10))
 
             # Update the display
             pygame.display.flip()
 
-            
-    def kb_listener(self): # do Turtlebot controller stuff here
-
-
+    def kb_listener(self):  # do Turtlebot controller stuff here
         """
         Instructions: // all data instructions are 5 bytes wide
         @XXXX, where the 4 X's are the instructions to be sent to the robot.
@@ -96,13 +105,14 @@ class turtlebot_controller:
         """
 
         # assumption: socket connection is successful
-        while not self.killswitch: # Outer loop
+        while not self.killswitch:  # Outer loop
 
             print("starting new data collection loop...")
             self.label = input('Enter data label: ')
-            self.text_display_content = "Now collecting Data." + ' Label: {}'.format(self.label) 
+            self.text_display_content = "Now collecting Data." + \
+                ' Label: {}'.format(self.label)
             self.is_collecting_data = True
-            
+
             print("Sending START signal...")
             self.send_data('@STRT')
 
@@ -119,92 +129,109 @@ class turtlebot_controller:
                     if self.keyboard_input == None:
                         self.send_data('@0000')
 
-                    elif self.keyboard_input == 'w': # move forward
+                    elif self.keyboard_input == 'w':  # move forward
                         self.send_data('@FRWD')
-                    
-                    elif self.keyboard_input == 'a': # turn left
+
+                    elif self.keyboard_input == 'a':  # turn left
                         self.send_data('@LEFT')
 
-                    elif self.keyboard_input == 'd': # turn right
+                    elif self.keyboard_input == 'd':  # turn right
                         self.send_data('@RGHT')
 
-                    elif self.keyboard_input == 'o': # retrieve current odometry
+                    elif self.keyboard_input == 'o':  # retrieve current odometry
                         self.send_data('@ODOM')
                         odometry_data = self.receive_data().decode()
                         data_logs.append(ast.literal_eval(odometry_data))
 
-                    elif self.keyboard_input == '/': # stop recording and save data points
+                    elif self.keyboard_input == '/':  # stop recording and save data points
                         self.is_collecting_data = False
                         print("Data collection finished. Restarting loop.")
 
                     elif self.keyboard_input == '=':
-                    
+
                         self.send_data('@RNDM')
                         # user-side waits for Turtlebot to randomize position.
 
                         # wait for READY signal
-                        go_signal = self.receive_data() # wait for @RNDM
-                    
-                else: pass
+                        go_signal = self.receive_data()  # wait for @RNDM
+
+                else:
+                    pass
 
             if not self.killswitch:
 
-                filename = os.path.join(os.getcwd(),'datalogs',self.generate_random_filename())
-                
+                filename = os.path.join(
+                    os.getcwd(), 'datalogs', self.generate_random_filename())
+
                 with open(filename, 'w') as f:
-                    f.write(str({'label':self.label, 'data_points':data_logs}))
+                    f.write(
+                        str({'label': self.label, 'data_points': data_logs}))
                     print(f'Data written to {filename}.')
 
     def generate_random_filename(self):
         random_filename = str(uuid.uuid4().hex)[:16]
         return random_filename
-    
+
     def send_data(self, data: bytes):
 
         if isinstance(data, str):
             data = data.encode()
 
         # NOTE: data may or may not be in string format.
-            
-        length_bytes = struct.pack('!I', len(data))
-        
-        if self.debug: print('[S] Sending byte length...')
-        self.client.sendall(length_bytes)
-        ack = self.client.recv(2) # wait for other side to process data size
-        if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-        if self.debug: print('[S] ACK good')
 
-        if self.debug: print('[S] Sending data...')
-        self.client.sendall(data) # send data
-        if self.debug: print('[S] Data sent; waiting for ACK...')
-        ack = self.client.recv(2) # wait for other side to process data size
-        if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-        if self.debug: print('[S] ACK good. Data send success.')
+        length_bytes = struct.pack('!I', len(data))
+
+        if self.debug:
+            print('[S] Sending byte length...')
+        self.client.sendall(length_bytes)
+        ack = self.client.recv(2)  # wait for other side to process data size
+        if ack != b'OK':
+            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+        if self.debug:
+            print('[S] ACK good')
+
+        if self.debug:
+            print('[S] Sending data...')
+        self.client.sendall(data)  # send data
+        if self.debug:
+            print('[S] Data sent; waiting for ACK...')
+        ack = self.client.recv(2)  # wait for other side to process data size
+        if ack != b'OK':
+            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+        if self.debug:
+            print('[S] ACK good. Data send success.')
 
     def receive_data(self):
 
         # NOTE: Returns data in BINARY. You must decode it on your own
 
-        if self.debug: print('[R] Waiting for byte length...')
+        if self.debug:
+            print('[R] Waiting for byte length...')
         length_bytes = self.client.recv(4)
         length = struct.unpack('!I', length_bytes)[0]
-        if self.debug: print(f'[R] Byte length received. Expecting: {length}')
+        if self.debug:
+            print(f'[R] Byte length received. Expecting: {length}')
         data, data_size = b'', 0
 
-        self.client.send(b'OK') # allow other side to send over the data
-        if self.debug: print(f'[R] ACK sent.')
+        self.client.send(b'OK')  # allow other side to send over the data
+        if self.debug:
+            print(f'[R] ACK sent.')
         while data_size < length:
 
             chunk_size = min(2048, length - data_size)
             data_size += chunk_size
             data += self.client.recv(chunk_size)
-            if self.debug: print(f'[R] RECV {chunk_size}')
+            if self.debug:
+                print(f'[R] RECV {chunk_size}')
 
-        if self.debug: print('[R] Transmission received successfull. Sending ACK')       
-        self.client.send(b'OK') # unblock other end
-        if self.debug: print('[R] ACK sent.')
-        return data # up to user to interpret the data
-    
+        if self.debug:
+            print('[R] Transmission received successfull. Sending ACK')
+        self.client.send(b'OK')  # unblock other end
+        if self.debug:
+            print('[R] ACK sent.')
+        return data  # up to user to interpret the data
+
+
 x = turtlebot_controller()
 while not x.killswitch:
     pass
