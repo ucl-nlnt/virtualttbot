@@ -1,0 +1,77 @@
+[0.755s] Invoking command in '/root/virtualttbot/workspace/src/sensors': PYTHONPATH=/root/virtualttbot/workspace/src/sensors/build/sensors/prefix_override:/root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base build/sensors build --build-base /root/virtualttbot/workspace/src/sensors/build/sensors/build install --record /root/virtualttbot/workspace/src/sensors/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[0.816s] /usr/local/lib/python3.8/dist-packages/setuptools/dist.py:498: SetuptoolsDeprecationWarning: Invalid dash-separated options
+[0.816s] !!
+[0.816s] 
+[0.816s]         ********************************************************************************
+[0.816s]         Usage of dash-separated 'script-dir' will not be supported in future
+[0.816s]         versions. Please use the underscore name 'script_dir' instead.
+[0.816s] 
+[0.816s]         This deprecation is overdue, please update your project and remove deprecated
+[0.816s]         calls to avoid build errors in the future.
+[0.816s] 
+[0.816s]         See https://setuptools.pypa.io/en/latest/userguide/declarative_config.html for details.
+[0.816s]         ********************************************************************************
+[0.816s] 
+[0.816s] !!
+[0.816s]   opt = self.warn_dash_deprecation(opt, section)
+[0.850s] running egg_info
+[0.855s] writing build/sensors/sensors.egg-info/PKG-INFO
+[0.855s] writing dependency_links to build/sensors/sensors.egg-info/dependency_links.txt
+[0.855s] writing entry points to build/sensors/sensors.egg-info/entry_points.txt
+[0.855s] writing requirements to build/sensors/sensors.egg-info/requires.txt
+[0.855s] writing top-level names to build/sensors/sensors.egg-info/top_level.txt
+[0.903s] reading manifest file 'build/sensors/sensors.egg-info/SOURCES.txt'
+[0.903s] writing manifest file 'build/sensors/sensors.egg-info/SOURCES.txt'
+[0.903s] running build
+[0.903s] running build_py
+[0.903s] copying sensors/level_test.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/inference_prog.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/capstone.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/data_receiver_pygame.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/nlnt-nl-augment.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/TwistedKNetwork.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/client_test.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/server_test.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.904s] copying sensors/KNetworking.py -> /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors
+[0.905s] running install
+[0.905s] /usr/local/lib/python3.8/dist-packages/setuptools/_distutils/cmd.py:66: SetuptoolsDeprecationWarning: setup.py install is deprecated.
+[0.905s] !!
+[0.905s] 
+[0.905s]         ********************************************************************************
+[0.905s]         Please avoid running ``setup.py`` directly.
+[0.905s]         Instead, use pypa/build, pypa/installer or other
+[0.905s]         standards-based tools.
+[0.905s] 
+[0.905s]         See https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html for details.
+[0.905s]         ********************************************************************************
+[0.905s] 
+[0.905s] !!
+[0.905s]   self.initialize_options()
+[0.907s] running install_lib
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/data_receiver_pygame.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/nlnt-nl-augment.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/TwistedKNetwork.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/client_test.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/level_test.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/server_test.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.913s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/inference_prog.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.914s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/KNetworking.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.914s] copying /root/virtualttbot/workspace/src/sensors/build/sensors/build/lib/sensors/capstone.py -> /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors
+[0.914s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/data_receiver_pygame.py to data_receiver_pygame.cpython-38.pyc
+[0.915s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/nlnt-nl-augment.py to nlnt-nl-augment.cpython-38.pyc
+[0.915s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/TwistedKNetwork.py to TwistedKNetwork.cpython-38.pyc
+[0.915s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/client_test.py to client_test.cpython-38.pyc
+[0.916s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/level_test.py to level_test.cpython-38.pyc
+[0.916s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/server_test.py to server_test.cpython-38.pyc
+[0.916s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/inference_prog.py to inference_prog.cpython-38.pyc
+[0.917s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/KNetworking.py to KNetworking.cpython-38.pyc
+[0.918s] byte-compiling /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors/capstone.py to capstone.cpython-38.pyc
+[0.919s] running install_data
+[0.925s] running install_egg_info
+[0.930s] removing '/root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[0.930s] Copying build/sensors/sensors.egg-info to /root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[0.931s] running install_scripts
+[0.949s] Installing capstone script to /root/virtualttbot/workspace/src/sensors/install/sensors/lib/sensors
+[0.949s] Installing sensors script to /root/virtualttbot/workspace/src/sensors/install/sensors/lib/sensors
+[0.949s] writing list of installed files to '/root/virtualttbot/workspace/src/sensors/build/sensors/install.log'
+[0.962s] Invoked command in '/root/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/root/virtualttbot/workspace/src/sensors/build/sensors/prefix_override:/root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base build/sensors build --build-base /root/virtualttbot/workspace/src/sensors/build/sensors/build install --record /root/virtualttbot/workspace/src/sensors/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed

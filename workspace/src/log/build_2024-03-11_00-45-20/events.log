@@ -1,0 +1,64 @@
+[0.000000] (-) TimerEvent: {}
+[0.000175] (sensors) JobQueued: {'identifier': 'sensors', 'dependencies': OrderedDict()}
+[0.000340] (sensors) JobStarted: {'identifier': 'sensors'}
+[0.099891] (-) TimerEvent: {}
+[0.200212] (-) TimerEvent: {}
+[0.300441] (-) TimerEvent: {}
+[0.400692] (-) TimerEvent: {}
+[0.500999] (-) TimerEvent: {}
+[0.601188] (-) TimerEvent: {}
+[0.701521] (-) TimerEvent: {}
+[0.801788] (-) TimerEvent: {}
+[0.845151] (sensors) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'egg_info', '--egg-base', '../build/sensors', 'build', '--build-base', '/root/virtualttbot/workspace/src/build/sensors/build', 'install', '--record', '/root/virtualttbot/workspace/src/build/sensors/install.log', '--install-scripts', '$base/lib/sensors', '--single-version-externally-managed'], 'cwd': '/root/virtualttbot/workspace/src/sensors', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'HOSTNAME': 'f4f17deb1a31', 'GIT_ASKPASS': '/root/.vscode-server/bin/1e790d77f81672c49be070e04474901747115651/extensions/git/dist/askpass.sh', 'SHLVL': '2', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib', 'BROWSER': '/root/.vscode-server/bin/1e790d77f81672c49be070e04474901747115651/bin/helpers/browser.sh', 'HOME': '/root', 'OLDPWD': '/root/virtualttbot/workspace/src/sensors', 'TERM_PROGRAM_VERSION': '1.87.1', 'VSCODE_IPC_HOOK_CLI': '/tmp/vscode-ipc-7464f379-428c-4d23-ad1b-5ae494834602.sock', 'ROS_PYTHON_VERSION': '3', 'VSCODE_GIT_ASKPASS_MAIN': '/root/.vscode-server/bin/1e790d77f81672c49be070e04474901747115651/extensions/git/dist/askpass-main.js', 'VSCODE_GIT_ASKPASS_NODE': '/root/.vscode-server/bin/1e790d77f81672c49be070e04474901747115651/node', 'COLORTERM': 'truecolor', 'REMOTE_CONTAINERS': 'true', 'COLCON_PREFIX_PATH': '/root/virtualttbot/workspace/src/sensors/sensors/install:/root/virtualttbot/workspace/install:/root/virtualttbot/workspace/src/sensors/install:/root/colcon_ws/install', 'ROS_DISTRO': 'foxy', 'REMOTE_CONTAINERS_IPC': '/tmp/vscode-remote-containers-ipc-718fd360-fd4f-458d-ad41-18894ff60f9a.sock', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'TERM': 'xterm-256color', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/root/.vscode-server/bin/1e790d77f81672c49be070e04474901747115651/bin/remote-cli:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin', 'REMOTE_CONTAINERS_SOCKETS': '["/tmp/vscode-ssh-auth-718fd360-fd4f-458d-ad41-18894ff60f9a.sock","/tmp/.X11-unix/X3","/root/.gnupg/S.gpg-agent"]', 'DISPLAY': ':0', 'LANG': 'en_US.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'VSCODE_GIT_IPC_HANDLE': '/tmp/vscode-git-31b30b3fe6.sock', 'TERM_PROGRAM': 'vscode', 'SSH_AUTH_SOCK': '/tmp/vscode-ssh-auth-718fd360-fd4f-458d-ad41-18894ff60f9a.sock', 'ROS_DOMAIN_ID': '30', 'AMENT_PREFIX_PATH': '/root/virtualttbot/workspace/src/sensors/install/sensors:/root/virtualttbot/workspace/install/sensors:/opt/ros/foxy', 'REMOTE_CONTAINERS_DISPLAY_SOCK': '/tmp/.X11-unix/X3', 'SHELL': '/bin/bash', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'VSCODE_GIT_ASKPASS_EXTRA_ARGS': '', 'PWD': '/root/virtualttbot/workspace/src/build/sensors', 'TURTLEBOT3_MODEL': 'burger', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/root/virtualttbot/workspace/src/build/sensors/prefix_override:/root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages:/root/virtualttbot/workspace/src/sensors/install/sensors/lib/python3.8/site-packages:/root/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages', 'COLCON': '1'}, 'shell': False}
+[0.901875] (-) TimerEvent: {}
+[0.940846] (sensors) StdoutLine: {'line': b'running egg_info\n'}
+[0.941081] (sensors) StdoutLine: {'line': b'writing ../build/sensors/sensors.egg-info/PKG-INFO\n'}
+[0.941204] (sensors) StdoutLine: {'line': b'writing dependency_links to ../build/sensors/sensors.egg-info/dependency_links.txt\n'}
+[0.941301] (sensors) StdoutLine: {'line': b'writing entry points to ../build/sensors/sensors.egg-info/entry_points.txt\n'}
+[0.941375] (sensors) StdoutLine: {'line': b'writing requirements to ../build/sensors/sensors.egg-info/requires.txt\n'}
+[0.941431] (sensors) StdoutLine: {'line': b'writing top-level names to ../build/sensors/sensors.egg-info/top_level.txt\n'}
+[0.956452] (sensors) StdoutLine: {'line': b"reading manifest file '../build/sensors/sensors.egg-info/SOURCES.txt'\n"}
+[0.957014] (sensors) StdoutLine: {'line': b"writing manifest file '../build/sensors/sensors.egg-info/SOURCES.txt'\n"}
+[0.957084] (sensors) StdoutLine: {'line': b'running build\n'}
+[0.957142] (sensors) StdoutLine: {'line': b'running build_py\n'}
+[0.957266] (sensors) StdoutLine: {'line': b'copying sensors/level_test.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957463] (sensors) StdoutLine: {'line': b'copying sensors/inference_prog.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957576] (sensors) StdoutLine: {'line': b'copying sensors/capstone.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957667] (sensors) StdoutLine: {'line': b'copying sensors/data_receiver_pygame.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957742] (sensors) StdoutLine: {'line': b'copying sensors/nlnt-nl-augment.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957809] (sensors) StdoutLine: {'line': b'copying sensors/TwistedKNetwork.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957874] (sensors) StdoutLine: {'line': b'copying sensors/client_test.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.957939] (sensors) StdoutLine: {'line': b'copying sensors/server_test.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.958004] (sensors) StdoutLine: {'line': b'copying sensors/KNetworking.py -> /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors\n'}
+[0.958170] (sensors) StdoutLine: {'line': b'running install\n'}
+[0.958518] (sensors) StdoutLine: {'line': b'running install_lib\n'}
+[0.959067] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/data_receiver_pygame.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959294] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/nlnt-nl-augment.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959369] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/TwistedKNetwork.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959551] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/client_test.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959612] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/level_test.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959681] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/server_test.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959747] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/inference_prog.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959824] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/KNetworking.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.959900] (sensors) StdoutLine: {'line': b'copying /root/virtualttbot/workspace/src/build/sensors/build/lib/sensors/capstone.py -> /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors\n'}
+[0.960227] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/data_receiver_pygame.py to data_receiver_pygame.cpython-38.pyc\n'}
+[0.961405] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/nlnt-nl-augment.py to nlnt-nl-augment.cpython-38.pyc\n'}
+[0.961519] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/TwistedKNetwork.py to TwistedKNetwork.cpython-38.pyc\n'}
+[0.961859] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/client_test.py to client_test.cpython-38.pyc\n'}
+[0.962075] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/level_test.py to level_test.cpython-38.pyc\n'}
+[0.962366] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/server_test.py to server_test.cpython-38.pyc\n'}
+[0.962501] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/inference_prog.py to inference_prog.cpython-38.pyc\n'}
+[0.963435] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/KNetworking.py to KNetworking.cpython-38.pyc\n'}
+[0.964199] (sensors) StdoutLine: {'line': b'byte-compiling /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors/capstone.py to capstone.cpython-38.pyc\n'}
+[0.965286] (sensors) StdoutLine: {'line': b'running install_data\n'}
+[0.965511] (sensors) StdoutLine: {'line': b'running install_egg_info\n'}
+[0.966107] (sensors) StdoutLine: {'line': b"removing '/root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)\n"}
+[0.966420] (sensors) StdoutLine: {'line': b'Copying ../build/sensors/sensors.egg-info to /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info\n'}
+[0.967130] (sensors) StdoutLine: {'line': b'running install_scripts\n'}
+[0.975149] (sensors) StdoutLine: {'line': b'Installing capstone script to /root/virtualttbot/workspace/src/install/sensors/lib/sensors\n'}
+[0.975281] (sensors) StdoutLine: {'line': b'Installing sensors script to /root/virtualttbot/workspace/src/install/sensors/lib/sensors\n'}
+[0.975560] (sensors) StdoutLine: {'line': b"writing list of installed files to '/root/virtualttbot/workspace/src/build/sensors/install.log'\n"}
+[0.985494] (sensors) CommandEnded: {'returncode': 0}
+[1.001962] (-) TimerEvent: {}
+[1.098291] (sensors) JobEnded: {'identifier': 'sensors', 'rc': 0}
+[1.098776] (-) EventReactorShutdown: {}

@@ -1,0 +1,238 @@
+import pygame
+import sys
+import threading
+import time
+import socket
+import struct
+import uuid
+import os
+import ast
+import json
+
+from KNetworking import DataBridgeServer_TCP
+
+if not os.path.exists("datalogs"):
+    os.mkdir("datalogs")
+
+
+class turtlebot_controller:
+
+    def __init__(self, manual_control=True):
+
+        self.data_buffer = None
+        self.current_user = input("enter a username for logging purposes << ")
+    
+        # will be useful once data gathering autmation is started
+        self.manual_control = manual_control
+
+        # keyboard stuff
+        self.keyboard_input = None
+        self.keyboard_impulse = False
+        self.killswitch = False
+        self.debug = True
+        self.debug_window_process = True
+        self.label = None
+
+        # socket programming stuff
+        self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
+        print(f'Server Listening on port 50000')
+
+        self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
+        print(f'Server Listening on port 50001')
+
+        # multithreading processes
+        self.window_thread = threading.Thread(target=self.window_process)
+        self.window_thread.start()
+        self.listener_thread = threading.Thread(target=self.kb_listener)
+        self.listener_thread.start()
+
+    def window_process(self):
+
+        pygame.init()
+        self.screen = pygame.display.set_mode((300, 300))
+        pygame.display.set_caption('Turtlebot Controller')
+        self.pygame_font = pygame.font.SysFont('Arial', 20)
+        self.text_color = (25, 25, 25)
+        self.text_display_content = 'Enter prompt in Python Terminal.'
+        self.is_collecting_data = False
+
+        # Cap the frame rate
+        pygame.time.Clock().tick(60)
+
+        while not self.killswitch:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.killswitch = True
+                    self.send_data('@KILL')
+                    print('Killing program...')
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    self.keyboard_input = event.unicode
+                    self.keyboard_impulse = True
+                    if self.debug_window_process:
+                        print(f"pressed {self.keyboard_input}")
+                elif event.type == pygame.KEYUP:
+                    self.keyboard_input = None
+                    self.keyboard_impulse = True
+                    if self.debug_window_process:
+                        print("Released key.")
+
+            # Fill the screen with a background color
+            self.screen.fill((255, 255, 255))
+
+            # Render and display the text input
+            text_surface = self.pygame_font.render(
+                self.text_display_content, True, self.text_color)
+            self.screen.blit(text_surface, (10, 10))
+
+            # Update the display
+            pygame.display.flip()
+
+    def kb_listener(self):  # do Turtlebot controller stuff here
+        """
+        Instructions: // all data instructions are 5 bytes wide
+        @XXXX, where the 4 X's are the instructions to be sent to the robot.
+        @0000 - Stop
+        @FRWD - Forward
+        @LEFT - Turn Left
+        @RGHT - Turn Right
+        @STRT - start recording data
+        @STOP - stop recording data
+        @KILL - stop program
+        @RNDM - randomize position, -5 <= x,y <= 5, 0 <= theta <= 2pi # NOTE: may not be used for now
+
+        Each data send starts with sending an 8-byte long size indicator. Each data segment is sent in 1024-byte-sized chunks.
+        Once all is received, receiver sends an 'OK' to sender to indicate that is done processing whatever data was
+        sent over.
+        """
+
+        # start host loop -> enter prompt -> start logging -> do stuff -> end logging -> generate unique id -> confirm save -> save data as a json with unique id
+
+        # assumption: socket connection is successful
+        while not self.killswitch:  # Start host loop
+
+            prompt = input("Enter natural language prompt:")    # enter user natural language prompt
+            self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+            self.movement_data_sender.receive_data()            # wait for @CONT
+            self.data_buffer = []
+            while True: # Inner loop, data collection
+
+                if not self.keyboard_impulse: time.sleep(0.01667); pass
+
+                elif self.keyboard_input == 'w': 
+                    self.movement_data_sender.send_data(b'@FRWD')
+                    self.keyboard_impulse = False                   # set to False to be able to tell when user lets go of the key.
+
+                elif self.keyboard_input == 'a':
+                    self.movement_data_sender.send_data(b'@LEFT')
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == 'd':
+                    self.movement_data_sender.send_data(b'@RGHT')
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == None:                   # Key was let go
+                    self.movement_data_sender.send_data(b'@0000')
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == ']':
+                    self.movement_data_sender.send_data(b'@STOP')
+                    self.keyboard_impulse = False
+                    print("Data collection is finished for this iteration.")
+                    break
+
+                time.sleep(0.01667)
+
+            # confirm if data is good to be saved
+            while True:
+                confirmation = input("Save log? (y/n) << ")
+                if confirmation == 'y' or confirmation == 'n': break
+
+            if confirmation == 'y':
+
+                # save data into a buffer
+                
+                json_file = {
+                            "username":self.current_user, "natural_language_prompt":prompt,
+                            "timestamp_s":time.ctime(), "timestamp_float":time.time(),
+                            "states":self.data_buffer
+                            }
+                
+                fname = self.generate_random_filename()
+
+                with open(os.path.join("datalogs",fname),'w') as f:
+                    f.write(json.dumps(json_file, indent=4))
+            
+                print("Instance saved.")
+                
+            else:
+                print("Instance removed.")
+
+    def generate_random_filename(self):
+        random_filename = str(uuid.uuid4().hex)[:16]
+        return random_filename
+
+    def send_data(self, data: bytes):
+
+        if isinstance(data, str):
+            data = data.encode()
+
+        # NOTE: data may or may not be in string format.
+
+        length_bytes = struct.pack('!I', len(data))
+
+        if self.debug:
+            print('[S] Sending byte length...')
+        self.client.sendall(length_bytes)
+        ack = self.client.recv(2)  # wait for other side to process data size
+        if ack != b'OK':
+            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+        if self.debug:
+            print('[S] ACK good')
+
+        if self.debug:
+            print('[S] Sending data...')
+        self.client.sendall(data)  # send data
+        if self.debug:
+            print('[S] Data sent; waiting for ACK...')
+        ack = self.client.recv(2)  # wait for other side to process data size
+        if ack != b'OK':
+            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+        if self.debug:
+            print('[S] ACK good. Data send success.')
+
+    def receive_data(self):
+
+        # NOTE: Returns data in BINARY. You must decode it on your own
+
+        if self.debug:
+            print('[R] Waiting for byte length...')
+        length_bytes = self.client.recv(4)
+        length = struct.unpack('!I', length_bytes)[0]
+        if self.debug:
+            print(f'[R] Byte length received. Expecting: {length}')
+        data, data_size = b'', 0
+
+        self.client.send(b'OK')  # allow other side to send over the data
+        if self.debug:
+            print(f'[R] ACK sent.')
+        while data_size < length:
+
+            chunk_size = min(2048, length - data_size)
+            data_size += chunk_size
+            data += self.client.recv(chunk_size)
+            if self.debug:
+                print(f'[R] RECV {chunk_size}')
+
+        if self.debug:
+            print('[R] Transmission received successfull. Sending ACK')
+        self.client.send(b'OK')  # unblock other end
+        if self.debug:
+            print('[R] ACK sent.')
+        return data  # up to user to interpret the data
+
+
+x = turtlebot_controller()
+while not x.killswitch:
+    pass

@@ -7,6 +7,9 @@ import struct
 import uuid
 import os
 import ast
+import json
+
+from KNetworking import DataBridgeServer_TCP
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
@@ -16,6 +19,9 @@ class turtlebot_controller:
 
     def __init__(self, manual_control=True):
 
+        self.data_buffer = None
+        self.current_user = input("enter a username for logging purposes << ")
+    
         # will be useful once data gathering autmation is started
         self.manual_control = manual_control
 
@@ -28,14 +34,11 @@ class turtlebot_controller:
         self.label = None
 
         # socket programming stuff
-        self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_sock.bind(('0.0.0.0', 50000))
-        self.server_sock.listen(0)
+        self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
         print(f'Server Listening on port 50000')
 
-        self.client, client_address = self.server_sock.accept()
-        print('Client copnnected from', client_address)
+        self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
+        print(f'Server Listening on port 50001')
 
         # multithreading processes
         self.window_thread = threading.Thread(target=self.window_process)
@@ -74,6 +77,7 @@ class turtlebot_controller:
                     self.keyboard_impulse = True
                     if self.debug_window_process:
                         print("Released key.")
+
             # Fill the screen with a background color
             self.screen.fill((255, 255, 255))
 
@@ -93,80 +97,77 @@ class turtlebot_controller:
         @FRWD - Forward
         @LEFT - Turn Left
         @RGHT - Turn Right
-        @ODOM - ask for odometry data
         @STRT - start recording data
         @STOP - stop recording data
         @KILL - stop program
-        @RNDM - randomize position, -5 <= x,y <= 5, 0 <= theta <= 2pi
+        @RNDM - randomize position, -5 <= x,y <= 5, 0 <= theta <= 2pi # NOTE: may not be used for now
 
         Each data send starts with sending an 8-byte long size indicator. Each data segment is sent in 1024-byte-sized chunks.
         Once all is received, receiver sends an 'OK' to sender to indicate that is done processing whatever data was
         sent over.
         """
 
+        # start host loop -> enter prompt -> start logging -> do stuff -> end logging -> generate unique id -> confirm save -> save data as a json with unique id
+
         # assumption: socket connection is successful
-        while not self.killswitch:  # Outer loop
+        while not self.killswitch:  # Start host loop
 
-            print("starting new data collection loop...")
-            self.label = input('Enter data label: ')
-            self.text_display_content = "Now collecting Data." + \
-                ' Label: {}'.format(self.label)
-            self.is_collecting_data = True
+            prompt = input("Enter natural language prompt:")    # enter user natural language prompt
+            self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+            self.movement_data_sender.receive_data()            # wait for @CONT
+            self.data_buffer = []
+            while True: # Inner loop, data collection
 
-            print("Sending START signal...")
-            self.send_data('@STRT')
+                if not self.keyboard_impulse: time.sleep(0.01667); pass
 
-            print("START good... receiving origin data...")
-            data_logs = [ast.literal_eval(self.receive_data().decode())]
-            print(f"Origin data received: {data_logs}")
-            while self.is_collecting_data and not self.killswitch:
+                elif self.keyboard_input == 'w': 
+                    self.movement_data_sender.send_data(b'@FRWD')
+                    self.keyboard_impulse = False                   # set to False to be able to tell when user lets go of the key.
 
-                # print(self.is_collecting_data, self.killswitch, self.keyboard_input)
-                if self.keyboard_impulse:
-                    print(self.keyboard_input)
+                elif self.keyboard_input == 'a':
+                    self.movement_data_sender.send_data(b'@LEFT')
                     self.keyboard_impulse = False
 
-                    if self.keyboard_input == None:
-                        self.send_data('@0000')
+                elif self.keyboard_input == 'd':
+                    self.movement_data_sender.send_data(b'@RGHT')
+                    self.keyboard_impulse = False
 
-                    elif self.keyboard_input == 'w':  # move forward
-                        self.send_data('@FRWD')
+                elif self.keyboard_input == None:                   # Key was let go
+                    self.movement_data_sender.send_data(b'@0000')
+                    self.keyboard_impulse = False
 
-                    elif self.keyboard_input == 'a':  # turn left
-                        self.send_data('@LEFT')
+                elif self.keyboard_input == ']':
+                    self.movement_data_sender.send_data(b'@STOP')
+                    self.keyboard_impulse = False
+                    print("Data collection is finished for this iteration.")
+                    break
 
-                    elif self.keyboard_input == 'd':  # turn right
-                        self.send_data('@RGHT')
+                time.sleep(0.01667)
 
-                    elif self.keyboard_input == 'o':  # retrieve current odometry
-                        self.send_data('@ODOM')
-                        odometry_data = self.receive_data().decode()
-                        data_logs.append(ast.literal_eval(odometry_data))
+            # confirm if data is good to be saved
+            while True:
+                confirmation = input("Save log? (y/n) << ")
+                if confirmation == 'y' or confirmation == 'n': break
 
-                    elif self.keyboard_input == '/':  # stop recording and save data points
-                        self.is_collecting_data = False
-                        print("Data collection finished. Restarting loop.")
+            if confirmation == 'y':
 
-                    elif self.keyboard_input == '=':
+                # save data into a buffer
+                
+                json_file = {
+                            "username":self.current_user, "natural_language_prompt":prompt,
+                            "timestamp_s":time.ctime(), "timestamp_float":time.time(),
+                            "states":self.data_buffer
+                            }
+                
+                fname = self.generate_random_filename()
 
-                        self.send_data('@RNDM')
-                        # user-side waits for Turtlebot to randomize position.
-
-                        # wait for READY signal
-                        go_signal = self.receive_data()  # wait for @RNDM
-
-                else:
-                    pass
-
-            if not self.killswitch:
-
-                filename = os.path.join(
-                    os.getcwd(), 'datalogs', self.generate_random_filename())
-
-                with open(filename, 'w') as f:
-                    f.write(
-                        str({'label': self.label, 'data_points': data_logs}))
-                    print(f'Data written to {filename}.')
+                with open(os.path.join("datalogs",fname),'w') as f:
+                    f.write(json.dumps(json_file, indent=4))
+            
+                print("Instance saved.")
+                
+            else:
+                print("Instance removed.")
 
     def generate_random_filename(self):
         random_filename = str(uuid.uuid4().hex)[:16]

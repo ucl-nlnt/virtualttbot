@@ -1,0 +1,22 @@
+[0.896s] Invoking command in '/root/virtualttbot/workspace/src/sensors': PYTHONPATH=/root/virtualttbot/workspace/src/build/sensors/prefix_override:/root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/sensors build --build-base /root/virtualttbot/workspace/src/build/sensors/build install --record /root/virtualttbot/workspace/src/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[0.995s] running egg_info
+[0.996s] writing ../build/sensors/sensors.egg-info/PKG-INFO
+[0.996s] writing dependency_links to ../build/sensors/sensors.egg-info/dependency_links.txt
+[0.996s] writing entry points to ../build/sensors/sensors.egg-info/entry_points.txt
+[0.996s] writing requirements to ../build/sensors/sensors.egg-info/requires.txt
+[0.996s] writing top-level names to ../build/sensors/sensors.egg-info/top_level.txt
+[1.011s] reading manifest file '../build/sensors/sensors.egg-info/SOURCES.txt'
+[1.012s] writing manifest file '../build/sensors/sensors.egg-info/SOURCES.txt'
+[1.012s] running build
+[1.012s] running build_py
+[1.013s] running install
+[1.013s] running install_lib
+[1.014s] running install_data
+[1.014s] running install_egg_info
+[1.015s] removing '/root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[1.015s] Copying ../build/sensors/sensors.egg-info to /root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[1.016s] running install_scripts
+[1.024s] Installing capstone script to /root/virtualttbot/workspace/src/install/sensors/lib/sensors
+[1.024s] Installing sensors script to /root/virtualttbot/workspace/src/install/sensors/lib/sensors
+[1.024s] writing list of installed files to '/root/virtualttbot/workspace/src/build/sensors/install.log'
+[1.034s] Invoked command in '/root/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/root/virtualttbot/workspace/src/build/sensors/prefix_override:/root/virtualttbot/workspace/src/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/sensors build --build-base /root/virtualttbot/workspace/src/build/sensors/build install --record /root/virtualttbot/workspace/src/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
