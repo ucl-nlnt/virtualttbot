@@ -64,6 +64,7 @@ class SensorsSubscriber(Node):
         self.time_last_order_issued = 0.0
         self.velocity_change = False
         self.killswitch = False
+        self.sampling_delay = 0.2
 
         # DEBUG LOCKS
         self.debug_send_data = False
@@ -81,27 +82,65 @@ class SensorsSubscriber(Node):
         self.battery_state_msg = None
 
         self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address="localhost",
-                                                         destination_port=50000)
-
+                                                        destination_port=50000)
+        self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address="localhost",
+                                                        destination_port=50001)
+        
         # threads
-                
-        self.transfer_thread = threading.Thread(target=self.send_to_server)
 
-        # Compile Data and Transmit to Server
         self.super_json = None
+        self.is_collecting_data = False
+
+        self.transfer_thread = threading.Thread(target=self.send_to_server)
+        self.movement_subscriber_thread = threading.Thread(target=self.receive_movement_from_server)
+        # Compile Data and Transmit to Server
+        
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
         self.compilation_thread.start()
         self.transfer_thread.start()
 
         print('INIT COMPLETE')
 
+    def receive_movement_from_server(self):
+
+        while True:
+            
+            inst = self.movement_instruction_client.receive_data()
+            
+            if isinstance(inst, str): # see KNetworking.py for error codes.
+                # TODO: implement error-handling
+
+                print("An error has occured in the movement instruction listener client. Closing the thread. Please restart the program.")
+                self.killswitch = True
+                break
+
+            elif inst == b'@0000': self.movement(0.0,0.0)
+            elif inst == b'@FRWD': self.movement(0.22,0.0)
+            elif inst == b'@LEFT': self.movement(0.0,0.75)
+            elif inst == b'@RGHT': self.movement(0.0,-0.75)
+            elif inst == b'@STRT': self.is_collecting_data = True
+            elif inst == b'@STOP': self.is_collecting_data = False
+
+            elif inst == b'@KILL': # terminate program
+                self.killswitch = True
+                break
+
+            self.movement_instruction_client.send_data(b'@CONT') # give an ACK
+
+    def send_to_server(self):
+
+        while True:
+
+            if self.super_json == None or not self.is_collecting_data: time.sleep(0.1); pass; # prevent excessive CPU usage when nothing is going on
+
+            self.data_transfer_client.send_data(str(self.super_json).encode())
+            time.sleep(self.sampling_delay)
 
     def laserscan_callback(self,msg):
         print('lsr_scn')
-        self.laserscan_msg = deepcopy(msg)
+        self.laserscan_msg = msg
 
     def twist_callback(self,msg):
-        #print('twst')
         if msg == None: return
         self.twist_msg = msg
 
@@ -121,7 +160,6 @@ class SensorsSubscriber(Node):
         self.battery_state_msg = msg
 
     def compile_to_json(self):
-
 
         # Runs asynchronously.
         # Prevent variable was not declared errors.
@@ -193,7 +231,7 @@ class SensorsSubscriber(Node):
             
             self.super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}).encode()
 
-            time.sleep(1) # TODO: implement sampling frequency parameter
+            time.sleep(self.sampling_delay)
     
     # TODO: fix this.
     def data_bridge_tx_TwistOdometry(self):
