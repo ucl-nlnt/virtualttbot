@@ -113,14 +113,17 @@ class turtlebot_controller:
         while not self.killswitch:  # Start host loop
 
             prompt = input("Enter natural language prompt:")    # enter user natural language prompt
+            print('sending START')
             self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+            print('waiting for CONT')
             self.movement_data_sender.receive_data()            # wait for @CONT
             self.data_buffer = []
             while True: # Inner loop, data collection
-
+                print('loop is running')
                 if not self.keyboard_impulse: time.sleep(0.01667); pass
+                print('entered loop')
 
-                elif self.keyboard_input == 'w': 
+                if self.keyboard_input == 'w': 
                     self.movement_data_sender.send_data(b'@FRWD')
                     self.keyboard_impulse = False                   # set to False to be able to tell when user lets go of the key.
 
