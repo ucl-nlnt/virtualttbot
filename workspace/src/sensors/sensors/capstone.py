@@ -16,6 +16,8 @@ from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
 from copy import deepcopy
 
+from KNetworking import DataBridgeServer_TCP, DataBridgeClient_TCP
+
 """
 Note that the following code was tested in a simulator and might not necessarily work on a real, physical turtlebot.
 If the process requires anything GPU-related, I am 99% certain that it will not work at all.
@@ -78,36 +80,18 @@ class SensorsSubscriber(Node):
         self.odometry_msg = None
         self.battery_state_msg = None
 
-        if self.transmit_to_server:
-            
-            self.client = socket.socket()
-            server_ip = server_ip_address
-
-            server_port = 50000
-            flag_connected = False
-            self.send_lock = True # signals that new data is allowed to be transmitted
-
-            try:
-                self.client.connect((server_ip, server_port))
-                print("[SensorsSubscriber] Connected to server.")
-                flag_connected = True
-
-            except Exception as e:
-                print(e)
-                print("[SensorsSubscriber] Error has occured when trying to connect to server.")
-
-            if not flag_connected:
-                print("[SensorsSubscriber] Exiting program...")
-                sys.exit() # Close program if unable to connect to server
+        self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address="localhost",
+                                                         destination_port=50000)
 
         # threads
                 
-        #self.transmission_thread = threading.Thread(target=self.data_bridge_tx_TwistOdometry)
-        #self.transmission_thread.start()
-        
+        self.transfer_thread = threading.Thread(target=self.send_to_server)
+
         # Compile Data and Transmit to Server
+        self.super_json = None
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
         self.compilation_thread.start()
+        self.transfer_thread.start()
 
         print('INIT COMPLETE')
 
@@ -207,23 +191,11 @@ class SensorsSubscriber(Node):
                     "current":self.battery_state_msg.current,
                 }
             
-            super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}).encode()
+            self.super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}).encode()
 
-
-            time.sleep(1)
-    # DEPRECATED: do not use
-
-    """
-    def odometry_listener(self, msg = None):
-
-        if msg == None: return
-        # Odometer listener
-
-        self.position_odom = [msg.pose.pose.position.x, msg.pose.pose.position.y, quaternion_to_yaw(msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)] # x, y, phi
-        # the orientation is from -pi to pi
-        # 0 is facing north. pi/2 is facing left. -pi/2 facing right. -pi OR pi is facing right behind.
-    """
-
+            time.sleep(1) # TODO: implement sampling frequency parameter
+    
+    # TODO: fix this.
     def data_bridge_tx_TwistOdometry(self):
 
         if not self.transmit_to_server: return # error handling
@@ -258,15 +230,6 @@ class SensorsSubscriber(Node):
                 data_is_collecting = False 
                 self.killswitch = True
             
-            #elif inst == b'@ROTT': # used during automated data-gathering
-            
-            #    self.movement_rotate_until(float(self.receive_data().decode()),tolerance=0.1,rotation_s=0.4)
-            #    self.send_data('@ROTT') # tell the other side that the rotation is complete
-            
-            #elif inst == b'@AFWD': # used during automated data-gathering
-                
-            #    self.movement_forward_until_distance(float(self.receive_data().decode()),tolerance=0.1,linear_s=0.22)
-            #    self.send_data('@AFWD') # tell the other side that the rotation is complete
 
             elif inst == b'@RNDM':
                 
@@ -294,63 +257,7 @@ class SensorsSubscriber(Node):
 
     # TODO: modify send_data and receive_data to accept port parameter
         
-    def send_data(self, data: bytes):
-
-        if isinstance(data, str):
-            data = data.encode()
-
-        # NOTE: data may or may not be in string format.
-        try:
-            length_bytes = struct.pack('!I', len(data))
-            
-            if self.debug_send_data: print('[S] Sending byte length...')
-            self.client.sendall(length_bytes)
-            ack = self.client.recv(2) # wait for other side to process data size
-            if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-            if self.debug_send_data: print('[S] ACK good')
-
-            if self.debug_send_data: print('[S] Sending data...')
-            self.client.sendall(data) # send data
-            if self.debug_send_data: print('[S] Data sent; waiting for ACK...')
-            ack = self.client.recv(2) # wait for other side to process data size
-            if ack != b'OK': print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-            if self.debug_send_data: print('[S] ACK good. Data send success.')
-
-        except Exception as e:
-            print(e)
-            self.killswitch = True
-            return None
-        
-    def receive_data(self):
-
-        # NOTE: Returns data in BINARY. You must decode it on your own
-        try:
-        
-            if self.debug_send_data: print('[R] Waiting for byte length...')
-            length_bytes = self.client.recv(4)
-            length = struct.unpack('!I', length_bytes)[0]
-            if self.debug_send_data: print(f'[R] Byte length received. Expecting: {length}')
-            data, data_size = b'', 0
-
-            self.client.send(b'OK') # allow other side to send over the data
-            if self.debug_send_data: print(f'[R] ACK sent.')
-            while data_size < length:
-
-                chunk_size = min(2048, length - data_size)
-                data_size += chunk_size
-                data += self.client.recv(chunk_size)
-                if self.debug_send_data: print(f'[R] RECV {chunk_size}')
-
-            if self.debug_send_data: print('[R] Transmission received successfull. Sending ACK')       
-            self.client.send(b'OK') # unblock other end
-            if self.debug_send_data: print('[R] ACK sent.')
-            return data # up to user to interpret the data
-        
-        except Exception as e:
-            print(e)
-            self.killswitch = True
-            return None
-        
+    
     def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
     
         data = Twist()
@@ -360,6 +267,7 @@ class SensorsSubscriber(Node):
         
         return
 
+    # May or may not be useful?
     def movement_rotate_until(self, target_radians, tolerance=0.1, rotation_s=0.05):
 
         """
