@@ -1,4 +1,3 @@
 [console_scripts]
 capstone = sensors.capstone:main
-sensors = sensors.sensors:main
-
+data_test = sensors.data_test:main

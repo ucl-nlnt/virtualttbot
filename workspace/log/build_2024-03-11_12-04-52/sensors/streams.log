@@ -1,0 +1,29 @@
+[1.359s] Invoking command in '/home/gabriel/virtualttbot/workspace/src/sensors': PYTHONPATH=/home/gabriel/virtualttbot/workspace/build/sensors/prefix_override:/home/gabriel/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/gabriel/virtualttbot/workspace/build/sensors/build install --record /home/gabriel/virtualttbot/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed
+[1.506s] /home/gabriel/.local/lib/python3.8/site-packages/setuptools/dist.py:775: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+[1.506s]   warnings.warn(
+[1.560s] running egg_info
+[1.569s] writing ../../build/sensors/sensors.egg-info/PKG-INFO
+[1.569s] writing dependency_links to ../../build/sensors/sensors.egg-info/dependency_links.txt
+[1.569s] writing entry points to ../../build/sensors/sensors.egg-info/entry_points.txt
+[1.570s] writing requirements to ../../build/sensors/sensors.egg-info/requires.txt
+[1.570s] writing top-level names to ../../build/sensors/sensors.egg-info/top_level.txt
+[1.588s] reading manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[1.589s] writing manifest file '../../build/sensors/sensors.egg-info/SOURCES.txt'
+[1.589s] running build
+[1.589s] running build_py
+[1.589s] copying sensors/data_test.py -> /home/gabriel/virtualttbot/workspace/build/sensors/build/lib/sensors
+[1.589s] running install
+[1.589s] /home/gabriel/.local/lib/python3.8/site-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.590s]   warnings.warn(
+[1.593s] running install_lib
+[1.602s] copying /home/gabriel/virtualttbot/workspace/build/sensors/build/lib/sensors/data_test.py -> /home/gabriel/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors
+[1.602s] byte-compiling /home/gabriel/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors/data_test.py to data_test.cpython-38.pyc
+[1.602s] running install_data
+[1.611s] running install_egg_info
+[1.620s] removing '/home/gabriel/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info' (and everything under it)
+[1.620s] Copying ../../build/sensors/sensors.egg-info to /home/gabriel/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages/sensors-0.0.1-py3.8.egg-info
+[1.621s] running install_scripts
+[1.660s] Installing capstone script to /home/gabriel/virtualttbot/workspace/install/sensors/lib/sensors
+[1.660s] Installing data_test script to /home/gabriel/virtualttbot/workspace/install/sensors/lib/sensors
+[1.661s] writing list of installed files to '/home/gabriel/virtualttbot/workspace/build/sensors/install.log'
+[1.681s] Invoked command in '/home/gabriel/virtualttbot/workspace/src/sensors' returned '0': PYTHONPATH=/home/gabriel/virtualttbot/workspace/build/sensors/prefix_override:/home/gabriel/virtualttbot/workspace/install/sensors/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/sensors build --build-base /home/gabriel/virtualttbot/workspace/build/sensors/build install --record /home/gabriel/virtualttbot/workspace/build/sensors/install.log --install-scripts $base/lib/sensors --single-version-externally-managed

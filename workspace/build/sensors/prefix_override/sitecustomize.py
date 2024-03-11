@@ -1,3 +1,3 @@
 import sys
 sys.real_prefix = sys.prefix
-sys.prefix = sys.exec_prefix = '/root/virtualttbot/workspace/install/sensors'
+sys.prefix = sys.exec_prefix = '/home/gabriel/virtualttbot/workspace/install/sensors'

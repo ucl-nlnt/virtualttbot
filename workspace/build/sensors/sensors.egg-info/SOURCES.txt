@@ -11,15 +11,14 @@ setup.py
 resource/sensors
 sensors/KNetworking.py
 sensors/TwistedKNetwork.py
-sensors/__init__.py
 sensors/capstone.py
 sensors/client_test.py
 sensors/data_receiver_pygame.py
+sensors/data_test.py
 sensors/inference_prog.py
 sensors/level_test.py
 sensors/message_receive_test.py
 sensors/movement_prot.py
-sensors/nlnt-nl-augment.py
 sensors/server_test.py
 test/test_copyright.py
 test/test_flake8.py

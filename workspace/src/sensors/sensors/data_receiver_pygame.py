@@ -21,7 +21,8 @@ class turtlebot_controller:
 
         self.data_buffer = None
         self.current_user = input("enter a username for logging purposes << ")
-    
+        self.gathering_data = False
+
         # will be useful once data gathering autmation is started
         self.manual_control = manual_control
 
@@ -41,10 +42,12 @@ class turtlebot_controller:
         print(f'Server Listening on port 50001')
 
         # multithreading processes
-        self.window_thread = threading.Thread(target=self.window_process)
-        self.window_thread.start()
-        self.listener_thread = threading.Thread(target=self.kb_listener)
-        self.listener_thread.start()
+        self.window_thread = threading.Thread(target=self.window_process)   # Pygame window process
+        self.window_thread.start() # Thread 1
+        self.listener_thread = threading.Thread(target=self.kb_listener)    # Keyboard listener
+        self.listener_thread.start() # Thread 2
+        self.data_listener_thread = threading.Thread(target=self.super_json_listener)
+        self.data_listener_thread.start() # Thread 3
 
     def window_process(self):
 
@@ -89,7 +92,17 @@ class turtlebot_controller:
             # Update the display
             pygame.display.flip()
 
+    def super_json_listener(self):
+
+        while True:
+
+            if not self.gathering_data: time.sleep(0.007); continue
+            data = self.server_data_receiver.receive_data().decode()
+            if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
+            self.data_buffer.append(data)
+
     def kb_listener(self):  # do Turtlebot controller stuff here
+
         """
         Instructions: // all data instructions are 5 bytes wide
         @XXXX, where the 4 X's are the instructions to be sent to the robot.
@@ -114,14 +127,16 @@ class turtlebot_controller:
 
             prompt = input("Enter natural language prompt:")    # enter user natural language prompt
             print('sending START')
+            self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
+            self.gathering_data = True
             self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
             print('waiting for CONT')
             self.movement_data_sender.receive_data()            # wait for @CONT
-            self.data_buffer = []
+            
             while True: # Inner loop, data collection
-                print('loop is running')
-                if not self.keyboard_impulse: time.sleep(0.01667); pass
-                print('entered loop')
+            
+                if not self.keyboard_impulse: time.sleep(0.01667); continue
+                print("input received:", self.keyboard_input)
 
                 if self.keyboard_input == 'w': 
                     self.movement_data_sender.send_data(b'@FRWD')
@@ -148,6 +163,8 @@ class turtlebot_controller:
                 time.sleep(0.01667)
 
             # confirm if data is good to be saved
+            self.gathering_data = False
+
             while True:
                 confirmation = input("Save log? (y/n) << ")
                 if confirmation == 'y' or confirmation == 'n': break

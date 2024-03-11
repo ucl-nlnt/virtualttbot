@@ -20,8 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		'sensors = sensors.sensors:main',
+		#'sensors = sensors.sensors:main',
 		'capstone = sensors.capstone:main',
+        'data_test = sensors.data_test:main'
 		# 'mess_test = sensors.message_receive_test:main',
 		# 'movement_prot = sensors.movement_prot:main',
         #'inference_prog = sensors.inference_prog:main',
