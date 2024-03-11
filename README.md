@@ -76,7 +76,7 @@ sudo apt-install ros-foxy-turtlebot3-gazebo
 
 ```
 
-Run a Gazebo simulation to verify using the [official guide](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
+- Run a Gazebo simulation to verify using the [official guide](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
 ```bash
 cd ~/turtlebot3_ws/src/
 git clone -b foxy-devel https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
@@ -98,18 +98,18 @@ git clone https://github.com/ucl-nlnt/virtualttbot.git
 6. Install `miniconda3` on your device using the [official guide](https://docs.anaconda.com/free/miniconda/miniconda-install/)
 > Miniconda is a lighteweight package manager and environment management system for Python.
 
-create a virtual environment for this repo
+ - create a virtual environment for this repo
 ```bash
 conda create --name vttbot
 conda activate vttbot
 ```
 
-Install **Python 3.8**
+ - Install **Python 3.8**
 ```bash
 conda install python=3.8
 ```
 
-Install the project's package dependencies
+ - Install the project's package dependencies
 ```bash
 pip install -r requirements.txt
 ```
@@ -135,6 +135,11 @@ ssh ubuntu@<turtlebot_ip>
 ros2 launch turtlebot3_bringup robot.launch.py
 ```
 > There can be issues expected when restarting the bot (such as during development). It is best to relaunch bringup every time
+
+3. Run script for sending data 
+```bash
+python workspace/src/sensors/sensors/capstone.py
+```
 
 ### Client PC
 1. To select a webcam, run the helper script to view your device's available cameras
