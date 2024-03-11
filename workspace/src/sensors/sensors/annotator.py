@@ -80,13 +80,13 @@ class Annotator:
             target=self.super_json_listener)
         self.data_listener_thread.start()
 
-        self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
+        # reset buffer. this will be filled up somewhere else (self.super_json_listener)
+        self.data_buffer = []
         self.gathering_data = True
-        self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+        # send data gathering start signal
+        self.movement_data_sender.send_data('@STRT')
         print('waiting for CONT')
         self.movement_data_sender.receive_data()            # wait for @CONT
-
-        
 
     def super_json_listener(self):
 
@@ -175,7 +175,7 @@ class Annotator:
         self.background = self.pygame.Surface((screen_width, screen_height))
         self.background.fill(self.pygame.Color(background_color))
         self.manager = pygame_gui.UIManager(
-            (screen_width, screen_height), "theme.json")
+            (screen_width, screen_height), "config/theme.json")
         self.clock = self.pygame.time.Clock()
 
         # initiate camera
@@ -184,7 +184,7 @@ class Annotator:
         if not camlist:
             print("ERROR: No cameras detected")
             return
-        camera_index = 0 # If your device has multiple cameras, adjust to the correct one
+        camera_index = 0  # If your device has multiple cameras, adjust to the correct one
         self.cam = self.pygame.camera.Camera(
             camlist[camera_index], (1280, 720))
         self.cam.start()
@@ -199,7 +199,6 @@ class Annotator:
         # main loop
         while self.is_running:
             time_delta = self.clock.tick(60) / 1000  # limits FPS to 60
-            
 
             # update every tick
             if (self.tick_counter > 0):
