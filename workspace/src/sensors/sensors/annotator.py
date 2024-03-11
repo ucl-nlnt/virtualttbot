@@ -11,6 +11,8 @@ import os
 from KNetworking import DataBridgeServer_TCP
 import threading
 import time
+import struct
+import uuid
 
 
 if not os.path.exists("datalogs"):
@@ -63,24 +65,20 @@ class Annotator:
         """enter sensor data into this string"""
         # TODO: save sensor data into the above global variables
 
-        # USE IN MACOS
-        self.showInterface()
-
-        # USE IN UBUNTU
-        # self.window_thread = threading.Thread(
-        #     target=self.showInterface)
-        # self.window_thread.start()
+        self.window_thread = threading.Thread(
+            target=self.showInterface)
+        self.window_thread.start()
         print(f'User interface initiated')
+
+        self.data_listener_thread = threading.Thread(
+            target=self.super_json_listener)
+        self.data_listener_thread.start()
 
         self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
         print(f'Server Listening on port 50000')
 
         self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
         print(f'Server Listening on port 50001')
-
-        self.data_listener_thread = threading.Thread(
-            target=self.super_json_listener)
-        self.data_listener_thread.start()
 
     def super_json_listener(self):
 
@@ -177,6 +175,7 @@ class Annotator:
         camlist = self.pygame.camera.list_cameras()
         if not camlist:
             print("ERROR: No cameras detected")
+            return
         camera_index = 1  # If your device has multiple cameras, adjust to the correct one
         self.cam = self.pygame.camera.Camera(
             camlist[camera_index], (1280, 720))
@@ -186,6 +185,8 @@ class Annotator:
         # PYGAME INIT END
 
         self.initializeElements()
+
+        self.is_key_pressed = False
 
         # main loop
         while self.is_running:
@@ -219,15 +220,23 @@ class Annotator:
                     if event.scancode == 79:
                         # RIGHT
                         print('[events/keyPressed]: d key pressed!')
-                    if event.scancode == 80:
+                        self.movement_data_sender.send_data(b'@RGHT')
+                        self.is_key_pressed = True
+                    elif event.scancode == 80:
                         # LEFT
                         print('[events/keyPressed]: a key pressed!')
-                    if event.scancode == 81:
+                        self.movement_data_sender.send_data(b'@LEFT')
+                        self.is_key_pressed = True
+                    elif event.scancode == 81:
                         # DOWN
                         print('[events/keyPressed]: s key pressed!')
-                    if event.scancode == 82:
+                    elif event.scancode == 82:
                         # UP
-                        print('[events/keyPressed]: d key pressed!')
+                        print('[events/keyPressed]: w key pressed!')
+                        self.movement_data_sender.send_data(b'@FRWD')
+                        self.is_key_pressed = True
+                    else:
+                        self.movement_data_sender.send_data(b'@0000')
 
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == self.start_button:
@@ -276,6 +285,13 @@ class Annotator:
 
                 self.manager.process_events(event)
 
+            events = pygame.event.get()
+            isPressed = self.hasKeyPressed(events, "type", pygame.KEYDOWN)
+
+            if not isPressed and self.is_key_pressed is True:
+                self.movement_data_sender.send_data(b'@0000')
+                self.is_key_pressed = False
+
             self.manager.update(time_delta)
             self.screen.blit(self.background, (0, 0))
             self.manager.draw_ui(self.screen)
@@ -284,6 +300,75 @@ class Annotator:
             self.tick_counter += 1
 
         self.pygame.quit()
+
+    def hasKeyPressed(self, dicts, field, value):
+        for dictionary in dicts:
+            if field in dictionary and dictionary[field] == value:
+                return True
+        return False
+
+    def generate_random_filename(self):
+        random_filename = str(uuid.uuid4().hex)[:16]
+        return random_filename
+
+    def send_data(self, data: bytes):
+
+        if isinstance(data, str):
+            data = data.encode()
+
+        # NOTE: data may or may not be in string format.
+
+        length_bytes = struct.pack('!I', len(data))
+
+        if self.debug:
+            print('[S] Sending byte length...')
+        self.client.sendall(length_bytes)
+        ack = self.client.recv(2)  # wait for other side to process data size
+        if ack != b'OK':
+            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+        if self.debug:
+            print('[S] ACK good')
+
+        if self.debug:
+            print('[S] Sending data...')
+        self.client.sendall(data)  # send data
+        if self.debug:
+            print('[S] Data sent; waiting for ACK...')
+        ack = self.client.recv(2)  # wait for other side to process data size
+        if ack != b'OK':
+            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
+        if self.debug:
+            print('[S] ACK good. Data send success.')
+
+    def receive_data(self):
+
+        # NOTE: Returns data in BINARY. You must decode it on your own
+
+        if self.debug:
+            print('[R] Waiting for byte length...')
+        length_bytes = self.client.recv(4)
+        length = struct.unpack('!I', length_bytes)[0]
+        if self.debug:
+            print(f'[R] Byte length received. Expecting: {length}')
+        data, data_size = b'', 0
+
+        self.client.send(b'OK')  # allow other side to send over the data
+        if self.debug:
+            print(f'[R] ACK sent.')
+        while data_size < length:
+
+            chunk_size = min(2048, length - data_size)
+            data_size += chunk_size
+            data += self.client.recv(chunk_size)
+            if self.debug:
+                print(f'[R] RECV {chunk_size}')
+
+        if self.debug:
+            print('[R] Transmission received successfull. Sending ACK')
+        self.client.send(b'OK')  # unblock other end
+        if self.debug:
+            print('[R] ACK sent.')
+        return data  # up to user to interpret the data
 
 
 annotator = Annotator()
