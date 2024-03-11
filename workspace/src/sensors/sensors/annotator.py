@@ -7,6 +7,10 @@ import pygame_gui
 from pygame_gui.core import ObjectID
 from pygame_gui.elements import UIButton, UITextEntryBox, UILabel, UIImage, UITextEntryLine
 import json
+import os
+
+if not os.path.exists("datalogs"):
+    os.mkdir("datalogs")
 
 # config variables
 screen_width = 1280

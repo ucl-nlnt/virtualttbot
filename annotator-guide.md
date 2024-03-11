@@ -1,3 +1,5 @@
+> WARNING: out of date!
+
 # NLNT Data Annotator Studio
 
 This is a Pygame-based user interface to easily annotate data for use in NLNT. It is to be run on a client PC with a connection to a Turtlebot v3 Burger via TCP and a Webcam
