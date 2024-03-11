@@ -1,7 +1,11 @@
+# python stuff
 __pycache__
+*/__pycache__
+
+# macos stuff
 .DS_Store
-workspace/src/sensors/sensors/datalogs
-log
+
 build/*
 install/*
-*/__pycache__
+log
+workspace/src/sensors/sensors/datalogs
