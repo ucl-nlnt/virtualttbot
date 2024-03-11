@@ -97,11 +97,13 @@ class SensorsSubscriber(Node):
         self.odometry_msg = None
         self.battery_state_msg = None
 
-        self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address="localhost",
+
+        self.destination_ip = "10.158.39.147"
+        self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                         destination_port=50000)
         
         time.sleep(0.5) # wait for the server to open the 2nd port.
-        self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address="localhost",
+        self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                         destination_port=50001)
         
         # threads
@@ -136,7 +138,7 @@ class SensorsSubscriber(Node):
                 break
 
             elif inst == b'@0000': self.movement(0.0,0.0)
-            elif inst == b'@FRWD': self.movement(0.22,0.0)
+            elif inst == b'@FRWD': self.movement(0.20,0.0)
             elif inst == b'@LEFT': self.movement(0.0,0.75)
             elif inst == b'@RGHT': self.movement(0.0,-0.75)
             elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True")
@@ -185,10 +187,14 @@ class SensorsSubscriber(Node):
         # Runs asynchronously.
         # Prevent variable was not declared errors.
         laserscan_msg_jsonized = None
-        twist_msg_jsonized = None
+        twist_msg_jsonized = {
+                    "linear":(0.0, 0.0, 0.0),
+                    "angular":(0.0, 0.0, 0.0)
+                }
         imu_msg_jsonized = None
         odometry_msg_jsonized = None
         battery_state_msg_jsonized = None
+
 
         while True:
 
@@ -249,6 +255,7 @@ class SensorsSubscriber(Node):
                     "temperature":self.battery_state_msg.temperature,
                     "current":self.battery_state_msg.current,
                 }
+            
             
             self.super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}).encode()
 
