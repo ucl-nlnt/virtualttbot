@@ -71,65 +71,68 @@ class Annotator:
         # TODO: save sensor data into the above global variables
 
     def start(self):
+        self.setupInterfaceElements()
         self.showInterface()
 
-    def showInterface(self):
+    def setupInterfaceElements(self):
         # UI elements
-        start_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*4, screen_height-screen_margins-button_height), (button_width, button_height)),
-                                text='Start',
-                                manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
-                                                                         object_id='#start_button'), tool_tip_text="start recording data")
+        self.start_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*4, screen_height-screen_margins-button_height), (button_width, button_height)),
+                                     text='Start',
+                                     manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
+                                                                              object_id='#start_button'), tool_tip_text="start recording data")
 
-        stop_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*3, screen_height-screen_margins-button_height), (button_width, button_height)),
-                               text='Stop',
-                               manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
-                                                                        object_id='#stop_button'), tool_tip_text="stop recording data")
+        self.stop_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*3, screen_height-screen_margins-button_height), (button_width, button_height)),
+                                    text='Stop',
+                                    manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
+                                                                             object_id='#stop_button'), tool_tip_text="stop recording data")
 
-        clear_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*2, screen_height-screen_margins-button_height), (button_width, button_height)),
-                                text='Clear',
-                                manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
-                                                                         object_id='#clear_button'), tool_tip_text="clear input field")
+        self.clear_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width)*2, screen_height-screen_margins-button_height), (button_width, button_height)),
+                                     text='Clear',
+                                     manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
+                                                                              object_id='#clear_button'), tool_tip_text="clear input field")
 
-        save_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width), screen_height-screen_margins-button_height), (button_width, button_height)),
-                               text='Save',
-                               manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
-                                                                        object_id='#save_button'), tool_tip_text="save annotated data to output file")
+        self.save_button = UIButton(relative_rect=pygame.Rect((screen_width-(screen_margins+button_width), screen_height-screen_margins-button_height), (button_width, button_height)),
+                                    text='Save',
+                                    manager=self.manager, object_id=ObjectID(class_id='@rounded_buttons',
+                                                                             object_id='#save_button'), tool_tip_text="save annotated data to output file")
 
-        data_text = UITextEntryBox(relative_rect=pygame.Rect((652.5, 275), (602.5, 350)),
-                                   initial_text=self.sensor_text,
-                                   manager=self.manager)
+        self.data_text = UITextEntryBox(relative_rect=pygame.Rect((652.5, 275), (602.5, 350)),
+                                        initial_text=self.sensor_text,
+                                        manager=self.manager)
 
-        image_box = UIImage(relative_rect=pygame.Rect((25, 275), (602.5, 350)),
-                            image_surface=self.image,
-                            manager=self.manager,)
+        self.image_box = UIImage(relative_rect=pygame.Rect((25, 275), (602.5, 350)),
+                                 image_surface=self.image,
+                                 manager=self.manager,)
 
-        prompt_box = UITextEntryLine(relative_rect=pygame.Rect((25, 175), (1230, 75)),
-                                     placeholder_text="Enter prompt here...",
-                                     manager=self.manager,)
+        self.prompt_box = UITextEntryLine(relative_rect=pygame.Rect((25, 175), (1230, 75)),
+                                          placeholder_text="Enter prompt here...",
+                                          manager=self.manager,)
 
-        user_box = UITextEntryLine(relative_rect=pygame.Rect((25, 100), (150, 50)),
-                                   placeholder_text="username",
-                                   manager=self.manager,)
+        self.user_box = UITextEntryLine(relative_rect=pygame.Rect((25, 100), (150, 50)),
+                                        placeholder_text="username",
+                                        manager=self.manager,)
 
-        instance_box = UITextEntryLine(relative_rect=pygame.Rect((200, 100), (150, 50)),
-                                       placeholder_text="instance_id",
-                                       manager=self.manager,)
+        self.instance_box = UITextEntryLine(relative_rect=pygame.Rect((200, 100), (150, 50)),
+                                            placeholder_text="instance_id",
+                                            manager=self.manager,)
 
-        connection_label = UILabel(relative_rect=pygame.Rect((25, 25), (300, 50)),
-                                   text=self.ping_text,
-                                   manager=self.manager, object_id=ObjectID(class_id='@text_input',
-                                                                            object_id='#connection_text'),)
+        self.connection_label = UILabel(relative_rect=pygame.Rect((25, 25), (300, 50)),
+                                        text=self.ping_text,
+                                        manager=self.manager, object_id=ObjectID(class_id='@text_input',
+                                                                                 object_id='#connection_text'),)
 
-        battery_label = UILabel(relative_rect=pygame.Rect((725, 25), (125, 50)),
-                                text=self.battery_text,
-                                manager=self.manager, object_id=ObjectID(class_id='@text_input',
-                                                                         object_id='#battery_text'),)
+        self.battery_label = UILabel(relative_rect=pygame.Rect((725, 25), (125, 50)),
+                                     text=self.battery_text,
+                                     manager=self.manager, object_id=ObjectID(class_id='@text_input',
+                                                                              object_id='#battery_text'),)
 
-        time_label = UILabel(relative_rect=pygame.Rect((1075, 25), (200, 50)),
-                             text=f"Time: {
-                                 int(datetime.datetime.now().timestamp())}",
-                             manager=self.manager, object_id=ObjectID(class_id='@text_input',
-                                                                      object_id='#battery_text'),)
+        self.time_label = UILabel(relative_rect=pygame.Rect((1075, 25), (200, 50)),
+                                  text=f"Time: {
+            int(datetime.datetime.now().timestamp())}",
+            manager=self.manager, object_id=ObjectID(class_id='@text_input',
+                                                     object_id='#battery_text'),)
+
+    def showInterface(self):
 
         while self.is_running:
             time_delta = self.clock.tick(60) / 1000  # limits FPS to 60
@@ -138,16 +141,16 @@ class Annotator:
             if (self.tick_counter > 0):
                 current_time = datetime.datetime.now()
                 unix_timestamp = int(current_time.timestamp())
-                time_label.set_text(f'Time: {unix_timestamp}')
-                data_text.set_text(self.sensor_text)
-                connection_label.set_text(self.ping_text)
-                battery_label.set_text(self.battery_text)
+                self.time_label.set_text(f'Time: {unix_timestamp}')
+                self.data_text.set_text(self.sensor_text)
+                self.connection_label.set_text(self.ping_text)
+                self.battery_label.set_text(self.battery_text)
 
             # update image output every 2 ticks (30 fps video feed at 60 fps game output)
-            if (self.tick_counter % 2 == 0):
+            if (self.tick_counter > 0):
                 self.tick_counter = 0
                 image = self.cam.get_image()
-                image_box.set_image(image)
+                self.image_box.set_image(image)
 
             # reset tick every 60
             if (self.tick_counter == 59):
@@ -159,24 +162,24 @@ class Annotator:
                     self.is_running = False
 
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == start_button:
+                    if event.ui_element == self.start_button:
                         print('[events/buttonPressed]: start button pressed!')
                         self.is_recording = True
-                    elif event.ui_element == stop_button:
+                    elif event.ui_element == self.stop_button:
                         print('[events/buttonPressed]: stop button pressed!')
                         self.is_recording = False
-                    elif event.ui_element == clear_button:
+                    elif event.ui_element == self.clear_button:
                         print('[events/buttonPressed]: clear button pressed!')
-                        user_box.set_text("")
-                        instance_box.set_text("")
-                        data_text.set_text("")
+                        self.user_box.set_text("")
+                        self.instance_box.set_text("")
+                        self.data_text.set_text("")
                         self.is_recording = False
-                    elif event.ui_element == save_button:
+                    elif event.ui_element == self.save_button:
                         print('[events/buttonPressed]: save button pressed!')
-                        username = user_box.get_text()
-                        instance_id = instance_box.get_text()
-                        prompt = prompt_box.get_text()
-                        sensor_data = data_text.get_text()
+                        username = self.user_box.get_text()
+                        instance_id = self.instance_box.get_text()
+                        prompt = self.prompt_box.get_text()
+                        sensor_data = self.data_text.get_text()
 
                         image = self.cam.get_image()
                         pygame.image.save(
@@ -200,13 +203,23 @@ class Annotator:
                         with open('annotator-output.txt', 'w') as file:
                             file.write(output)
 
-                        data_text.set_text("")
-                        is_recording = False
+                        self.data_text.set_text("")
+                        self.is_recording = False
 
                 self.manager.process_events(event)
 
-            self.manager.update(time_delta)
+            # keyboard press handler
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_w]:
+                print('[events/keyPressed]: w key pressed!')
+            if keys[pygame.K_s]:
+                print('[events/keyPressed]: s key pressed!')
+            if keys[pygame.K_a]:
+                print('[events/keyPressed]: a key pressed!')
+            if keys[pygame.K_d]:
+                print('[events/keyPressed]: d key pressed!')
 
+            self.manager.update(time_delta)
             self.screen.blit(self.background, (0, 0))
             self.manager.draw_ui(self.screen)
 
