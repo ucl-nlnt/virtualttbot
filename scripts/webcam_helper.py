@@ -23,4 +23,8 @@ class Helper:
 
 
 helper = Helper()
-print(helper.getCamList())
+list = helper.getCamList()
+
+print('Select your webcam from this list:')
+for i in range(len(list)):
+    print(f'{i} - {list[i]}')
