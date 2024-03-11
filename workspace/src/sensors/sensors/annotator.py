@@ -65,6 +65,12 @@ class Annotator:
         """enter sensor data into this string"""
         # TODO: save sensor data into the above global variables
 
+        self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
+        print(f'Server Listening on port 50000')
+
+        self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
+        print(f'Server Listening on port 50001')
+
         self.window_thread = threading.Thread(
             target=self.showInterface)
         self.window_thread.start()
@@ -74,11 +80,13 @@ class Annotator:
             target=self.super_json_listener)
         self.data_listener_thread.start()
 
-        self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
-        print(f'Server Listening on port 50000')
+        self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
+        self.gathering_data = True
+        self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+        print('waiting for CONT')
+        self.movement_data_sender.receive_data()            # wait for @CONT
 
-        self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
-        print(f'Server Listening on port 50001')
+        
 
     def super_json_listener(self):
 
@@ -176,7 +184,7 @@ class Annotator:
         if not camlist:
             print("ERROR: No cameras detected")
             return
-        camera_index = 1  # If your device has multiple cameras, adjust to the correct one
+        camera_index = 0 # If your device has multiple cameras, adjust to the correct one
         self.cam = self.pygame.camera.Camera(
             camlist[camera_index], (1280, 720))
         self.cam.start()
@@ -191,12 +199,14 @@ class Annotator:
         # main loop
         while self.is_running:
             time_delta = self.clock.tick(60) / 1000  # limits FPS to 60
+            
 
             # update every tick
             if (self.tick_counter > 0):
                 current_time = datetime.datetime.now()
                 unix_timestamp = int(current_time.timestamp())
                 self.time_label.set_text(f'Time: {unix_timestamp}')
+                self.sensor_text = self.data_buffer[-1]
                 self.data_text.set_text(self.sensor_text)
                 self.connection_label.set_text(self.ping_text)
                 self.battery_label.set_text(self.battery_text)
@@ -208,7 +218,7 @@ class Annotator:
                 self.image_box.set_image(image)
 
             # reset tick every 60
-            if (self.tick_counter == 59):
+            if (self.tick_counter >= 59):
                 self.tick_counter = 0
 
             # event handler
@@ -219,17 +229,18 @@ class Annotator:
                 if event.type == pygame.KEYDOWN:
                     if event.scancode == 79:
                         # RIGHT
-                        print('[events/keyPressed]: d key pressed!')
+                        # print('[events/keyPressed]: d key pressed!')
                         self.movement_data_sender.send_data(b'@RGHT')
                         self.is_key_pressed = True
                     elif event.scancode == 80:
                         # LEFT
-                        print('[events/keyPressed]: a key pressed!')
+                        # print('[events/keyPressed]: a key pressed!')
                         self.movement_data_sender.send_data(b'@LEFT')
                         self.is_key_pressed = True
                     elif event.scancode == 81:
                         # DOWN
-                        print('[events/keyPressed]: s key pressed!')
+                        # print('[events/keyPressed]: s key pressed!')
+                        self.movement_data_sender.send_data(b'@0000')
                     elif event.scancode == 82:
                         # UP
                         print('[events/keyPressed]: w key pressed!')
@@ -285,12 +296,12 @@ class Annotator:
 
                 self.manager.process_events(event)
 
-            events = pygame.event.get()
-            isPressed = self.hasKeyPressed(events, "type", pygame.KEYDOWN)
+            # events = pygame.event.get()
+            # isPressed = self.hasKeyPressed(events, "type", pygame.KEYDOWN)
 
-            if not isPressed and self.is_key_pressed is True:
-                self.movement_data_sender.send_data(b'@0000')
-                self.is_key_pressed = False
+            # if not isPressed and self.is_key_pressed is True:
+            #     self.movement_data_sender.send_data(b'@0000')
+            #     self.is_key_pressed = False
 
             self.manager.update(time_delta)
             self.screen.blit(self.background, (0, 0))

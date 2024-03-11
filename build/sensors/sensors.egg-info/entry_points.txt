@@ -1,7 +1,4 @@
 [console_scripts]
-inference_prog = sensors.inference_prog:main
-mess_test = sensors.message_receive_test:main
-movement_prot = sensors.movement_prot:main
-sensors = sensors.sensors:main
-timer_node = sensors.timer_node:main
+capstone = sensors.capstone:main
+data_test = sensors.data_test:main
 
