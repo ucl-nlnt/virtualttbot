@@ -107,6 +107,9 @@ conda activate vttbot
  - Install **Python 3.8**
 ```bash
 conda install python=3.8
+
+# verify installation
+python --version
 ```
 
  - Install the project's package dependencies
