@@ -2,15 +2,15 @@
 A guide for setting up and using NLNT's Turtlebot Data Gathering system scripts
 
 ## Table of Contents
-[Requirements](#requirements)
-[Device Setup](#device-setup)
-&nbsp;&nbsp;&nbsp;&nbsp;[A. Client PC](#a-client-pc)
-&nbsp;&nbsp;&nbsp;&nbsp;[B. Virtual Turtlebot](#b-virtual-turtlebot)
-&nbsp;&nbsp;&nbsp;&nbsp;[C. Real Turtlebot](#c-real-turtlebot)
-&nbsp;&nbsp;[Conducting Data Gathering](#conducting-data-gathering)
-&nbsp;&nbsp;&nbsp;&nbsp;[Turtlebot](#turtlebot)
-&nbsp;&nbsp;&nbsp;&nbsp;[Client PC](#client-pc)
-[How to Use Data Annotator](#how-to-use-data-annotator)
+[Requirements](#requirements) <br/>
+[Device Setup](#device-setup) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[A. Client PC](#a-client-pc) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[B. Virtual Turtlebot](#b-virtual-turtlebot) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[C. Real Turtlebot](#c-real-turtlebot) <br/>
+&nbsp;&nbsp;[Conducting Data Gathering](#conducting-data-gathering) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[Turtlebot](#turtlebot) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[Client PC](#client-pc) <br/> 
+[How to Use Data Annotator](#how-to-use-data-annotator) <br/>
 
 ## Requirements
 - Clean Install of **Ubuntu 20.04 LTS**
