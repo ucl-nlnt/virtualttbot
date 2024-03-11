@@ -138,7 +138,7 @@ class SensorsSubscriber(Node):
                 break
 
             elif inst == b'@0000': self.movement(0.0,0.0)
-            elif inst == b'@FRWD': self.movement(0.20,0.0)
+            elif inst == b'@FRWD': self.movement(0.1,0.0)
             elif inst == b'@LEFT': self.movement(0.0,0.75)
             elif inst == b'@RGHT': self.movement(0.0,-0.75)
             elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True")
@@ -155,7 +155,6 @@ class SensorsSubscriber(Node):
         while True:
 
             if self.super_json == None or not self.is_collecting_data: time.sleep(0.1); continue; # prevent excessive CPU usage when nothing is going on
-            else: print("sending super json")
             self.data_transfer_client.send_data(str(self.super_json).encode())
             time.sleep(self.sampling_delay)
 
@@ -261,74 +260,13 @@ class SensorsSubscriber(Node):
 
             time.sleep(self.sampling_delay)
     
-    # TODO: fix this.
-    def data_bridge_tx_TwistOdometry(self):
-
-        if not self.transmit_to_server: return # error handling
-        data_is_collecting = True
-
-        while self.position_odom == [None,None,None]: time.sleep(1); print('waiting for odometer to warm up...') # wait for odometer to initialize
-
-        while data_is_collecting:
-
-            inst = self.receive_data()
-            print(inst)
-            if inst == b'@STRT':
-
-                time.sleep(0.2)
-                self.send_data(f'{self.position_odom}'.encode())
-                print('Odom:', self.position_odom)
-
-            elif inst == b'@0000': self.movement(0.0,0.0)
-            elif inst == b'@FRWD': self.movement(0.22,0.0)
-            elif inst == b'@LEFT': self.movement(0.0,0.75)
-            elif inst == b'@RGHT': self.movement(0.0,-0.75)
-            elif inst == b'@ODOM': 
-
-                time.sleep(0.2)
-                self.send_data(f'{self.position_odom}'.encode())
-                print('Odom:', self.position_odom)
-
-            # elif inst == b'@STOP': self.movement(0.0,0.0); data_is_collecting = False
-            elif inst == b'@KILL':
-                print('exiting...') 
-                self.movement(0.0,0.0)
-                data_is_collecting = False 
-                self.killswitch = True
-            
-
-            elif inst == b'@RNDM':
-                
-                x, y = random.uniform(-3,3), random.uniform(-3,3)
-                theta = random.uniform(-1,1) * 3.14159
-
-                print(f'Randomizing position... [{x}, {y}, {theta}]')
-
-                dx, dy = x - self.position_odom[0], y - self.position_odom[1]
-                dtheta = math.atan2(dy,dx)
-
-                print('Rotating towards dtheta:', dtheta)
-                self.movement_rotate_until(dtheta,tolerance=0.01,rotation_s=0.1)
-                distance = math.sqrt(dx**2 + dy**2)
-                print('Moving distance:', distance)
-                self.movement_forward_until_distance(distance,tolerance=0.01,linear_s=0.22)
-                self.movement_rotate_until(theta,tolerance=0.01,rotation_s=0.1)
-                print(f'Movement Complete. {self.position_odom}')
-
-                self.send_data('@RNDM')
-
-            else: continue
-
-        print('THREAD CLOSED')
-
-    # TODO: modify send_data and receive_data to accept port parameter
-        
-    
     def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
     
         data = Twist()
         data.linear.x = linear_x
         data.angular.z = angular_z
+        print(linear_x, angular_z)
+        print(data.linear.x, data.angular.z)
         self.movement_publisher.publish(data)
         
         return
