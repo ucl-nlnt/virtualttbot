@@ -1,2 +1,7 @@
 __pycache__
 .DS_Store
+workspace/src/sensors/sensors/datalogs
+log
+build/*
+install/*
+*/__pycache__
