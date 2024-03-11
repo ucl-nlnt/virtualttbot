@@ -1,4 +1,16 @@
 # NLNT Turtlebot System
+A guide for setting up and using NLNT's Turtlebot Data Gathering system scripts
+
+## Table of Contents
+[Requirements](#requirements)
+[Device Setup](#device-setup)
+&nbsp;&nbsp;&nbsp;&nbsp;[A. Client PC](#a-client-pc)
+&nbsp;&nbsp;&nbsp;&nbsp;[B. Virtual Turtlebot](#b-virtual-turtlebot)
+&nbsp;&nbsp;&nbsp;&nbsp;[C. Real Turtlebot](#c-real-turtlebot)
+&nbsp;&nbsp;[Conducting Data Gathering](#conducting-data-gathering)
+&nbsp;&nbsp;&nbsp;&nbsp;[Turtlebot](#turtlebot)
+&nbsp;&nbsp;&nbsp;&nbsp;[Client PC](#client-pc)
+[How to Use Data Annotator](#how-to-use-data-annotator)
 
 ## Requirements
 - Clean Install of **Ubuntu 20.04 LTS**
@@ -139,5 +151,5 @@ python workspace/src/sensors/sensors/annotator.py
 ```
 > For MacOS, there are issues with multithreading support with Pygame. It is recommended to use Ubuntu instead
 
-### How to use Data Annotator Studio
+### How to use Data Annotator
 > TODO: add instructions here
