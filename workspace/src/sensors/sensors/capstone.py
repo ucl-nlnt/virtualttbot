@@ -80,7 +80,7 @@ class SensorsSubscriber(Node):
         self.time_last_order_issued = 0.0
         self.velocity_change = False
         self.killswitch = False
-        self.sampling_delay = 0.2
+        self.sampling_delay = 0.1
 
         # DEBUG LOCKS
         self.debug_send_data = False
