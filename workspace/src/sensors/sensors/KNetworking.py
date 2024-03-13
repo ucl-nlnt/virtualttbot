@@ -5,6 +5,7 @@ import sys
 from collections import deque
 import struct
 import random
+from simple_chalk import chalk
 
 ###
 #   NOTE on USAGE: DataBridgeClient assumes that the Server is already running. Please ensure that it's setting up first!
@@ -257,6 +258,7 @@ class DataBridgeServer_TCP:
         self.server_sock.listen(0)
         
         print(f"[DataBridgeServer TCP : {self.port_number}] Server started.")
+        print('Waiting for Turtlebot Connection!')
         
         self.client, self.client_address = self.server_sock.accept()
         print(f"[DataBridgeServer TCP : {self.port_number}] Client connected from {self.client_address}.")

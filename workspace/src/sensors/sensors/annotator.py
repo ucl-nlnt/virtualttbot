@@ -13,7 +13,8 @@ import threading
 import time
 import struct
 import uuid
-
+from simple_chalk import chalk
+import pprintpp
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
@@ -26,6 +27,8 @@ background_color = '#000000'
 
 button_width = 100
 button_height = 50
+
+ANNOTATOR_DEBUG = False
 
 
 class Annotator:
@@ -43,6 +46,9 @@ class Annotator:
         self.debug = True
         self.debug_window_process = True
         self.label = None
+
+        """boolean: if device has a working camera"""
+        self.hasCamera = False
 
         # state variables setup
         self.is_running = True
@@ -65,28 +71,32 @@ class Annotator:
         """enter sensor data into this string"""
         # TODO: save sensor data into the above global variables
 
-        self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
-        print(f'Server Listening on port 50000')
+        if not ANNOTATOR_DEBUG:
+            self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
+            print(f'Server Listening on port 50000')
 
-        self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
-        print(f'Server Listening on port 50001')
+            self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
+            print(f'Server Listening on port 50001')
 
         self.window_thread = threading.Thread(
             target=self.showInterface)
         self.window_thread.start()
         print(f'User interface initiated')
 
-        self.data_listener_thread = threading.Thread(
-            target=self.super_json_listener)
-        self.data_listener_thread.start()
+        if not ANNOTATOR_DEBUG:
+            self.data_listener_thread = threading.Thread(
+                target=self.super_json_listener)
+            self.data_listener_thread.start()
 
         # reset buffer. this will be filled up somewhere else (self.super_json_listener)
         self.data_buffer = []
         self.gathering_data = True
-        # send data gathering start signal
-        self.movement_data_sender.send_data('@STRT')
-        print('waiting for CONT')
-        self.movement_data_sender.receive_data()            # wait for @CONT
+        
+        if not ANNOTATOR_DEBUG:
+            # send data gathering start signal
+            self.movement_data_sender.send_data('@STRT')
+            print('waiting for CONT')
+            self.movement_data_sender.receive_data()            # wait for @CONT
 
     def super_json_listener(self):
 
@@ -127,6 +137,7 @@ class Annotator:
                                         initial_text=self.sensor_text,
                                         manager=self.manager)
 
+    
         self.image_box = UIImage(relative_rect=pygame.Rect((25, 275), (602.5, 350)),
                                  image_surface=self.image,
                                  manager=self.manager,)
@@ -158,6 +169,7 @@ class Annotator:
                                   manager=self.manager, object_id=ObjectID(class_id='@text_input',
                                                                            object_id='#battery_text'))
 
+        return 
     def showInterface(self):
 
         # PYGAME INIT START
@@ -178,47 +190,75 @@ class Annotator:
             (screen_width, screen_height), "config/theme.json")
         self.clock = self.pygame.time.Clock()
 
+        print(chalk.magenta.bold("Initiating cameras..."))
+
         # initiate camera
         self.pygame.camera.init()
         camlist = self.pygame.camera.list_cameras()
+        
         if not camlist:
-            print("ERROR: No cameras detected")
+            print(chalk.red.bold("ERROR: No cameras detected"))
+            self.hasCamera = False
             return
-        camera_index = 0  # If your device has multiple cameras, adjust to the correct one
+    
+        print(chalk.green.bold("Cameras initiated"))
+        self.hasCamera = True
+        camera_index = 0 # If your device has multiple cameras, adjust to the correct one
         self.cam = self.pygame.camera.Camera(
             camlist[camera_index], (1280, 720))
         self.cam.start()
         self.image = self.cam.get_image()
 
         # PYGAME INIT END
+        
+        print(chalk.magenta.bold("Initiating elements..."))
+        
 
         self.initializeElements()
+        
+        print(chalk.green.bold("Elements initiated"))
 
         self.is_key_pressed = False
+        
+       
 
         # main loop
         while self.is_running:
+            print(self.tick_counter)
             time_delta = self.clock.tick(60) / 1000  # limits FPS to 60
+            
+            if (self.tick_counter % 5 == 0):
+                if (len(self.sensor_text)>=1 and self.sensor_text[0]=="b"):
+                    sensor_data = self.parseRawData(self.sensor_text)
+                    print(sensor_data.keys())
+                    print(sensor_data["odometry"])
+            
 
             # update every tick
             if (self.tick_counter > 0):
                 current_time = datetime.datetime.now()
                 unix_timestamp = int(current_time.timestamp())
                 self.time_label.set_text(f'Time: {unix_timestamp}')
-                self.sensor_text = self.data_buffer[-1]
+                if ANNOTATOR_DEBUG:
+                    self.sensor_text = "Lorem Ipsum"
+                else:
+                    self.sensor_text = self.data_buffer[-1] 
+                    
                 self.data_text.set_text(self.sensor_text)
                 self.connection_label.set_text(self.ping_text)
                 self.battery_label.set_text(self.battery_text)
 
             # update image output every 2 ticks (30 fps video feed at 60 fps game output)
-            if (self.tick_counter > 0):
-                self.tick_counter = 0
-                image = self.cam.get_image()
-                self.image_box.set_image(image)
+            if (self.tick_counter %2 == 1):
+                if self.hasCamera:
+                    image = self.cam.get_image()
+                    self.image_box.set_image(image)
 
             # reset tick every 60
             if (self.tick_counter >= 59):
+                
                 self.tick_counter = 0
+                
 
             # event handler
             for event in pygame.event.get():
@@ -295,19 +335,13 @@ class Annotator:
 
                 self.manager.process_events(event)
 
-            # events = pygame.event.get()
-            # isPressed = self.hasKeyPressed(events, "type", pygame.KEYDOWN)
-
-            # if not isPressed and self.is_key_pressed is True:
-            #     self.movement_data_sender.send_data(b'@0000')
-            #     self.is_key_pressed = False
 
             self.manager.update(time_delta)
             self.screen.blit(self.background, (0, 0))
             self.manager.draw_ui(self.screen)
 
+            self.tick_counter = self.tick_counter + 1
             pygame.display.update()
-            self.tick_counter += 1
 
         self.pygame.quit()
 
@@ -380,5 +414,10 @@ class Annotator:
             print('[R] ACK sent.')
         return data  # up to user to interpret the data
 
-
+    def parseRawData(self,raw):
+        a = raw[1:].replace("'",'"').replace('array("f",',"").replace("])","]").replace("None",'"None"').replace("(","[").replace(")","]")
+        print(a)
+        out = json.load(a)
+        print(out)
+        return out
 annotator = Annotator()
