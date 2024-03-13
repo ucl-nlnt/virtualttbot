@@ -126,13 +126,16 @@ class turtlebot_controller:
         while not self.killswitch:  # Start host loop
 
             prompt = input("Enter natural language prompt:")    # enter user natural language prompt
-            print('sending START')
-            self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
-            self.gathering_data = True
-            self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
-            print('waiting for CONT')
-            self.movement_data_sender.receive_data()            # wait for @CONT
-            
+            if prompt != '$CONTROL':
+                print('sending START')
+                self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
+                self.gathering_data = True
+                self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+                print('waiting for CONT')
+                self.movement_data_sender.receive_data()            # wait for @CONT
+            else:
+                print('Activating movement debug mode.')
+
             while True: # Inner loop, data collection
             
                 if not self.keyboard_impulse: time.sleep(0.01667); continue
@@ -255,4 +258,4 @@ class turtlebot_controller:
 
 x = turtlebot_controller()
 while not x.killswitch:
-    pass
+    time.sleep(5)
