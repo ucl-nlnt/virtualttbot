@@ -97,15 +97,20 @@ class SensorsSubscriber(Node):
         self.odometry_msg = None
         self.battery_state_msg = None
 
+        lock = True
+        while lock:
+            self.destination_ip = input("Please enter the destination server's IP << ")
+            try:
+                self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
+                                                                destination_port=50000)
+                
+                time.sleep(0.5) # wait for the server to open the 2nd port.
+                self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
+                                                                destination_port=50001)
+                lock = False
+            except Exception as e:
+                print(e)
 
-        self.destination_ip = "10.158.39.147"
-        self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
-                                                        destination_port=50000)
-        
-        time.sleep(0.5) # wait for the server to open the 2nd port.
-        self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
-                                                        destination_port=50001)
-        
         # threads
 
         self.super_json = None
