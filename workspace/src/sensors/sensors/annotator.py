@@ -251,15 +251,11 @@ class Annotator:
                 
             # update every tick
             if (self.tick_counter > 0):
-                
                 self.time_label.set_text(f'Time: {unix_timestamp}')
-                
-
-            # update image output every 2 ticks (30 fps video feed at 60 fps game output)
-            if (self.tick_counter %2 == 1):
                 if self.hasCamera:
                     image = self.cam.get_image()
-                    self.image_box.set_image(image)
+                    self.image_box.set_image(image) # update image output every tick for 60 fps
+                                
 
             # reset tick every 60
             if (self.tick_counter >= 59):
@@ -272,7 +268,7 @@ class Annotator:
                 if event.type == pygame.QUIT:
                     self.is_running = False
 
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.KEYDOWN and self.is_key_pressed == False:
                     if event.scancode == 79:
                         # RIGHT
                         # print('[events/keyPressed]: d key pressed!')
@@ -293,7 +289,19 @@ class Annotator:
                         self.movement_data_sender.send_data(b'@FRWD')
                         self.is_key_pressed = True
                     else:
+                        self.is_key_pressed = False
                         self.movement_data_sender.send_data(b'@0000')
+                
+                if self.is_key_pressed == True:
+                    if event.type == pygame.KEYDOWN:
+                        if event.scancode >= 79 and event.scancode <=82:
+                            pass
+                        else:
+                            self.movement_data_sender.send_data(b'@0000')
+                            self.is_key_pressed = False
+                    else:
+                        self.movement_data_sender.send_data(b'@0000')
+                        self.is_key_pressed = False
 
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == self.start_button:
