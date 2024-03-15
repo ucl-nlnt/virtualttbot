@@ -1,6 +1,6 @@
 import pygame.camera
 import pygame
-
+from simple_chalk import chalk
 
 class Helper:
     def __init__(self) -> None:
@@ -25,6 +25,6 @@ class Helper:
 helper = Helper()
 list = helper.getCamList()
 
-print('Select your webcam from this list:')
+print(chalk.green('Select your webcam from this list:'))
 for i in range(len(list)):
     print(f'{i} - {list[i]}')
