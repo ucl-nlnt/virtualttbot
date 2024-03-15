@@ -235,6 +235,7 @@ class SensorsSubscriber(Node):
                 print('Camera is good. Proceeding.')
 
         except Exception as e:
+            
             self.enable_camera = False
             print("Error encountered when attempting to turn on camera.")
 

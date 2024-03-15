@@ -8,6 +8,9 @@ import uuid
 import os
 import ast
 import json
+import base64
+import numpy as np
+import cv2
 
 from KNetworking import DataBridgeServer_TCP
 
@@ -94,11 +97,32 @@ class turtlebot_controller:
 
     def super_json_listener(self):
 
+        t = time.time() + 1.0
+        x = 0
         while True:
-
+            
             if not self.gathering_data: time.sleep(0.007); continue
-            data = self.server_data_receiver.receive_data().decode()
+            if time.time() > t: 
+                t = time.time() + 1.0
+                x = 0
+            x += 1
+            data = json.loads(self.server_data_receiver.receive_data().decode())
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
+            
+            if False: # set to True to enable opencv camera
+                camera_frame = data['frame_data']
+                encoded_data = base64.b64decode(camera_frame)
+
+                # Convert the bytes to a numpy array
+                nparr = np.frombuffer(encoded_data, np.uint8)
+
+                # Decode the numpy array to an OpenCV image
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                cv2.imshow('frame',frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                print(x)
+
             self.data_buffer.append(data)
 
     def kb_listener(self):  # do Turtlebot controller stuff here
@@ -167,6 +191,9 @@ class turtlebot_controller:
 
             # confirm if data is good to be saved
             self.gathering_data = False
+
+            if prompt == '$CONTROL':
+                continue
 
             while True:
                 confirmation = input("Save log? (y/n) << ")
