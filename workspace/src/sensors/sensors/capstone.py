@@ -1,10 +1,6 @@
 import rclpy
 import time
 import threading
-import socket
-import sys
-import struct
-import random
 import math
 
 from rclpy.node import Node
@@ -14,7 +10,8 @@ from sensor_msgs.msg import Imu
 from sensor_msgs.msg import LaserScan
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
-from copy import deepcopy
+
+import argparse
 
 from KNetworking import DataBridgeServer_TCP, DataBridgeClient_TCP
 
@@ -63,7 +60,7 @@ def quaternion_to_yaw(x, y, z, w):
 
 class SensorsSubscriber(Node):
 
-    def __init__(self, server_ip_address, transmit_to_server = False):
+    def __init__(self,):
 
         super().__init__('sensors_subscriber')
 
@@ -76,9 +73,6 @@ class SensorsSubscriber(Node):
         self.movement_publisher = self.create_publisher(Twist, '/cmd_vel',10)
     
         # Instruction variables
-        self.last_order = '@0000'
-        self.time_last_order_issued = 0.0
-        self.velocity_change = False
         self.killswitch = False
         self.sampling_delay = 0.1
 
@@ -87,8 +81,6 @@ class SensorsSubscriber(Node):
         self.debug_odometer = False
         self.debug_randomizer = False
         self.debug_movement = False
-
-        self.transmit_to_server = transmit_to_server
 
         # Sensor messages:
         self.laserscan_msg = None
@@ -261,8 +253,8 @@ class SensorsSubscriber(Node):
                 }
             
             
-            self.super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized}).encode()
-
+            self.super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized})
+            print(self.super_json)
             time.sleep(self.sampling_delay)
     
     def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
@@ -375,10 +367,9 @@ class SensorsSubscriber(Node):
 
 def main(args=None):
 
-
-    server_ip_address = "127.0.0.1" # localhost
     rclpy.init(args=args)
-    sensors_subscriber = SensorsSubscriber(server_ip_address = server_ip_address)
+
+    sensors_subscriber = SensorsSubscriber()
     rclpy.spin(sensors_subscriber)
     sensors_subscriber.destroy_node()
 

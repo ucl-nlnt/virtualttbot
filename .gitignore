@@ -9,3 +9,4 @@ build/*
 install/*
 log
 workspace/src/sensors/sensors/datalogs
+workspace/src/sensors/sensors/serverconf.py

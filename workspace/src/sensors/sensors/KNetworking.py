@@ -227,8 +227,6 @@ class DataBridgeClient_TCP:
             self.reconnect_to_server()
             self.send_data(data=data) # re-attempt to send data
 
-
-
     def receive_data(self):
 
         return receive_data_subroutine(self.client, destination_port=self.destination_ip_address, debug=self.debug, send_acks=self.enable_acks, packet_size=self.packet_size)
