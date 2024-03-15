@@ -224,29 +224,36 @@ class Annotator:
 
         # main loop
         while self.is_running:
-            print(self.tick_counter)
             time_delta = self.clock.tick(60) / 1000  # limits FPS to 60
+            current_time = datetime.datetime.now()
+            unix_timestamp = int(current_time.timestamp())
             
-            if (self.tick_counter % 5 == 0):
-                if (len(self.sensor_text)>=1 and self.sensor_text[0]=="b"):
-                    sensor_data = self.parseRawData(self.sensor_text)
-                    print(sensor_data.keys())
-                    print(sensor_data["odometry"])
-            
-
+            if (self.tick_counter % 5 ==0):
+                if ANNOTATOR_DEBUG:
+                    self.sensor_text += "\nLorem Ipsum"
+                else:
+                    if (len(self.data_buffer[-1])>=1 and self.data_buffer[-1][0]=="b"):
+                        """dictionary that contains the real-time turtlebot data, please see schema/test.json for format"""
+                        sensor_data = self.parseRawData(self.data_buffer[-1])
+                        
+                        # TODO: format the sensor_data into self.sensor_text
+                        acen = sensor_data['imu']['linear_acceleration']
+                        odom = sensor_data['odometry']['pose_position']
+                        self.sensor_text = f'{unix_timestamp}: {acen} | {odom}\n{self.sensor_text}'
+                        # END
+                        
+                        self.data_text.set_text(self.sensor_text)
+                        
+                        # self.connection_label.set_text(self.ping_text)
+                        batt_percen = round(sensor_data['battery']['percentage'],2)
+                        self.battery_text = f'{batt_percen}%'
+                        self.battery_label.set_text(self.battery_text)
+                
             # update every tick
             if (self.tick_counter > 0):
-                current_time = datetime.datetime.now()
-                unix_timestamp = int(current_time.timestamp())
+                
                 self.time_label.set_text(f'Time: {unix_timestamp}')
-                if ANNOTATOR_DEBUG:
-                    self.sensor_text = "Lorem Ipsum"
-                else:
-                    self.sensor_text = self.data_buffer[-1] 
-                    
-                self.data_text.set_text(self.sensor_text)
-                self.connection_label.set_text(self.ping_text)
-                self.battery_label.set_text(self.battery_text)
+                
 
             # update image output every 2 ticks (30 fps video feed at 60 fps game output)
             if (self.tick_counter %2 == 1):
@@ -416,8 +423,7 @@ class Annotator:
 
     def parseRawData(self,raw):
         a = raw[1:].replace("'",'"').replace('array("f",',"").replace("])","]").replace("None",'"None"').replace("(","[").replace(")","]")
-        print(a)
-        out = json.load(a)
-        print(out)
+        b = a[1:-1]
+        out = json.loads(b)
         return out
 annotator = Annotator()
