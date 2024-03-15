@@ -2,6 +2,7 @@ import rclpy
 import time
 import threading
 import math
+import cv2
 
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -10,7 +11,7 @@ from sensor_msgs.msg import Imu
 from sensor_msgs.msg import LaserScan
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
-
+import json
 import argparse
 
 from KNetworking import DataBridgeServer_TCP, DataBridgeClient_TCP
@@ -35,6 +36,7 @@ import sys
 from collections import deque
 import struct
 import random
+import base64
 
 ###
 #   NOTE on USAGE: DataBridgeClient assumes that the Server is already running. Please ensure that it's setting up first!
@@ -75,12 +77,19 @@ class SensorsSubscriber(Node):
         # Instruction variables
         self.killswitch = False
         self.sampling_delay = 0.1
+        self.server_ip_address = None
 
         # DEBUG LOCKS
         self.debug_send_data = False
         self.debug_odometer = False
         self.debug_randomizer = False
         self.debug_movement = False
+
+        self.enable_camera = False
+        self.linear_x_speed = 0.0
+        self.angular_z_speed = 0.0
+        self.destination_ip = None
+        self.camera_device = 0
 
         # Sensor messages:
         self.laserscan_msg = None
@@ -89,9 +98,14 @@ class SensorsSubscriber(Node):
         self.odometry_msg = None
         self.battery_state_msg = None
 
+        
+        self.set_params()
+        self.get_params()
+
+        
         lock = True
         while lock:
-            self.destination_ip = input("Please enter the destination server's IP << ")
+            if self.destination_ip != None: self.destination_ip = input("Please enter the destination server's IP << ")
             try:
                 self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                                 destination_port=50000)
@@ -119,6 +133,26 @@ class SensorsSubscriber(Node):
 
         print('INIT COMPLETE')
 
+    def set_params(self):
+
+        self.declare_parameter('linear_x',0.2)              # Default value
+        self.declare_parameter('angular_z',0.75)            # Default value
+        self.declare_parameter('photos',1)                  # Set to 0 to disable
+        self.declare_parameter('sampling_t',0.1)            # DO NOT GO LOWER THAN 0.1!
+        self.declare_parameter('server_ip_address',"0.0.0.0")    # If None, will prompt the user for the IP Address
+        self.declare_parameter('cam_device',0)              # default is zero
+
+    def get_params(self):
+
+        self.linear_x_speed = self.get_parameter('linear_x').get_parameter_value().double_value
+        self.angular_z_speed = self.get_parameter('angular_z').get_parameter_value().double_value
+        self.enable_camera = self.get_parameter('photos').get_parameter_value().integer_value
+        self.sampling_delay = self.get_parameter('sampling_t').get_parameter_value().double_value
+        self.destination_ip = self.get_parameter('server_ip_address').get_parameter_value().string_value
+        self.camera_device = self.get_parameter('cam_device').get_parameter_value().integer_value
+
+        print('params:', self.destination_ip, [self.linear_x_speed, self.angular_z_speed], self.enable_camera, self.sampling_delay)
+
     def receive_movement_from_server(self):
 
         while True:
@@ -135,11 +169,11 @@ class SensorsSubscriber(Node):
                 break
 
             elif inst == b'@0000': self.movement(0.0,0.0)
-            elif inst == b'@FRWD': self.movement(0.1,0.0)
-            elif inst == b'@LEFT': self.movement(0.0,0.75)
-            elif inst == b'@RGHT': self.movement(0.0,-0.75)
-            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True")
-            elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False")
+            elif inst == b'@FRWD': self.movement(self.linear_x_speed,0.0)
+            elif inst == b'@LEFT': self.movement(0.0,self.angular_z_speed)
+            elif inst == b'@RGHT': self.movement(0.0,-self.angular_z_speed)
+            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True"); time.sleep(0.2);
+            elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); time.sleep(0.2);
 
             elif inst == b'@KILL': # terminate program
                 self.killswitch = True
@@ -190,10 +224,37 @@ class SensorsSubscriber(Node):
         imu_msg_jsonized = None
         odometry_msg_jsonized = None
         battery_state_msg_jsonized = None
+        camera_frame = None
 
+        try:
+            cap = cv2.VideoCapture(self.camera_device)
+            print('taking a test photo...')
+            ret, frame = cap.read()
+            if not ret:
+                self.enable_camera = False
+                print('Camera is good. Proceeding.')
+
+        except Exception as e:
+            self.enable_camera = False
+            print("Error encountered when attempting to turn on camera.")
 
         while True:
 
+            if not self.is_collecting_data: time.sleep(0.1); continue;
+
+            if self.enable_camera:
+                ret, frame = cap.read()
+                if not ret:
+                    print('WARNING: Camera failed to return an image.')
+                    continue
+
+                success, encoded_image = cv2.imencode('.jpg',frame)
+                if not success:
+                    print('WARNING: Failed to encode image.')
+                    continue
+            
+                camera_frame = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
+    
             if self.laserscan_msg != None:
 
                 laserscan_msg_jsonized = {
@@ -253,8 +314,7 @@ class SensorsSubscriber(Node):
                 }
             
             
-            self.super_json = str({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized})
-            print(self.super_json)
+            self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":camera_frame})
             time.sleep(self.sampling_delay)
     
     def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
