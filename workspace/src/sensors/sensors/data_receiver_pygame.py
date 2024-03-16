@@ -11,11 +11,21 @@ import json
 import base64
 import numpy as np
 import cv2
+import argparse
+
 
 from KNetworking import DataBridgeServer_TCP
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
+
+parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based controller.")
+
+parser.add_argument("--display",type=bool, default=False, help='Enable or disable OpenCV camera window for debugging purposes.')
+parser.add_argument("--enable_autorandomizer_from_csv", type=bool, default=False, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
+parser.add_argument("--csv_path",type=str, default="NLNT_level1.csv", help="Specifies path to NLNT level 1 natural language label dataset.")
+parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount. Measured in Clockwise rotations.")
+args = parser.parse_args()
 
 
 class turtlebot_controller:
@@ -109,7 +119,7 @@ class turtlebot_controller:
             data = json.loads(self.server_data_receiver.receive_data().decode())
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
             
-            if False: # set to True to enable opencv camera
+            if args.display: # set to True to enable opencv camera
                 camera_frame = data['frame_data']
                 encoded_data = base64.b64decode(camera_frame)
 
@@ -119,8 +129,7 @@ class turtlebot_controller:
                 # Decode the numpy array to an OpenCV image
                 frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
                 cv2.imshow('frame',frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                cv2.waitKey(1)
                 print(x)
 
             self.data_buffer.append(data)
