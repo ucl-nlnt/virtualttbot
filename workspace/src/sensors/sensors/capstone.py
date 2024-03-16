@@ -42,9 +42,16 @@ import base64
 #   NOTE on USAGE: DataBridgeClient assumes that the Server is already running. Please ensure that it's setting up first!
 ###
 
-# NOTE: added DataBridge objects here cause colcon build is messing up for some reason
+parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based client.")
 
+parser.add_argument("--send_images", type=bool, default=True, help="Enable or Disable OpenCV functions.")
+parser.add_argument("--linear_x_ms", type=float, default=0.15, help="Set Turtlebot3 linear movement speed.")
+parser.add_argument("--angular_z_rads", type=float, default=1.0, help="Set Turtlebot3 angular turning speed.")
+parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sampling frequency, hz = 1/t. NOTE: DO NOT SET LOWER THAN 0.1 SECONDS.")
+parser.add_argument("--server_ip", type=str, default="None", help="Sets jump server IP address.")
+parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
 
+args = parser.parse_args()
 
 def quaternion_to_yaw(x, y, z, w):
 
@@ -62,7 +69,7 @@ def quaternion_to_yaw(x, y, z, w):
 
 class SensorsSubscriber(Node):
 
-    def __init__(self,):
+    def __init__(self):
 
         super().__init__('sensors_subscriber')
 
@@ -76,7 +83,7 @@ class SensorsSubscriber(Node):
     
         # Instruction variables
         self.killswitch = False
-        self.sampling_delay = 0.1
+        self.sampling_delay = args.sampling_delay_t
         self.server_ip_address = None
 
         # DEBUG LOCKS
@@ -85,9 +92,9 @@ class SensorsSubscriber(Node):
         self.debug_randomizer = False
         self.debug_movement = False
 
-        self.enable_camera = False
-        self.linear_x_speed = 0.0
-        self.angular_z_speed = 0.0
+        self.enable_camera = args.send_images
+        self.linear_x_speed = args.linear_x_ms
+        self.angular_z_speed = args.angular_z_rads
         self.destination_ip = None
         self.camera_device = 0
 
@@ -105,14 +112,14 @@ class SensorsSubscriber(Node):
         
         lock = True
         while lock:
-            if self.destination_ip != None: self.destination_ip = input("Please enter the destination server's IP << ")
+            if args.server_ip == "None": self.destination_ip = input("Please enter the destination server's IP << ")
             try:
                 self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
-                                                                destination_port=50000)
+                                                                destination_port=args.server_port)
                 
                 time.sleep(0.5) # wait for the server to open the 2nd port.
                 self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
-                                                                destination_port=50001)
+                                                                destination_port=args.server_port + 1)
                 lock = False
             except Exception as e:
                 print(e)
@@ -132,26 +139,6 @@ class SensorsSubscriber(Node):
         self.movement_subscriber_thread.start()
 
         print('INIT COMPLETE')
-
-    def set_params(self):
-
-        self.declare_parameter('linear_x',0.2)              # Default value
-        self.declare_parameter('angular_z',0.75)            # Default value
-        self.declare_parameter('photos',1)                  # Set to 0 to disable
-        self.declare_parameter('sampling_t',0.1)            # DO NOT GO LOWER THAN 0.1!
-        self.declare_parameter('server_ip_address',"0.0.0.0")    # If None, will prompt the user for the IP Address
-        self.declare_parameter('cam_device',0)              # default is zero
-
-    def get_params(self):
-
-        self.linear_x_speed = self.get_parameter('linear_x').get_parameter_value().double_value
-        self.angular_z_speed = self.get_parameter('angular_z').get_parameter_value().double_value
-        self.enable_camera = self.get_parameter('photos').get_parameter_value().integer_value
-        self.sampling_delay = self.get_parameter('sampling_t').get_parameter_value().double_value
-        self.destination_ip = self.get_parameter('server_ip_address').get_parameter_value().string_value
-        self.camera_device = self.get_parameter('cam_device').get_parameter_value().integer_value
-
-        print('params:', self.destination_ip, [self.linear_x_speed, self.angular_z_speed], self.enable_camera, self.sampling_delay)
 
     def receive_movement_from_server(self):
 
@@ -227,6 +214,7 @@ class SensorsSubscriber(Node):
         camera_frame = None
 
         try:
+            
             cap = cv2.VideoCapture(self.camera_device)
             print('taking a test photo...')
             ret, frame = cap.read()
@@ -235,7 +223,7 @@ class SensorsSubscriber(Node):
                 print('Camera is good. Proceeding.')
 
         except Exception as e:
-            
+
             self.enable_camera = False
             print("Error encountered when attempting to turn on camera.")
 
@@ -244,6 +232,8 @@ class SensorsSubscriber(Node):
             if not self.is_collecting_data: time.sleep(0.1); continue;
 
             if self.enable_camera:
+                
+                t = time.time()
                 ret, frame = cap.read()
                 if not ret:
                     print('WARNING: Camera failed to return an image.')
@@ -255,7 +245,8 @@ class SensorsSubscriber(Node):
                     continue
             
                 camera_frame = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
-    
+                print(time.time() - t)
+
             if self.laserscan_msg != None:
 
                 laserscan_msg_jsonized = {
