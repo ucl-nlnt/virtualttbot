@@ -24,9 +24,9 @@ parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based con
 parser.add_argument("--display",type=bool, default=False, help='Enable or disable OpenCV camera window for debugging purposes.')
 parser.add_argument("--enable_autorandomizer_from_csv", type=bool, default=False, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
 parser.add_argument("--csv_path",type=str, default="NLNT_level1.csv", help="Specifies path to NLNT level 1 natural language label dataset.")
-parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount. Measured in Clockwise rotations.")
+parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
+parser.add_argument("--disable_log_compression", type=bool, default=False, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
 args = parser.parse_args()
-
 
 class turtlebot_controller:
 
@@ -36,7 +36,7 @@ class turtlebot_controller:
         self.current_user = input("enter a username for logging purposes << ")
         self.gathering_data = False
 
-        # will be useful once data gathering autmation is started
+        # will be useful once data gathering automation is started
         self.manual_control = manual_control
 
         # keyboard stuff
