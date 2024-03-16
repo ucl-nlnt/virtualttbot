@@ -192,7 +192,7 @@ class turtlebot_controller:
         # assumption: socket connection is successful
         while not self.killswitch:  # Start host loop
 
-            prompt = prompt_generator()                             # random_generated
+            prompt = self.prompt_generator()                             # random_generated
             print(prompt)
             if prompt != '$CONTROL':
                 print('sending START')
