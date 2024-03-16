@@ -134,7 +134,7 @@ class turtlebot_controller:
 
             self.data_buffer.append(data)
 
-    def prompt_generator():
+    def prompt_generator(self):
 
         prompt_type = ['move', 'rotate', 'two_inst']
         selected = random.sample(prompt_type, 1)
