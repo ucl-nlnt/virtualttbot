@@ -134,6 +134,39 @@ class turtlebot_controller:
 
             self.data_buffer.append(data)
 
+    def prompt_generator():
+
+        prompt_type = ['move', 'rotate', 'two_inst']
+        selected = random.sample(prompt_type, 1)
+    
+        if selected[0] == 'move':
+            random_number = random.randint(1, 30)
+            random_number = random_number / 10  
+            prompt = "Move forward by " + str(random_number) + " meters"
+    
+        elif selected[0] == 'rotate':
+            direction = ['left', 'right']
+            selected_direction = random.sample(direction, 1)
+            prompt = "Rotate " + selected_direction[0] + " by " + str(random.randrange(10,365,5)) + " degrees"
+    
+        elif selected[0] == 'two_inst':
+            random_number = random.randint(1, 30)
+            random_number = random_number / 10  
+            prompt_a = str(random_number) + " meters"
+    
+            direction = ['left', 'right']
+            selected_direction = random.sample(direction, 1)
+            prompt_b = selected_direction[0] + " by " + str(random.randrange(10,365,5)) + " degrees"
+    
+            variation = [1, 2]
+            selected_variation = random.sample(variation, 1)
+            if selected_variation[0] == 1:
+                prompt = "Move forward by " + prompt_a + " then rotate " + prompt_b
+            elif selected_variation[0] == 2:
+                prompt = "Rotate " + prompt_b + " then move forward by " + prompt_a
+    
+        return prompt
+
     def kb_listener(self):  # do Turtlebot controller stuff here
 
         """
@@ -155,10 +188,12 @@ class turtlebot_controller:
 
         # start host loop -> enter prompt -> start logging -> do stuff -> end logging -> generate unique id -> confirm save -> save data as a json with unique id
 
+    
         # assumption: socket connection is successful
         while not self.killswitch:  # Start host loop
 
-            prompt = input("Enter natural language prompt:")    # enter user natural language prompt
+            prompt = prompt_generator()                             # random_generated
+            print(prompt)
             if prompt != '$CONTROL':
                 print('sending START')
                 self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
