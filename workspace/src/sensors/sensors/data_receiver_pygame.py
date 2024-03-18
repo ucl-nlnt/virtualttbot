@@ -129,7 +129,16 @@ class turtlebot_controller:
 
                 # Decode the numpy array to an OpenCV image
                 frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
                 cv2.imshow('frame',frame)
+
+                # Frame Rotator
+                h, w = frame.shape[:2]
+                rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), args.rotate_r_by, 1)
+                rot_frame = cv2.warpAffine(frame, rot_matrix, (w, h))
+
+                cv2.imshow('rotated frame', rot_frame)
+
                 cv2.waitKey(1)
                 print(x)
 
