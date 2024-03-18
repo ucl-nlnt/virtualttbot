@@ -13,6 +13,7 @@ import numpy as np
 import cv2
 import argparse
 import random
+import zlib
 
 from KNetworking import DataBridgeServer_TCP
 
@@ -256,8 +257,11 @@ class turtlebot_controller:
                 fname = self.generate_random_filename()
 
                 with open(os.path.join("datalogs",fname),'w') as f:
-                    f.write(json.dumps(json_file, indent=4))
-            
+                    if args.disable_log_compression:
+                          f.write(json.dumps(json_file, indent=4))
+                    else:
+                        f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
+
                 print("Instance saved.")
                 
             else:
@@ -266,6 +270,17 @@ class turtlebot_controller:
     def generate_random_filename(self):
         random_filename = str(uuid.uuid4().hex)[:16]
         return random_filename
+
+    def csv_randomizer():
+        prompt_list = []
+        with open(args.csv_path, 'r') as file:
+            prompt_list = file.read().split('\n')
+
+        if args.enable_autorandomizer_from_csv:
+            rnd_num = random.randint(0, len(prompt_list)-1)
+            next_prompt = prompt_list[rnd_num]
+            return next_prompt
+        return
 
     def send_data(self, data: bytes):
 
