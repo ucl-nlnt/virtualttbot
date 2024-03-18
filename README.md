@@ -121,7 +121,9 @@ pip install -r requirements.txt
 You don't need to do further setup as these are already discussed in [Client PC Setup](###a.-client-pc)
 
 ### C. Real Turtlebot
-> TODO: Gab i'm not sure how to do setup hehe - Red
+Follow the SBV setup on the Turtlebot3 quickstart guide. NOTE: requires a MicroSD Card reader.
+https://emanual.robotis.com/docs/en/platform/turtlebot3/sbc_setup/#sbc-setup
+-> MAKE SURE TO FOLLOW THE INSTRUCTIONS FOR FOXY.
 
 ## Conducting Data Gathering
 
