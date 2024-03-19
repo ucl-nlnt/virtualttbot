@@ -27,6 +27,7 @@ parser.add_argument("--csv_path",type=str, default="NLNT_level1.csv", help="Spec
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
 parser.add_argument("--disable_log_compression", type=bool, default=False, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
 args = parser.parse_args()
+print(args)
 
 class turtlebot_controller:
 
@@ -234,8 +235,7 @@ class turtlebot_controller:
 
     def send_data(self, data: bytes):
 
-        if isinstance(data, str):
-            data = data.encode()
+        data = data.encode()
 
         # NOTE: data may or may not be in string format.
 
