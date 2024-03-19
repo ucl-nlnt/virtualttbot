@@ -219,7 +219,7 @@ class turtlebot_controller:
                 print("Random prompt:",prompt)
 
             else:
-                print("Enter prompt <<")
+                prompt = input("Enter prompt <<")
 
             if prompt != '$CONTROL':
                 print('sending START')
