@@ -127,31 +127,32 @@ class turtlebot_controller:
 
                 # Decode camera data
                 camera_frame = data['frame_data']
-                encoded_data = base64.b64decode(camera_frame)
+                if camera_frame != None:
+                    encoded_data = base64.b64decode(camera_frame)
 
-                # Convert the bytes to a numpy array
-                nparr = np.frombuffer(encoded_data, np.uint8)
+                    # Convert the bytes to a numpy array
+                    nparr = np.frombuffer(encoded_data, np.uint8)
 
-                # Decode the numpy array to an OpenCV image
-                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                    # Decode the numpy array to an OpenCV image
+                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-                # Frame Rotator
-                if args.rotate_r_by:
+                    # Frame Rotator
+                    if args.rotate_r_by:
 
-                    h, w = frame.shape[:2]
-                    angle = -90 * args.rotate_r_by
-                    rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle, 1)
-                    frame = cv2.warpAffine(frame, rot_matrix, (w, h))
+                        h, w = frame.shape[:2]
+                        angle = -90 * args.rotate_r_by
+                        rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle, 1)
+                        frame = cv2.warpAffine(frame, rot_matrix, (w, h))
 
-                    # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
-                    retval, buffer = cv2.imencode('.jpg', frame)
-                    frame_data_as_string = base64.b64encode(buffer).decode('utf-8')
+                        # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
+                        retval, buffer = cv2.imencode('.jpg', frame)
+                        frame_data_as_string = base64.b64encode(buffer).decode('utf-8')
 
-                    # Update 'frame_data' in the JSON data structure
-                    data['frame_data'] = frame_data_as_string
+                        # Update 'frame_data' in the JSON data structure
+                        data['frame_data'] = frame_data_as_string
 
-                cv2.imshow('frame',frame)
-                cv2.waitKey(1)
+                    cv2.imshow('frame',frame)
+                    cv2.waitKey(1)
 
             self.data_buffer.append(data)
 
@@ -282,12 +283,19 @@ class turtlebot_controller:
                 
                 fname = self.generate_random_filename()
 
-                with open(os.path.join("datalogs",fname),'w') as f:
+                if not args.disable_log_compression:
+                    fname = fname + ".compressed"
+
+                with open(os.path.join("datalogs",fname),'wb') as f:
                     if args.disable_log_compression:
                           f.write(json.dumps(json_file, indent=4))
                     else:
                         f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
 
+                with open(os.path.join("datalogs",fname),'rb') as f:
+                    compressed = f.read()
+
+                print(json.loads(zlib.decompress(compressed).decode('utf-8')).keys())
                 print("Instance saved.")
                 
             else:
