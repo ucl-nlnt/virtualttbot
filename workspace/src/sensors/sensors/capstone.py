@@ -346,6 +346,7 @@ class SensorsSubscriber(Node):
         if t1 < t2: dirrection_right = True
         else: dirrection_right = False
         """
+        
         while True:
 
             current_radians = self.position_odom[2]

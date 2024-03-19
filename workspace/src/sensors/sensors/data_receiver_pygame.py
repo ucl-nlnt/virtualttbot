@@ -22,11 +22,12 @@ if not os.path.exists("datalogs"):
 
 parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based controller.")
 
-parser.add_argument("--display",type=bool, default=False, help='Enable or disable OpenCV camera window for debugging purposes.')
-parser.add_argument("--enable_autorandomizer_from_csv", type=bool, default=False, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
+parser.add_argument("--display",type=int, default=0, help='Enable or disable OpenCV camera window for debugging purposes.')
+parser.add_argument("--enable_autorandomizer_from_csv", type=int, default=0, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
 parser.add_argument("--csv_path",type=str, default="NLNT_level1.csv", help="Specifies path to NLNT level 1 natural language label dataset.")
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
-parser.add_argument("--disable_log_compression", type=bool, default=False, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
+parser.add_argument("--disable_log_compression", type=int, default=0, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
+
 args = parser.parse_args()
 print(args)
 
@@ -111,6 +112,7 @@ class turtlebot_controller:
 
         t = time.time() + 1.0
         x = 0
+
         while True:
             
             if not self.gathering_data: time.sleep(0.007); continue
@@ -122,32 +124,36 @@ class turtlebot_controller:
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
             
             if args.display or args.rotate_r_by:
+
                 # Decode camera data
                 camera_frame = data['frame_data']
-                encoded_data = base64.b64decode(camera_frame)
+                if camera_frame != None:
+                    encoded_data = base64.b64decode(camera_frame)
 
-                # Convert the bytes to a numpy array
-                nparr = np.frombuffer(encoded_data, np.uint8)
+                    # Convert the bytes to a numpy array
+                    nparr = np.frombuffer(encoded_data, np.uint8)
 
-                # Decode the numpy array to an OpenCV image
-                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                    # Decode the numpy array to an OpenCV image
+                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+                    # Frame Rotator
+                    if args.rotate_r_by:
 
-                # Frame Rotator
-                if args.rotate_r_by:
+                        h, w = frame.shape[:2]
+                        angle = -90 * args.rotate_r_by
+                        rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle, 1)
+                        frame = cv2.warpAffine(frame, rot_matrix, (w, h))
 
-                    h, w = frame.shape[:2]
-                    angle = 90
-                    rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle * args.rotate_r_by, 1)
-                    rot_frame = cv2.warpAffine(frame, rot_matrix, (w, h))
-                cv2.imshow('frame',frame)
-                cv2.waitKey(1)
+                        # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
+                        retval, buffer = cv2.imencode('.jpg', frame)
+                        frame_data_as_string = base64.b64encode(buffer).decode('utf-8')
 
-            if args.rotate_r_by:
-                retval, buffer = cv2.imencode('.jpg',rot_frame)
-                frame_data_as_string = base64.b64encode(buffer.tobytes()).decode('utf-8')
-                data['frame_data'] = frame_data_as_string
-                
+                        # Update 'frame_data' in the JSON data structure
+                        data['frame_data'] = frame_data_as_string
+
+                    cv2.imshow('frame',frame)
+                    cv2.waitKey(1)
+
             self.data_buffer.append(data)
 
     def prompt_generator(self):
@@ -208,8 +214,14 @@ class turtlebot_controller:
         # assumption: socket connection is successful
         while not self.killswitch:  # Start host loop
 
-            prompt = self.prompt_generator()                             # random_generated
-            print(prompt)
+            if args.enable_autorandomizer_from_csv:
+                
+                prompt = self.prompt_generator()                             # random_generated
+                print("Random prompt:",prompt)
+
+            else:
+                prompt = input("Enter prompt <<")
+
             if prompt != '$CONTROL':
                 print('sending START')
                 self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
@@ -271,12 +283,19 @@ class turtlebot_controller:
                 
                 fname = self.generate_random_filename()
 
-                with open(os.path.join("datalogs",fname),'w') as f:
+                if not args.disable_log_compression:
+                    fname = fname + ".compressed"
+
+                with open(os.path.join("datalogs",fname),'wb') as f:
                     if args.disable_log_compression:
                           f.write(json.dumps(json_file, indent=4))
                     else:
                         f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
 
+                with open(os.path.join("datalogs",fname),'rb') as f:
+                    compressed = f.read()
+
+                print(json.loads(zlib.decompress(compressed).decode('utf-8')).keys())
                 print("Instance saved.")
                 
             else:
