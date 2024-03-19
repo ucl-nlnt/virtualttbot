@@ -44,7 +44,7 @@ import base64
 
 parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based client.")
 
-parser.add_argument("--send_images", type=bool, default=True, help="Enable or Disable OpenCV functions.")
+parser.add_argument("--send_images", type=int, default=1, help="Enable or Disable OpenCV functions.")
 parser.add_argument("--linear_x_ms", type=float, default=0.15, help="Set Turtlebot3 linear movement speed.")
 parser.add_argument("--angular_z_rads", type=float, default=1.0, help="Set Turtlebot3 angular turning speed.")
 parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sampling frequency, hz = 1/t. NOTE: DO NOT SET LOWER THAN 0.1 SECONDS.")
@@ -52,6 +52,7 @@ parser.add_argument("--server_ip", type=str, default="None", help="Sets jump ser
 parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
 
 args = parser.parse_args()
+print(args)
 
 def quaternion_to_yaw(x, y, z, w):
 
@@ -95,7 +96,7 @@ class SensorsSubscriber(Node):
         self.enable_camera = args.send_images
         self.linear_x_speed = args.linear_x_ms
         self.angular_z_speed = args.angular_z_rads
-        self.destination_ip = None
+        self.destination_ip = args.server_ip
         self.camera_device = 0
 
         # Sensor messages:
@@ -105,14 +106,11 @@ class SensorsSubscriber(Node):
         self.odometry_msg = None
         self.battery_state_msg = None
 
-        
-        self.set_params()
-        self.get_params()
-
+        self.starting_odometry_set = False
         
         lock = True
         while lock:
-            if args.server_ip == "None": self.destination_ip = input("Please enter the destination server's IP << ")
+            if self.destination_ip == "None": self.destination_ip = input("Please enter the destination server's IP << ")
             try:
                 self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                                 destination_port=args.server_port)
@@ -159,7 +157,7 @@ class SensorsSubscriber(Node):
             elif inst == b'@FRWD': self.movement(self.linear_x_speed,0.0)
             elif inst == b'@LEFT': self.movement(0.0,self.angular_z_speed)
             elif inst == b'@RGHT': self.movement(0.0,-self.angular_z_speed)
-            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True"); time.sleep(0.2);
+            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True"); self.starting_odometry_set = False; time.sleep(0.2);
             elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); time.sleep(0.2);
 
             elif inst == b'@KILL': # terminate program
@@ -245,7 +243,7 @@ class SensorsSubscriber(Node):
                     continue
             
                 camera_frame = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
-                print(time.time() - t)
+                # print(time.time() - t)
 
             if self.laserscan_msg != None:
 
@@ -260,8 +258,8 @@ class SensorsSubscriber(Node):
                     "scan_time":self.laserscan_msg.scan_time,
                     "range_min":self.laserscan_msg.range_min,
                     "range_max":self.laserscan_msg.range_max,
-                    "ranges":self.laserscan_msg.ranges,
-                    "intensities":self.laserscan_msg.intensities
+                    "ranges":[i for i in self.laserscan_msg.ranges],
+                    "intensities":[i for i in self.laserscan_msg.intensities]
                 }
 
             if self.twist_msg != None:
@@ -288,6 +286,12 @@ class SensorsSubscriber(Node):
                 position, orientation = msg_pose.position, msg_pose.orientation
                 msg_pose_covariance = self.odometry_msg.pose.covariance
 
+                if not self.starting_odometry_set: 
+                    self.starting_odometry_set = True
+                    distance_traveled = 0
+                else:
+                    x, y, z = odometry_msg_jsonized["pose_position"] # save the values before proceeding
+
                 odometry_msg_jsonized = {
                     "time_sec":self.odometry_msg.header.stamp.sec,
                     "time_nano":self.odometry_msg.header.stamp.nanosec,
@@ -295,6 +299,13 @@ class SensorsSubscriber(Node):
                     "pose_orientation_quarternion":(orientation.x, orientation.y, orientation.z, orientation.w),
                     "object_covariance":[i for i in msg_pose_covariance]
                 }
+
+                try:
+                    x1, y1, z1 = odometry_msg_jsonized["pose_position"]
+                    distance_traveled += math.sqrt((x1-x)**2 + (y1-y)**2 + (z1-z)**2)
+                    print("Total distance:",round(distance_traveled,2))
+                except Exception as e:
+                    pass
 
             if self.battery_state_msg != None:
 
@@ -305,7 +316,7 @@ class SensorsSubscriber(Node):
                     "current":self.battery_state_msg.current,
                 }
             
-            
+            data = {"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":camera_frame}
             self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":camera_frame})
             time.sleep(self.sampling_delay)
     
