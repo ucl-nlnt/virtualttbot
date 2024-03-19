@@ -12,7 +12,8 @@ import base64
 import numpy as np
 import cv2
 import argparse
-
+import random
+import zlib
 
 from KNetworking import DataBridgeServer_TCP
 
@@ -129,11 +130,53 @@ class turtlebot_controller:
 
                 # Decode the numpy array to an OpenCV image
                 frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
                 cv2.imshow('frame',frame)
+
+                # Frame Rotator
+                h, w = frame.shape[:2]
+                rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), args.rotate_r_by, 1)
+                rot_frame = cv2.warpAffine(frame, rot_matrix, (w, h))
+
+                cv2.imshow('rotated frame', rot_frame)
+
                 cv2.waitKey(1)
                 print(x)
 
             self.data_buffer.append(data)
+
+    def prompt_generator(self):
+
+        prompt_type = ['move', 'rotate', 'two_inst']
+        selected = random.sample(prompt_type, 1)
+    
+        if selected[0] == 'move':
+            random_number = random.randint(1, 30)
+            random_number = random_number / 10  
+            prompt = "Move forward by " + str(random_number) + " meters"
+    
+        elif selected[0] == 'rotate':
+            direction = ['left', 'right']
+            selected_direction = random.sample(direction, 1)
+            prompt = "Rotate " + selected_direction[0] + " by " + str(random.randrange(10,365,5)) + " degrees"
+    
+        elif selected[0] == 'two_inst':
+            random_number = random.randint(1, 30)
+            random_number = random_number / 10  
+            prompt_a = str(random_number) + " meters"
+    
+            direction = ['left', 'right']
+            selected_direction = random.sample(direction, 1)
+            prompt_b = selected_direction[0] + " by " + str(random.randrange(10,365,5)) + " degrees"
+    
+            variation = [1, 2]
+            selected_variation = random.sample(variation, 1)
+            if selected_variation[0] == 1:
+                prompt = "Move forward by " + prompt_a + " then rotate " + prompt_b
+            elif selected_variation[0] == 2:
+                prompt = "Rotate " + prompt_b + " then move forward by " + prompt_a
+    
+        return prompt
 
     def kb_listener(self):  # do Turtlebot controller stuff here
 
@@ -156,10 +199,12 @@ class turtlebot_controller:
 
         # start host loop -> enter prompt -> start logging -> do stuff -> end logging -> generate unique id -> confirm save -> save data as a json with unique id
 
+    
         # assumption: socket connection is successful
         while not self.killswitch:  # Start host loop
 
-            prompt = input("Enter natural language prompt:")    # enter user natural language prompt
+            prompt = self.prompt_generator()                             # random_generated
+            print(prompt)
             if prompt != '$CONTROL':
                 print('sending START')
                 self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
@@ -222,8 +267,11 @@ class turtlebot_controller:
                 fname = self.generate_random_filename()
 
                 with open(os.path.join("datalogs",fname),'w') as f:
-                    f.write(json.dumps(json_file, indent=4))
-            
+                    if args.disable_log_compression:
+                          f.write(json.dumps(json_file, indent=4))
+                    else:
+                        f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
+
                 print("Instance saved.")
                 
             else:
@@ -232,6 +280,17 @@ class turtlebot_controller:
     def generate_random_filename(self):
         random_filename = str(uuid.uuid4().hex)[:16]
         return random_filename
+
+    def csv_randomizer():
+        prompt_list = []
+        with open(args.csv_path, 'r') as file:
+            prompt_list = file.read().split('\n')
+
+        if args.enable_autorandomizer_from_csv:
+            rnd_num = random.randint(0, len(prompt_list)-1)
+            next_prompt = prompt_list[rnd_num]
+            return next_prompt
+        return
 
     def send_data(self, data: bytes):
 
