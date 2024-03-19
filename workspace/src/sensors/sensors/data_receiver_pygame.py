@@ -121,7 +121,8 @@ class turtlebot_controller:
             data = json.loads(self.server_data_receiver.receive_data().decode())
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
             
-            if args.display: # set to True to enable opencv camera
+            if args.display or args.rotate_r_by:
+                # Decode camera data
                 camera_frame = data['frame_data']
                 encoded_data = base64.b64decode(camera_frame)
 
@@ -131,18 +132,22 @@ class turtlebot_controller:
                 # Decode the numpy array to an OpenCV image
                 frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-                cv2.imshow('frame',frame)
 
                 # Frame Rotator
-                h, w = frame.shape[:2]
-                rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), args.rotate_r_by, 1)
-                rot_frame = cv2.warpAffine(frame, rot_matrix, (w, h))
+                if args.rotate_r_by:
 
-                cv2.imshow('rotated frame', rot_frame)
-
+                    h, w = frame.shape[:2]
+                    angle = 90
+                    rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle * args.rotate_r_by, 1)
+                    rot_frame = cv2.warpAffine(frame, rot_matrix, (w, h))
+                cv2.imshow('frame',frame)
                 cv2.waitKey(1)
-                print(x)
 
+            if args.rotate_r_by:
+                retval, buffer = cv2.imencode('.jpg',rot_frame)
+                frame_data_as_string = base64.b64encode(buffer.tobytes()).decode('utf-8')
+                data['frame_data'] = frame_data_as_string
+                
             self.data_buffer.append(data)
 
     def prompt_generator(self):
