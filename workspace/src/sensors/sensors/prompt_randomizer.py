@@ -55,7 +55,7 @@ class prompt_randomizer:
       if num == "a" or num == "one":
         measure = [" millimeter", " centimeter", " meter", " foot", " ruler", " yardstick"]
       else:
-        measure = [" millimeters", " centimeters", " meters", " foots", " rulers", " yardsticks"]
+        measure = [" millimeters", " centimeters", " meters", " feet", " rulers", " yardsticks"]
 
       return num + " " + random.choice(added) + random.choice(measure)
 
@@ -83,7 +83,8 @@ class prompt_randomizer:
 
       elif a == "pi":
         pi_rot = ["pi/6", "pi/4", "pi/3", "pi/2", "pi", "2pi/3", "3pi/4", "5pi/6", "7pi/6", "5pi/4", "4pi/3", "3pi/2", "5pi/3", "7pi/4", "11pi/6", "2 pi"]
-        return random.choice(pi_rot)
+        rads = [" radians", " rads", ""]
+        return random.choice(pi_rot) + random.choice(rads)
 
     elif rot_type == "%":
       return str(random.randint(0, 100)) + "%"
