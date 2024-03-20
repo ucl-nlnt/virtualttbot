@@ -288,14 +288,19 @@ class turtlebot_controller:
 
                 with open(os.path.join("datalogs",fname),'wb') as f:
                     if args.disable_log_compression:
-                          f.write(json.dumps(json_file, indent=4))
+                          f.write(json.dumps(json_file, indent=4).encode('utf-8'))
                     else:
                         f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
 
                 with open(os.path.join("datalogs",fname),'rb') as f:
                     compressed = f.read()
 
-                print(json.loads(zlib.decompress(compressed).decode('utf-8')).keys())
+                if args.disable_log_compression:
+                    print("Saved as: " + fname)
+                    print(json.loads(compressed.decode('utf-8')).keys())
+                else:
+                    print(json.loads(zlib.decompress(compressed).decode('utf-8')).keys())
+                
                 print("Instance saved.")
                 
             else:
