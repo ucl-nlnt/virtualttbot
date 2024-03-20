@@ -135,7 +135,7 @@ class prompt_randomizer:
     elif randtype == "X METERS AT ANGLE Y":
       dist =  prompt_randomizer.rand_dist()
       rot = prompt_randomizer.rand_rot()
-      return random.choice(rephrase_move) + " " +  dist + " at " + rot + random.choice(rephrase_rot)
+      return random.choice(rephrase_move) + " " +  dist + " at " + rot + " " + random.choice(rephrase_rot)
 
   def prompt_maker():
     prompt = ""
