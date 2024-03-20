@@ -16,6 +16,7 @@ import random
 import zlib
 
 from KNetworking import DataBridgeServer_TCP
+from prompt_randomizer import prompt_randomizer
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
@@ -216,7 +217,8 @@ class turtlebot_controller:
 
             if args.enable_autorandomizer_from_csv:
                 
-                prompt = self.prompt_generator()                             # random_generated
+                # prompt = self.prompt_generator()                             # random_generated
+                prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
                 print("Random prompt:",prompt)
 
             else:
