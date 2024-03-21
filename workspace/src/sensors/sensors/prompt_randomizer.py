@@ -73,7 +73,7 @@ class prompt_randomizer:
 
     if rot_type == "degrees" or rot_type == "degs":
       return str(random.randint(0, 360)) + " " + rot_type
-        
+
     elif rot_type == "radians" or rot_type == "rads":
       rad_type = ["numerical", "pi"]
       a = random.choice(rad_type)
@@ -88,7 +88,7 @@ class prompt_randomizer:
 
     elif rot_type == "%":
       return str(random.randint(0, 100)) + "%"
-    
+
     elif rot_type == "fraction":
       frac_rot = ["1/2", "1/4", "1/3", "1/8", "3/4", "half", "quarter", "three quarters", "3 quarters", "a third"]
 
@@ -96,7 +96,7 @@ class prompt_randomizer:
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "ROT1", "SIDE1", "BACK", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y"]
+    inst_types = ["FWD1", "FWD2", "ROT1", "ROT2", "SIDE1", "SIDE2", "BACK", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y"]
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     rephrase_forward = ["forward", "onwards", "in front of you", "straight ahead"]
@@ -122,7 +122,7 @@ class prompt_randomizer:
         dist =  prompt_randomizer.rand_dist()
         return random.choice(rephrase_move) +" " +  random.choice(prepositions) +" " +  dist +" " +  random.choice(rephrase_side)
     elif randtype == "SIDE2":
-      dist =  prompt_randomizer.rand_dist()[0]
+      dist =  prompt_randomizer.rand_dist()
       return random.choice(rephrase_move) +" " +  random.choice(rephrase_side) + " " + random.choice(prepositions) +" " +  dist
     elif randtype == "BACK":
       dist =  prompt_randomizer.rand_dist()
@@ -148,7 +148,7 @@ class prompt_randomizer:
       elif (x == 0) and (x == no_of_insts):
         addition = [', and ', ', then ']
         prompt += random.choice(addition)
-      
+
       new_inst = prompt_randomizer.rand_inst()
       # print(new_inst)
       prompt += new_inst
@@ -159,4 +159,4 @@ class prompt_randomizer:
         prompt += " " + prompt_randomizer.rand_multiples()
     return prompt
 
-print(prompt_randomizer.prompt_maker())
+# print(prompt_randomizer.prompt_maker())
