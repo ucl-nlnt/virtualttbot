@@ -87,6 +87,7 @@ def send_data_subroutine(socket_object: socket.socket, data: bytes,
     except ConnectionError as errormsg:
         print(f"[Sending Subroutine -> Destination: {destination_port}]: ConnectionError occured.")
         print(errormsg)
+        pass
         return "@SNCE"
     
     
