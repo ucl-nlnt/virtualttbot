@@ -1,6 +1,7 @@
 import os
 import zlib
 import json
+from custom_types import DatalogType
 
 
 class Cleaner:
@@ -15,10 +16,11 @@ class Cleaner:
         # for file in files:
         file = files[0]
         file_path = os.path.join(self.datalogs_path, file)
-        print(file, file_path)
         bytes = self.readFile(file_path)
-        data = self.decompressBytes(bytes)
-        print(json.dumps(data, separators=(',', ':')), )
+        data: DatalogType = self.decompressBytes(bytes)
+        states = data['states']
+        state = states[0]
+        print(state['frame_data'])
 
     def readFile(self, path):
         with open(path, 'rb') as f:
@@ -26,7 +28,7 @@ class Cleaner:
             return compressed
 
     def decompressBytes(self, bytes):
-        decompressed = zlib.decompress(bytes).decode('utf-8')
+        decompressed = json.loads(zlib.decompress(bytes).decode('utf-8'))
         return decompressed
 
 
