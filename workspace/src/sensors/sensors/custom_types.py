@@ -61,3 +61,6 @@ class DatalogType(TypedDict):
     timestamp_s: str
     timestamp_float: float
     states: List[Union[DataframeType]]
+
+
+DatalogsList = List[Union[DatalogType]]
