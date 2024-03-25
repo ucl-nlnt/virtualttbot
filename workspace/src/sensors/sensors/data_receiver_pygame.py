@@ -44,7 +44,7 @@ class turtlebot_controller:
         self.manual_control = manual_control
 
         #
-        self.sesh_count = 0
+        self.sesh_count = 1
 
         # keyboard stuff
         self.keyboard_input = None
@@ -220,13 +220,13 @@ class turtlebot_controller:
 
             if args.enable_autorandomizer_from_csv:
                 
-                print("Prompt #", self.sesh_count)                             # count number of saved prompts in current session
+                print("Prompt #", str(self.sesh_count))                             # count number of saved prompts in current session
                 # prompt = self.prompt_generator()                             # random_generated
                 prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
                 print("Random prompt:",prompt)
 
             else:
-                print("Prompt #" + self.sesh_count)                            # count number of saved prompts in current session
+                print("Prompt #" + str(self.sesh_count))                            # count number of saved prompts in current session
                 prompt = input("Enter prompt <<")
 
             if prompt != '$CONTROL':
