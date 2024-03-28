@@ -32,39 +32,72 @@ class prompt_randomizer:
         rand_num = 1
 
       if rand_num == 1:
-        dis_type = random.choice(["mm", " millimeter", "cm", " centimeter", "m", " meter", "ft", " foot", " ruler", " yard", " yardstick"])
+        meas = ["mm", " millimeter", "cm", " centimeter", "m", " meter", "ft", " foot", " ruler", " yard", " yardstick"]
+        mets = [1000, 1000, 100, 100, 1, 1, 0.31, 0.31, 0.31, 0.91, 0.91]
+        num = random.randint(0, len(meas)-1)
+        dis_type = meas[num]
+        in_meters = mets[num]
 
       #space = ['', ' ']
       #return (str(rand_num) + random.choice(space) + dis_type, in_meters)
-      return str(rand_num) + dis_type
+      return (str(rand_num) + dis_type, in_meters)
 
     elif selected_num_type == "quarters":
       rand_quarter = ["a single", "a quarter", "a third", "a fourth", "a quarter", "a fifth", "a half", "three quarters", "an eigth", "two fifths", "three eighths", "five eights"]
-      measure = [" millimeter", " centimeter", " meter", " foot", " ruler", " yardstick"]
+      writ = [1, 0.25, 0.30, 0.25, 0.25, 0.20, 0.5, 0.75, 0.125, 0.40, 0.375, 0.625]
+      measure = [" meter", " foot", " ruler", " yardstick"]
+      num = random.randint(0, len(rand_quarter)-1)
 
-      return random.choice(rand_quarter) + " of a" + random.choice(measure)
+      meas = random.randint(0, len(measure)-1)
+
+      if meas == 0:
+        in_meters = writ[num]
+      elif meas == 1 or meas == 2:
+        in_meters = round(writ[num]/3.281, 2)
+      elif meas == 3:
+        in_meters = round(writ[num]/1.094, 2)
+
+      if num == 1:
+        return (rand_quarter[num] + " " + measure[meas], in_meters)
+      else:
+        return (rand_quarter[num] + " of a" + measure[meas], in_meters)
 
     elif selected_num_type == "spelled out":
       prepositions_b = ["by", "a distance of", "for", "for a total distance of"]
-      numbers = ["a", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven","twelve","thirteen","fourteen","fifteen","sixteen",
-             "seventeen", "eighteen", "nineteen"]
-      added = ["", "full", "whole"]
+      numbers = ["a", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven","twelve","thirteen","fourteen","fifteen","sixteen", "seventeen", "eighteen", "nineteen", "twenty"]
+      writ = [1,1,2, 3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+      added = ["", "full ", "whole "]
 
-      num = random.choice(numbers)
+      meas = random.randint(0, 4)
 
-      if num == "a" or num == "one":
-        measure = [" millimeter", " centimeter", " meter", " foot", " ruler", " yardstick"]
+      if meas == 0:
+        num = random.randint(0, len(numbers)-1)
+        in_meters = writ[num] / 100
+      elif meas == 1:
+        num = random.randint(0, 3)
+        in_meters = writ[num]
+      elif meas == 2 or meas == 3:
+        num = random.randint(0, 9)
+        in_meters = round(writ[num]/3.281, 2)
+      elif meas == 4:
+        num = random.randint(0, 3)
+        in_meters = round(writ[num]/1.094, 2)
+
+      if num == 0 or num == 1:
+        measure = ["centimeter", "meter", "foot", "ruler", "yardstick"]
       else:
-        measure = [" millimeters", " centimeters", " meters", " feet", " rulers", " yardsticks"]
+        measure = ["centimeters", "meters", "feet", "rulers", "yardsticks"]
 
-      return num + " " + random.choice(added) + random.choice(measure)
+      return (numbers[num] + " " + random.choice(added) + measure[meas], in_meters)
 
   def rand_multiples():
     multiples = ["", "twice", "two times", "2 times", "2x", "thrice", "three times", "3x", "3 times", "4 times", "4x", "four times", "five times", "5x", "5 times"]
-    return random.choice(multiples)
+    times = [0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4]
+    time_int = random.randint(0, len(multiples)-1)
+    return (multiples[time_int], times[time_int])
 
   def rand_insts():
-    no_of_instructions = random.randint(1, 5)
+    no_of_instructions = random.randint(1, 3)
     return no_of_instructions
 
   def rand_rot():
@@ -72,75 +105,108 @@ class prompt_randomizer:
     rot_type = random.choice(angle_type)
 
     if rot_type == "degrees" or rot_type == "degs":
-      return str(random.randint(0, 360)) + " " + rot_type
+      deg = random.randint(0, 360)
+      return (str(deg) + " " + rot_type, deg)
 
     elif rot_type == "radians" or rot_type == "rads":
       rad_type = ["numerical", "pi"]
       a = random.choice(rad_type)
 
       if a == "numerical":
-        return str(float(random.randint(0, 628))/100) + " " + rot_type
+        rad = float(random.randint(0, 628))/100
+        deg = round(rad * 57.296, 2)
+        return ( str(rad) + " " + rot_type, deg)
 
       elif a == "pi":
         pi_rot = ["pi/6", "pi/4", "pi/3", "pi/2", "pi", "2pi/3", "3pi/4", "5pi/6", "7pi/6", "5pi/4", "4pi/3", "3pi/2", "5pi/3", "7pi/4", "11pi/6", "2 pi"]
+        deg_rot = [30, 45, 60, 90, 180, 120, 135, 150, 210, 225, 240, 270, 300, 315, 330, 360]
         rads = [" radians", " rads", ""]
-        return random.choice(pi_rot) + random.choice(rads)
+        deg_choice = random.randint(0, len(pi_rot)-1)
+        return (pi_rot[deg_choice] + random.choice(rads), deg_rot[deg_choice])
 
     elif rot_type == "%":
-      return str(random.randint(0, 100)) + "%"
+      percentage = random.randint(0, 100)
+      deg = (float(percentage) / 100.00) * 360.00
+      return (str(percentage) + "%", deg)
 
     elif rot_type == "fraction":
-      frac_rot = ["1/2", "1/4", "1/3", "1/8", "3/4", "half", "quarter", "three quarters", "3 quarters", "a third"]
-
-      return str(random.choice(frac_rot)) + " of a circle"
+      frac_rot = ["1/2", "1/4", "1/3", "1/8", "3/4", "half", "quarter", "three quarters", "3 quarters", "a third", "an eighth"]
+      deg_rot = [180, 90, 120, 45, 270, 180, 90, 270, 270, 120, 45]
+      deg_choice = random.randint(0, len(frac_rot) -1)
+      return (str(frac_rot[deg_choice]) + " of a circle", deg_rot[deg_choice])
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "FWD2", "ROT1", "ROT2", "SIDE1", "SIDE2", "BACK", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y"]
+    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT"]
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
+    prepositions2 = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     rephrase_forward = ["forward", "onwards", "in front of you", "straight ahead"]
     rephrase_rotate = ["turn", "shift", "rotate", "spin", "turn yourself", "shift yourself", "rotate yourself", "spin"]
-    rephrase_rot = ["to the left", "to your left", "to your right", "to the right", "clockwise", "counterclockwise", "CW", "CCW", "leftward", "rightward"]
-    rephrase_side = ["to your left", "to your right", "to the left", "to the right", "leftwards", "rightwards", "to your relative east", "to your relative west"]
+    rephrase_lrot = ["to the left", "to your left", "counterclockwise", "CCW", "leftward"]
+    rephrase_rrot = ["to your right", "to the right", "clockwise", "CW", "rightward"]
+    rephrase_lside = ["to your left", "to the left", "leftwards", "to your relative west"]
+    rephrase_rside = ["to your right", "to the right", "rightwards", "to your relative east"]
+    rephrase_back1 = ["behind you", "backwards", "rearward", "to your rear", "to the spot behind you"]
+    rephrase_back2 = ["behind you", "backwards", "in reverse", "rearward", "to your rear"]
 
     randtype = random.choice(inst_types)
 
     if randtype == "FWD1":
       dist =  prompt_randomizer.rand_dist()
-      return random.choice(rephrase_move) + " " +  random.choice(prepositions) +" " +  dist + " " +  random.choice(rephrase_forward)
+      return (random.choice(rephrase_move) + " " +  random.choice(prepositions) +" " +  dist[0] + " " +  random.choice(rephrase_forward), "(MOVE, " + str(dist[1]) + ")")
     elif randtype == "FWD2":
       dist =  prompt_randomizer.rand_dist()
-      return random.choice(rephrase_move) +" " +   random.choice(rephrase_forward) + " " + random.choice(prepositions) +" " +  dist
-    elif randtype == "ROT1":
+      return (random.choice(rephrase_move) +" " +   random.choice(rephrase_forward) + " " + random.choice(prepositions) +" " +  dist[0], "(MOVE, " + str(dist[1]) + ")")
+    elif randtype == "LROT1":
       rot = prompt_randomizer.rand_rot()
-      return random.choice(rephrase_rotate)  +" " +  rot +" " +  random.choice(rephrase_rot)
-    elif randtype == "ROT2":
+      return (random.choice(rephrase_rotate)  +" " +  rot[0] +" " +  random.choice(rephrase_lrot), "(LEFT, " + str(rot[1]) + ")")
+    elif randtype == "LROT2":
         rot = prompt_randomizer.rand_rot()
-        return random.choice(rephrase_rotate) +" " +  random.choice(rephrase_rot) + " " + rot
-    elif randtype == "SIDE1":
+        return (random.choice(rephrase_rotate) +" " +  random.choice(rephrase_lrot) + " " + rot[0], "(LEFT, " + str(rot[1]) + ")")
+    elif randtype == "RROT1":
+      rot = prompt_randomizer.rand_rot()
+      return (random.choice(rephrase_rotate)  +" " +  rot[0] +" " +  random.choice(rephrase_rrot), "(RGHT, " + str(rot[1]) + ")")
+    elif randtype == "RROT2":
+        rot = prompt_randomizer.rand_rot()
+        return (random.choice(rephrase_rotate) +" " +  random.choice(rephrase_rrot) + " " + rot[0], "(RGHT, " + str(rot[1]) + ")")
+    elif randtype == "LSIDE1":
         dist =  prompt_randomizer.rand_dist()
-        return random.choice(rephrase_move) +" " +  random.choice(prepositions) +" " +  dist +" " +  random.choice(rephrase_side)
-    elif randtype == "SIDE2":
+        return (random.choice(rephrase_move) +" " +  random.choice(prepositions) +" " +  dist[0] +" " +  random.choice(rephrase_lside), "(LEFT, 90), (MOVE, " + str(dist[1]) +")")
+    elif randtype == "LSIDE2":
       dist =  prompt_randomizer.rand_dist()
-      return random.choice(rephrase_move) +" " +  random.choice(rephrase_side) + " " + random.choice(prepositions) +" " +  dist
-    elif randtype == "BACK":
+      return (random.choice(rephrase_move) +" " +  random.choice(rephrase_lside) + " " + random.choice(prepositions2) +" " +  dist[0], "(LEFT, 90), (MOVE, " + str(dist[1]) +")")
+    elif randtype == "RSIDE1":
       dist =  prompt_randomizer.rand_dist()
-      return random.choice(rephrase_move) +" " +  dist + " behind you"
+      return (random.choice(rephrase_move) +" " +  random.choice(prepositions) + " " +  dist[0] +" " +  random.choice(rephrase_rside), "(RGHT, 90), (MOVE, " + str(dist[1]) +")")
+    elif randtype == "RSIDE2":
+      dist =  prompt_randomizer.rand_dist()
+      return (random.choice(rephrase_move) +" " +  random.choice(rephrase_rside) + " " + random.choice(prepositions2) +" " +  dist[0], "(RGHT, 90), (MOVE, " + str(dist[1]) +")")
+    elif randtype == "BACK1":
+      dist =  prompt_randomizer.rand_dist()
+      return (random.choice(rephrase_move) +" " +  dist[0] + " " + random.choice(rephrase_back1), "(RGHT, 180), (MOVE, " + str(dist[1]) +")")
+    elif randtype == "BACK2":
+      dist =  prompt_randomizer.rand_dist()
+      return (random.choice(rephrase_move) +" " + random.choice(rephrase_back2)+ " "+  random.choice(prepositions) + " " + dist[0], "(RGHT, 180), (MOVE, " + str(dist[1]) +")")
     elif randtype == "DIAGONAL LEFT FORWARD":
       dist =  prompt_randomizer.rand_dist()
-      return random.choice(rephrase_move) + " " + dist + " diagonally to your left"
+      return (random.choice(rephrase_move) + " " + dist[0] + " diagonally to your left", "(LEFT, 45), (MOVE, " + str(dist[1]) +")")
     elif randtype == "DIAGONAL RIGHT FORWARD":
       dist =  prompt_randomizer.rand_dist()
-      return random.choice(rephrase_move) +" " +  dist + " diagonally to your right"
-    elif randtype == "X METERS AT ANGLE Y":
+      return (random.choice(rephrase_move) +" " +  dist[0] + " diagonally to your right", "(RGHT, 45), (MOVE, " + str(dist[1]) +")")
+    elif randtype == "X METERS AT ANGLE Y LEFT":
       dist =  prompt_randomizer.rand_dist()
       rot = prompt_randomizer.rand_rot()
-      return random.choice(rephrase_move) + " " +  dist + " at " + rot + " " + random.choice(rephrase_rot)
-
+      return (random.choice(rephrase_move) + " " +  dist[0] + " at " + rot[0] + " " + random.choice(rephrase_lrot) , "[(LEFT, " + str(rot[1]) + "), (MOVE, " + str(dist[1]) +")]")
+    elif randtype == "X METERS AT ANGLE Y RIGHT":
+      dist =  prompt_randomizer.rand_dist()
+      rot = prompt_randomizer.rand_rot()
+      return (random.choice(rephrase_move) + " " +  dist[0] + " at " + rot[0] + " " + random.choice(rephrase_rrot) , "[(RGHT, " + str(rot[1]) + "), (MOVE, " + str(dist[1]) +")]")
+  
   def prompt_maker():
     prompt = ""
     no_of_insts = prompt_randomizer.rand_insts()
+    simple_move = []
     for x in range(no_of_insts):
       if x > 0 and not x == no_of_insts:
         add = [', ', ', then ']
@@ -151,12 +217,15 @@ class prompt_randomizer:
 
       new_inst = prompt_randomizer.rand_inst()
       # print(new_inst)
-      prompt += new_inst
+      prompt += new_inst[0]
+      simple_move.append(new_inst[1])
 
       # of times
       y = random.randint(0, 10)
       if y > 8:
-        prompt += " " + prompt_randomizer.rand_multiples()
-    return prompt
-
-# print(prompt_randomizer.prompt_maker())
+        multi = prompt_randomizer.rand_multiples()
+        prompt += " " + multi[0]
+        for x in range(multi[1]):
+          simple_move.append(new_inst[1])
+        
+    return (prompt, simple_move)
