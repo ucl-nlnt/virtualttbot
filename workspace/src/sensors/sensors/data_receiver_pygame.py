@@ -222,8 +222,11 @@ class turtlebot_controller:
                 
                 print("Prompt #", str(self.sesh_count))                             # count number of saved prompts in current session
                 # prompt = self.prompt_generator()                             # random_generated
-                prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
-                print("Random prompt:",prompt)
+                random_prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
+                prompt = random_prompt[0]
+
+                print("Random Prompt:",prompt)
+                print("Prompt Equivalent: ", str(random_prompt[1]))
 
             else:
                 print("Prompt #" + str(self.sesh_count))                            # count number of saved prompts in current session
