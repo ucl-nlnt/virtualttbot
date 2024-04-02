@@ -4,6 +4,7 @@ import json
 from custom_types import DatalogType, DatalogsList, FloatList
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Cleaner:
@@ -24,7 +25,6 @@ class Cleaner:
         compiles all data into a single dictionary
         """
         files = os.listdir(self.datalogs_path)
-        files = [files[0]]
         datalogs: DatalogsList = []
         for file in files:
             if (file.endswith(".compressed")):
@@ -76,6 +76,72 @@ class Cleaner:
             compressed = f.read()
             return compressed
 
+    def plotDatalog(self, datalog: DatalogType):
+
+        length = len(datalog['states'])
+        x = np.linspace(0, 2*np.pi, length)
+
+        # plot imu linear acceleration x,y,z
+        fig, (ax1, ax2) = plt.subplots(2)
+        fig.suptitle(
+            f"IMU: {datalog['natural_language_prompt']}")
+        ax1.set_title("linear acceleration")
+        linear_acce_x = [i['imu']['linear_acceleration'][0]
+                         for i in datalog['states']]
+        linear_acce_z = [i['imu']['linear_acceleration'][1]
+                         for i in datalog['states']]
+        linear_acce_y = [i['imu']['linear_acceleration'][2]
+                         for i in datalog['states']]
+        ax1.plot(x, linear_acce_x, label="x")
+        ax1.plot(x, linear_acce_z, label="z")
+        ax1.plot(x, linear_acce_y, label="y")
+
+        ax2.set_title("angular velocity")
+        angular_velo_x = [i['imu']['angular_velocity'][0]
+                          for i in datalog['states']]
+        angular_velo_z = [i['imu']['angular_velocity'][1]
+                          for i in datalog['states']]
+        angular_velo_y = [i['imu']['angular_velocity'][2]
+                          for i in datalog['states']]
+        ax2.plot(x, angular_velo_x, label="x")
+        ax2.plot(x, angular_velo_z, label="z")
+        ax2.plot(x, angular_velo_y, label="y")
+
+        ax1.legend()
+        ax2.legend()
+
+        # plot twist linear x,y,z
+        fig, (ax1, ax2) = plt.subplots(2)
+        fig.suptitle(
+            f"Twist: {datalog['natural_language_prompt']}")
+
+        ax1.set_title("linear twist")
+        twist_linear_x = [i['twist']['linear'][0]
+                          for i in datalog['states']]
+        twist_linear_z = [i['twist']['linear'][1]
+                          for i in datalog['states']]
+        twist_linear_y = [i['twist']['linear'][2]
+                          for i in datalog['states']]
+        ax1.plot(x, twist_linear_x, label="x")
+        ax1.plot(x, twist_linear_z, label="z")
+        ax1.plot(x, twist_linear_y, label="y")
+
+        ax2.set_title("angular twist")
+        twist_angular_x = [i['twist']['angular'][0]
+                           for i in datalog['states']]
+        twist_angular_z = [i['twist']['angular'][1]
+                           for i in datalog['states']]
+        twist_angular_y = [i['twist']['angular'][2]
+                           for i in datalog['states']]
+        ax2.plot(x, twist_angular_x, label="x")
+        ax2.plot(x, twist_angular_z, label="z")
+        ax2.plot(x, twist_angular_y, label="y")
+
+        plt.legend()
+        plt.show()
+
+        pass
+
     def decompressBytes(self, bytes):
         """
         decompresses the contents of a file
@@ -86,5 +152,7 @@ class Cleaner:
 
 cleaner = Cleaner(include_images=False)
 
+cleaner.plotDatalog(datalog=cleaner.datalogs[-1])
+
 # save datalogs to a json file
-cleaner.saveDatalogs()
+# cleaner.saveDatalogs()
