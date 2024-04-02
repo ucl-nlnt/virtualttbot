@@ -1,7 +1,7 @@
 import os
 import zlib
 import json
-from custom_types import DatalogType, DatalogsList, FloatList
+from custom_types import DatalogType, DatalogsList, FloatList, StatesList
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,12 +55,39 @@ class Cleaner:
             with open(file_path, "w") as json_file:
                 json.dump(data, json_file)
 
-    def trimDatalogs(self, threshold=0.01):
+    def findFirstTwist(self, states: StatesList):
+        for index, state in enumerate(states):
+            linear_sum = sum(state["twist"]["linear"])
+            angular_sum = sum(state["twist"]["angular"])
+            if linear_sum != 0 or angular_sum != 0:
+                return index
+        return 0
+
+    def findLastTwist(self, states: StatesList):
+        for index in range(len(states) - 1, -1, -1):  # Iterate in reverse order
+            state = states[index]
+            linear_sum = sum(state["twist"]["linear"])
+            angular_sum = sum(state["twist"]["angular"])
+            if linear_sum != 0 or angular_sum != 0:
+                return index
+        return len(states)-1
+
+    def trimDatalog(self, datalog: DatalogType, padding=3):
         """
         remove unwanted datalogs at the start and end of datalog stream
         """
 
-        pass
+        # find first instance with a non-zero linear or angular twist
+        firstTwistIndex = self.findFirstTwist(datalog['states'])
+        firstIndex = max(firstTwistIndex - padding, 0)
+
+        # find last instance with a non-zero linear or angular twist
+        lastTwistIndex = self.findLastTwist(datalog['states'])
+        lastIndex = min(lastTwistIndex - padding, len(datalog['states'])-1)
+
+        datalog['states'] = datalog['states'][firstIndex:lastIndex]
+
+        return datalog
 
     def cleanDatalogs(self):
         """
@@ -137,10 +164,10 @@ class Cleaner:
         ax2.plot(x, twist_angular_z, label="z")
         ax2.plot(x, twist_angular_y, label="y")
 
-        plt.legend()
-        plt.show()
+        ax1.legend()
+        ax2.legend()
 
-        pass
+        plt.show(block=False)
 
     def decompressBytes(self, bytes):
         """
@@ -152,7 +179,14 @@ class Cleaner:
 
 cleaner = Cleaner(include_images=False)
 
-cleaner.plotDatalog(datalog=cleaner.datalogs[-1])
+datalog = cleaner.datalogs[0]
+cleaner.plotDatalog(datalog=datalog)
+trimmed_datalog = cleaner.trimDatalog(datalog)
+cleaner.plotDatalog(datalog=trimmed_datalog)
+
+
+# this is a hack to make matplotlib work, do not remove this
+plt.show()
 
 # save datalogs to a json file
 # cleaner.saveDatalogs()

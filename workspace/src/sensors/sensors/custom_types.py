@@ -55,12 +55,15 @@ class DataframeType(TypedDict):
     frame_data: str
 
 
+StatesList = List[Union[DataframeType]]
+
+
 class DatalogType(TypedDict):
     username: str
     natural_language_prompt: str
     timestamp_s: str
     timestamp_float: float
-    states: List[Union[DataframeType]]
+    states: StatesList
 
 
 DatalogsList = List[Union[DatalogType]]
