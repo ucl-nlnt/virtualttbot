@@ -1,36 +1,47 @@
 import os
 import zlib
 import json
-from custom_types import DatalogType, DatalogsList
+from custom_types import DatalogType, DatalogsList, FloatList
 import time
+import numpy as np
 
 
 class Cleaner:
-    def __init__(self, include_images=False):
+    def __init__(self, include_images=False, include_laserscanrawdata=False):
         self.datalogs_path = os.path.join(
             os.getcwd(), "./workspace/src/sensors/sensors/datalogs")
 
         self.include_images = include_images
+        self.include_laserscanrawdata = include_laserscanrawdata
         self.datalogs = self.viewDatalogs()
+
+    def moving_average(data: FloatList, window_size: int):
+        weights = np.repeat(1.0, window_size) / window_size
+        return np.convolve(data, weights, 'valid')
 
     def viewDatalogs(self):
         """
         compiles all data into a single dictionary
         """
         files = os.listdir(self.datalogs_path)
+        files = [files[0]]
         datalogs: DatalogsList = []
         for file in files:
-            file = files[0]
             if (file.endswith(".compressed")):
                 file_path = os.path.join(self.datalogs_path, file)
                 bytes = self.readFile(file_path)
                 data: DatalogType = self.decompressBytes(bytes)
                 if (self.include_images == False):
-                    states = [{k: "" if k == "frame_data" else v for k, v in d.items()}
-                              for d in data['states']]
-                    data['states'] = states
+                    for state in data['states']:
+                        state['frame_data'] = ''
+
+                if (self.include_laserscanrawdata == False):
+                    for state in data['states']:
+                        state['laser_scan']['ranges'] = []
+                        state['laser_scan']['intensities'] = []
 
                 datalogs.append(data)
+
         return datalogs
 
     def saveDatalogs(self, compress=False):
@@ -44,10 +55,11 @@ class Cleaner:
             with open(file_path, "w") as json_file:
                 json.dump(data, json_file)
 
-    def trimDatalogs(self):
+    def trimDatalogs(self, threshold=0.01):
         """
         remove unwanted datalogs at the start and end of datalog stream
         """
+
         pass
 
     def cleanDatalogs(self):
