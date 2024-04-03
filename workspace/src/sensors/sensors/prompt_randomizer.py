@@ -32,8 +32,8 @@ class prompt_randomizer:
         rand_num = 1
 
       if rand_num == 1:
-        meas = ["mm", " millimeter", "cm", " centimeter", "m", " meter", "ft", " foot", " ruler", " yard", " yardstick"]
-        mets = [1000, 1000, 100, 100, 1, 1, 0.31, 0.31, 0.31, 0.91, 0.91]
+        meas = ["m", " meter", "ft", " foot", " ruler", " yard", " yardstick"]
+        mets = [1, 1, 0.31, 0.31, 0.31, 0.91, 0.91]
         num = random.randint(0, len(meas)-1)
         dis_type = meas[num]
         in_meters = mets[num]
@@ -205,7 +205,8 @@ class prompt_randomizer:
   
   def prompt_maker():
     prompt = ""
-    no_of_insts = prompt_randomizer.rand_insts()
+    #no_of_insts = prompt_randomizer.rand_insts()
+    no_of_insts = 1
     simple_move = []
     for x in range(no_of_insts):
       if x > 0 and not x == no_of_insts:
