@@ -217,19 +217,25 @@ class turtlebot_controller:
     
         # assumption: socket connection is successful
         while not self.killswitch:  # Start host loop
+            
+            print("Prompt #", str(self.sesh_count))                             # count number of saved prompts in current session
 
             if args.enable_autorandomizer_from_csv:
-                
-                print("Prompt #", str(self.sesh_count))                             # count number of saved prompts in current session
-                # prompt = self.prompt_generator()                             # random_generated
-                random_prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
-                prompt = random_prompt[0]
-
-                print("Random Prompt:",prompt)
-                print("Prompt Equivalent: ", str(random_prompt[1]))
+            	# Random Generated Prompts  
+                if args.enable_autorandomizer_from_csv == 1:
+                	random_prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
+                	prompt = random_prompt[0]
+                	print("Random Prompt:",prompt)
+                	#print("Prompt Equivalent: ", str(random_prompt[1]))
+                	print("Cumulative Equivalent: ", str(random_prompt[2]))
+                elif args.enable_autorandomizer_from_csv == 2:
+                	prompt = self.prompt_generator()
+                	print("Random Prompt:",prompt)
+                elif args.enable_autorandomizer_from_csv == 3:
+                	prompt = self.csv_randomizer()
+                	print("Random Prompt:",prompt)
 
             else:
-                print("Prompt #" + str(self.sesh_count))                            # count number of saved prompts in current session
                 prompt = input("Enter prompt <<")
 
             if prompt != '$CONTROL':
