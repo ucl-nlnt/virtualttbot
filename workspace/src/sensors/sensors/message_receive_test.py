@@ -122,6 +122,7 @@ class SensorsSubscriber(Node):
         self.position_odom = [msg.pose.pose.position.x, msg.pose.pose.position.y, quaternion_to_yaw(msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)] # x, y, phi
         # the orientation is from -pi to pi
         # 0 is facing north. pi/2 is facing left. -pi/2 facing right. -pi OR pi is facing right behind.
+        
     def odometer_printer(self):
 
         while not self.killswitch:
