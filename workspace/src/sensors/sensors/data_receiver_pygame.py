@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based con
 
 parser.add_argument("--display",type=int, default=0, help='Enable or disable OpenCV camera window for debugging purposes.')
 parser.add_argument("--enable_autorandomizer_from_csv", type=int, default=0, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
-parser.add_argument("--csv_path",type=str, default="NLNT_level1.csv", help="Specifies path to NLNT level 1 natural language label dataset.")
+parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrases.csv", help="Specifies path to NLNT natural language label dataset.")
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
 parser.add_argument("--disable_log_compression", type=int, default=0, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
 
