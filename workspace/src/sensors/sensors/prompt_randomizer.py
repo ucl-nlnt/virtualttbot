@@ -207,7 +207,7 @@ class prompt_randomizer:
       return (random.choice(rephrase_move) + " " + dist[0] + " diagonally to your left", "(LEFT, 45), (MOVE, " + str(round(dist[1],2)) +")", [("LEFT", 45), ("MOVE", round(dist[1],2))])
     elif randtype == "DIAGONAL RIGHT FORWARD":
       dist =  prompt_randomizer.rand_dist()
-      return (random.choice(rephrase_move) + " " +  dist[0] + " diagonally to your right", "(RGHT, 45), (MOVE, " + str(round(dist[1],2)) +")", [("RGHT", 90), ("MOVE", round(dist[1],2))])
+      return (random.choice(rephrase_move) + " " +  dist[0] + " diagonally to your right", "(RGHT, 45), (MOVE, " + str(round(dist[1],2)) +")", [("RGHT", 45), ("MOVE", round(dist[1],2))])
     elif randtype == "X METERS AT ANGLE Y LEFT":
       dist =  prompt_randomizer.rand_dist()
       rot = prompt_randomizer.rand_rot()
@@ -234,7 +234,7 @@ class prompt_randomizer:
       
       return init
   
-  def prompt_maker(max_per_prompt = 5):
+  def prompt_maker(max_per_prompt = 3):
     # maximum number of steps per prompt ; does not count in repeated steps (ex. 2x)
     prompt = ""
     no_of_insts = random.randint(1, max_per_prompt)
