@@ -234,9 +234,9 @@ class prompt_randomizer:
       
       return init
   
-  def prompt_maker():
+  def prompt_maker(max_per_prompt = 5):
+    # maximum number of steps per prompt ; does not count in repeated steps (ex. 2x)
     prompt = ""
-    max_per_prompt = 5							# maximum number of steps per prompt ; does not count in repeated steps (ex. 2x)
     no_of_insts = random.randint(1, max_per_prompt)
     
     #no_of_insts = prompt_randomizer.rand_insts(max_per_prompt)
@@ -309,21 +309,21 @@ class prompt_randomizer:
     return (prompt, simple_move, computed_move)
     
 #testing
-#prompt1 = prompt_randomizer.prompt_maker()
+#prompt1 = prompt_randomizer.prompt_maker(5)
 #print("Prompt: ", prompt1[0])
 #print("Single: ", prompt1[1])
 #print("Cumulative: ", prompt1[2])
 
 #print("\n")
 
-#prompt2 = prompt_randomizer.prompt_maker()
+#prompt2 = prompt_randomizer.prompt_maker(8)
 #print("Prompt: ", prompt2[0])
 #print("Single: ", prompt2[1])
 #print("Cumulative: ", prompt2[2])
 
 #print("\n")
 
-#prompt3 = prompt_randomizer.prompt_maker()
+#prompt3 = prompt_randomizer.prompt_maker(1)
 #print("Prompt: ", prompt3[0])
 #print("Single: ", prompt3[1])
 #print("Cumulative: ", prompt3[2])
