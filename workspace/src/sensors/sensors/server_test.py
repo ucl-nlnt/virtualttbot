@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from prompt_randomizer import prompt_randomizer
 import ast
 
@@ -29,3 +30,8 @@ for i in x:
     s += ']'
     print(s)
     print(ast.literal_eval(s))
+=======
+from auto_data_collector_lv12 import generate_trial_instruction
+
+print(generate_trial_instruction())
+>>>>>>> fa32b33fc7bd6fd9db22a93f437840f68efc7ea2
