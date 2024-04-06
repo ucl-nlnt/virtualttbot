@@ -335,8 +335,6 @@ class SensorsSubscriber(Node):
                     "object_covariance":[i for i in msg_pose_covariance]
                 }
 
-                
-
             if self.battery_state_msg != None:
 
                 battery_state_msg_jsonized = {

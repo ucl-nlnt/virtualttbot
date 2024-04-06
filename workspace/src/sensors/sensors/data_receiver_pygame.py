@@ -223,17 +223,17 @@ class turtlebot_controller:
             if args.enable_autorandomizer_from_csv:
             	# Random Generated Prompts  
                 if args.enable_autorandomizer_from_csv == 1:
-                	random_prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
-                	prompt = random_prompt[0]
-                	print("Random Prompt:",prompt)
+                    random_prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
+                    prompt = random_prompt[0]
+                    print("Random Prompt:",prompt)
                 	#print("Prompt Equivalent: ", str(random_prompt[1]))
-                	print("Cumulative Equivalent: ", str(random_prompt[2]))
+                    print("Cumulative Equivalent: ", str(random_prompt[2]))
                 elif args.enable_autorandomizer_from_csv == 2:
-                	prompt = self.prompt_generator()
-                	print("Random Prompt:",prompt)
+                    prompt = self.prompt_generator()
+                    print("Random Prompt:",prompt)
                 elif args.enable_autorandomizer_from_csv == 3:
-                	prompt = self.csv_randomizer()
-                	print("Random Prompt:",prompt)
+                    prompt = self.csv_randomizer()
+                    print("Random Prompt:",prompt)
 
             else:
                 prompt = input("Enter prompt <<")
