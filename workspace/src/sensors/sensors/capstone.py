@@ -326,7 +326,6 @@ class SensorsSubscriber(Node):
                 position, orientation = msg_pose.position, msg_pose.orientation
                 msg_pose_covariance = self.odometry_msg.pose.covariance
 
-                
                 odometry_msg_jsonized = {
                     "time_sec":self.odometry_msg.header.stamp.sec,
                     "time_nano":self.odometry_msg.header.stamp.nanosec,
@@ -334,8 +333,6 @@ class SensorsSubscriber(Node):
                     "pose_orientation_quarternion":(orientation.x, orientation.y, orientation.z, orientation.w),
                     "object_covariance":[i for i in msg_pose_covariance]
                 }
-
-                
 
             if self.battery_state_msg != None:
 
