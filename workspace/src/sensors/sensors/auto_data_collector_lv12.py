@@ -165,7 +165,8 @@ class AutoDataCollector(Node):
         
         # wait for the msgs to reead
         while self.imu_msg == None: time.sleep(0.1)
-        while self.odometry_msg == None: time.sleep(0.1)
+        while self.odometry_msg_data == None: time.sleep(0.1)
+        while self.odometry_msg_data_pos == None: time.sleep(0.1)
         twist_msg_jsonized = { # default
                     "linear":(0.0, 0.0, 0.0),
                     "angular":(0.0, 0.0, 0.0)
@@ -252,39 +253,22 @@ class AutoDataCollector(Node):
                     total_move += 1
                 
                 if ins == 'RGHT':
+
                     mag = float(mag) * math.pi / 180
-                    if mag > math.pi:
-                        temp = 0
-                        temp += abs(self.rotate_x_radians_right(3.14))
-                        temp += abs(self.rotate_x_radians_right(mag - 3.14))
-                        err = mag - temp
-         
-                        total_error_right += err
-                        total_right += 1
-                    else:
-                        err = self.rotate_x_radians_right(mag)
-    
-                        total_error_right += err
-                        total_right += 1
+                    err = self.rotate_x_radians_right(mag)
+                    total_error_right += err
+                    total_right += 1
 
                     if err > max_error_right: max_error_right = err
 
                 if ins == 'LEFT':
-                    mag = float(mag) * math.pi / 180
-                    if mag > math.pi:
-                        temp = 0
-                        temp += abs(self.rotate_x_radians_left(3.14))
-                        temp += abs(self.rotate_x_radians_left(mag - 3.14))
-                        err = mag - temp
-                 
-                        total_error_right += err
-                        total_left += 1
-                    else:
-                        err = self.rotate_x_radians_left(mag)
-                        total_error_left += err
-                        total_left += 1
 
+                    mag = float(mag) * math.pi / 180
+                    err = self.rotate_x_radians_left(mag)
+                    total_error_left += err
+                    total_left += 1
                     if err > max_error_left: max_error_left = err
+
                 time.sleep(0.5) # allow turtlebot to decelerate to a stop
             
 
@@ -303,10 +287,10 @@ class AutoDataCollector(Node):
             with open(os.path.join("datalogs_auto",fname),'wb') as f:
 
                 f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
-                #print(f"[{time.ctime()}]: Simulation saved under {fname}, Progress: {args.samples - iterations} / {args.samples} ({round((args.samples - iterations) / args.samples, 2)})")    
+                print(f"[{time.ctime()}]: Simulation saved under {fname}, Progress: {args.samples - iterations} / {args.samples} ({round((args.samples - iterations) / args.samples, 2)})")    
                 q = time.time() - t_start
                 time_total += q
-                #print(f"Time taken: {round(q,2)}; Avg. time per prompt: {round(time_total / loop_num,2)}")
+                print(f"Time taken: {round(q,2)}; Avg. time per prompt: {round(time_total / loop_num,2)}")
             
             loop_num += 1
             self.data_frame_buffer = []
