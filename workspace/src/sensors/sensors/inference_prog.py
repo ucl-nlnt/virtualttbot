@@ -13,6 +13,8 @@ from nav_msgs.msg import Odometry
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
 
+# DEPRACATED
+
 def quaternion_to_yaw(x, y, z, w):
 
     # AI-generated with GPT-4
