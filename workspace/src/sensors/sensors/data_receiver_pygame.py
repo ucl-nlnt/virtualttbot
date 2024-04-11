@@ -17,6 +17,7 @@ import zlib
 
 from KNetworking import DataBridgeServer_TCP
 from prompt_randomizer import prompt_randomizer
+from csv_randomizer import random_csv
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
@@ -229,9 +230,13 @@ class turtlebot_controller:
                 	#print("Prompt Equivalent: ", str(random_prompt[1]))
                     print("Cumulative Equivalent: ", str(random_prompt[2]))
                 elif args.enable_autorandomizer_from_csv == 2:
+                    prompt = random_csv.csv_randomizer()
+                    print("Random Prompt:", prompt[0])
+                    print("Prompt Equivalent: ", prompt[1])
+                elif args.enable_autorandomizer_from_csv == 3:
                     prompt = self.prompt_generator()
                     print("Random Prompt:",prompt)
-                elif args.enable_autorandomizer_from_csv == 3:
+                elif args.enable_autorandomizer_from_csv == 4:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
 
