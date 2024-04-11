@@ -284,15 +284,17 @@ class turtlebot_controller:
                 continue
 
             while True:
-                confirmation = input("Save log? (y/n) << ")
+                confirmation = input("Save log? (y/n/e) << ")
                 if confirmation == 'y' or confirmation == 'n': break
+                elif confirmation == 'e':
+                    prompt = input("Revised Prompt: ")
 
             if confirmation == 'y':
 
                 # save data into a buffer
                 
                 json_file = {
-                            "username":self.current_user, "natural_language_prompt":prompt,
+                            "username":self.current_user, "natural_language_prompt": prompt,
                             "timestamp_s":time.ctime(), "timestamp_float":time.time(),
                             "states":self.data_buffer
                             }
@@ -320,7 +322,7 @@ class turtlebot_controller:
                 print("Instance saved.")
 
                 self.sesh_count += 1
-                
+            
             else:
                 print("Instance removed.")
 
