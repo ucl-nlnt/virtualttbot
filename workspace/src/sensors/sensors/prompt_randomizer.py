@@ -1,9 +1,11 @@
 import random
+import json
+import math
 
 class prompt_randomizer:
   #def __init__(self):
   #  self.init = [0.0, 0.0]
-  
+
   def rand_dist ():
     meas = ["mm", " millimeters", "cm", " centimeters", "m", " meters", '"', "in", " inches", "'", "ft", " feet", "yds", " yards"]
     dis_type = random.choice(meas)
@@ -96,7 +98,7 @@ class prompt_randomizer:
   def rand_multiples(max_left):
     multiples = ["", "twice", "two times", "2 times", "2x", "thrice", "three times", "3x", "3 times", "4 times", "4x", "four times", "five times", "5x", "5 times"]
     times = [0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4]
-    
+
     if max_left == 0:
     	time_int = 0
     elif max_left == 1:
@@ -107,7 +109,7 @@ class prompt_randomizer:
     	time_int = random.randint(0, 11)
     else:
     	time_int = random.randint(0, len(multiples)-1)
-    
+
     return (multiples[time_int], times[time_int])
 
   #def rand_insts(max_per_prompt):
@@ -151,7 +153,7 @@ class prompt_randomizer:
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT"]
+    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT"] #"DRAW SHAPE"
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     prepositions2 = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
@@ -216,52 +218,144 @@ class prompt_randomizer:
       dist =  prompt_randomizer.rand_dist()
       rot = prompt_randomizer.rand_rot()
       return (random.choice(rephrase_move) + " " +  dist[0] + " at " + rot[0] + " " + random.choice(rephrase_rrot) , "(RGHT, " + str(round(rot[1], 2)) + "), (MOVE, " + str(round(dist[1],2)) +")", [("RGHT", round(rot[1], 2)), ("MOVE", round(dist[1],2))])
-  
-  def compute_total(x, init):      
-      #print(str(x[0]))  
+    #elif randtype == "DRAW SHAPE":
+    #  shapes = ["triangle", "square", "rectangle", "pentagon", "hexagon", "heptagon", "octagon", "nonagon", "decagon"]
+    #  dist =  prompt_randomizer.rand_dist()
+      # "create a <shape> with sides with length equal to <dist>"
+      # "draw a <shape> "
+
+  def flag(max_time=10):
+
+    flags = ["@STOP_I", "@STOP_W", "@GO_AROUND_I", "@GO_AROUND_W"]
+
+    fl = random.choice(flags)
+
+    # Defaults
+    distance = 0                    # distance from obstacle
+    wait = 0                        # amount of time to wait until obstacle is removed from path or until robot tries to move around the obstacle
+    stop = False                    # stops at obstacle
+    go_around = False               # try to move around the object, else stop
+
+    if fl == "@STOP_I":
+      # stop immediately once obstacle is detected
+      possible_prompts = ["Stop immediately once the obstacle is detected.", "Cease promptly upon detection of the obstacle.", "Once the obstacle is detected, halt immediately.", "Upon detecting the obstacle, stop right away.", "Cease movement as soon as the obstacle is detected.", "Stop instantly upon detection of the obstacle.", "Once the obstacle is spotted, come to a halt immediately.", "Halt without delay once the obstacle is detected.", "Upon detection of the obstacle, stop abruptly.", "Cease motion immediately upon detecting the obstacle.", "Stop at once when the obstacle is detected.", "Come to a stop instantly upon detecting the obstacle."]
+      prompt_addition = random.choice(possible_prompts)
+
+      stop = True
+
+    elif fl == "@STOP_W":
+      # stop after X seconds
+      possible_prompts = ["Wait up to X seconds once the obstacle is detected. If the obstacle is still there after X seconds, stop."]
+      prompt_addition = random.choice(possible_prompts)
+
+      stop = True
+      wait = random.randint(0, max_time)
+
+      # replace X
+      prompt_addition = prompt_addition.replace("X", str(wait))
+
+
+    elif fl == "@GO_AROUND_I":
+      # move around obstacle immediately once obstacle is detected. if not possible, stop
+      possible_prompts = ["Try to go around it. If you can't go around it, stop.", "Immediately try to go around it. If you can't go around it, stop"]
+      prompt_addition = random.choice(possible_prompts)
+
+      go_around = True
+
+    elif fl == "@GO_AROUND_W":
+      # move around obstacle after <wait> seconds. if not possible, stop
+      possible_prompts = ["Wait up to X seconds once the obstacle is detected. If the obstacle is still there after X seconds, try to go around it. If you can't go around it, stop."]
+      prompt_addition = random.choice(possible_prompts)
+
+      go_around = True
+      wait = random.randint(0, max_time)
+
+      # replace X
+      prompt_addition = prompt_addition.replace("X", str(wait))
+
+    t_or_f = [True, False]
+    announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
+
+    json_flags = {
+      "@DISTANCE": distance,
+      "@WAIT": wait,
+      "@STOP": stop,
+      "@GO_AROUND": go_around,
+      "@ANNOUNCE":  announce
+      }
+
+    #flags = json.loads(str(json_flags))
+    return (prompt_addition, json_flags)
+
+
+  def compute_total(x, init):
+      #print(str(x[0]))
       #print(str(x[1]))
       if x[0] == "MOVE":
       	init[0] = init[0] + x[1]
+      	init[0] = round(init[0], 2)
       	#init[0] = init[0] + 1
-      
+
       elif x[0]  == "LEFT":
       	init[1] = init[1] - x[1]
+      	init[1] = round(init[1], 2)
       	#init[1] = init[1] - 1
-      
+
       elif x[0]  == "RGHT":
       	init[1] = init[1] + x[1]
+      	init[1] = round(init[1], 2)
       	#init[1] = init[1] + 1
-      
+
       return init
-  
-  def prompt_maker(max_per_prompt = 3):
+
+  def ground_truth_zero(inst, s_coords):
+    n_coords = s_coords
+
+    if inst[0] == 'MOVE':
+      # double_check
+      n_coords[0] += inst[1] * math.sin(math.radians(s_coords[2]))           # x
+      n_coords[1] += inst[1] * math.cos(math.radians(s_coords[2]))           # y
+    elif inst[0] == 'LEFT':
+      n_coords[2] -= inst[1]      # z
+    elif inst[0] == 'RGHT':
+      n_coords[2] += inst[1]      # z
+
+    n_coords[0] = round(n_coords[0], 2)
+    n_coords[1] = round(n_coords[1], 2)
+    n_coords[2] = round(n_coords[2], 2)
+    return n_coords
+
+  def prompt_maker(max_per_prompt = 3, coords = [0, 0, 0]):
     # maximum number of steps per prompt ; does not count in repeated steps (ex. 2x)
     prompt = ""
     no_of_insts = random.randint(1, max_per_prompt)
-    
+
     #no_of_insts = prompt_randomizer.rand_insts(max_per_prompt)
     init = [0.0, 0.0]  # initialize randomizer
     computed_move = []
     #no_of_insts = 5
     simple_move = []
+    equiv = []
+    ground_truth = [coords[:]]       # [x, y, phi]
+    print(ground_truth)
     x = 0
     #print("no of insts: ", no_of_insts)
-    
-    polite = ('please ', 'show me how you can ', '')
+
+    polite = ('Please ', 'Show me how you can ', '')
     prompt += random.choice(polite)
-    
+
     #for x in range(no_of_insts):
     while x < no_of_insts:
       #print(x)
       if (no_of_insts) == 2 and (x != 0):
       	add = [' and ', ' then ', '. Please also ', ', and ', ', then ', '. Then, ']
-      	to_add = random.choice(add) 
-      	
-      	if to_add == '. Please also ' or to_add == '. Then, ' or random.randint(0, 10) >= 7:   
+      	to_add = random.choice(add)
+
+      	if to_add == '. Please also ' or to_add == '. Then, ' or random.randint(0, 10) >= 7:
             prompt = prompt.capitalize()
-            
+
       	prompt += to_add
-        
+
       elif no_of_insts > 2:
       	if (x < no_of_insts - 1) and (x != 0):
             add = [', ', ', then ']
@@ -270,19 +364,25 @@ class prompt_randomizer:
             addition = [', and ', ', then ', ', finally, ']
             prompt += random.choice(addition)
       	elif x == 0:
-            prompt = prompt.capitalize()        
+            prompt = prompt.capitalize()
 
       new_inst = prompt_randomizer.rand_inst()
       prompt += new_inst[0]
       simple_move.append(new_inst[1])
-      
+
       for y in new_inst[2]:
-      	init = prompt_randomizer.compute_total(y, init)
-      	computed_move.append(init[:])
+        init = prompt_randomizer.compute_total(y, init)
+        computed_move.append(init[:])
+        equiv.append(y)
+        gt_next = prompt_randomizer.ground_truth_zero(y, coords)
+        coords = gt_next
+        print(y)
+        print(coords[:])
+        ground_truth.append(coords[:])
 
       #max_per_prompt -= 1
       x += 1
-      
+
       # of times
       a = random.randint(0, 10)
       if a > 8:
@@ -290,42 +390,74 @@ class prompt_randomizer:
         prompt += " " + multi[0]
         for b in range(multi[1]):
           simple_move.append(new_inst[1])
-          
+
           for c in new_inst[2]:
-          	init = prompt_randomizer.compute_total(c, init)
-          	computed_move.append(init[:])
+            init = prompt_randomizer.compute_total(c, init)
+            computed_move.append(init[:])
+            equiv.append(c)
+            gt_next = prompt_randomizer.ground_truth_zero(c, coords)
+            print(c)
+            print(coords)
+            coords = gt_next
+            ground_truth.append(coords[:])
+
           x += 1
-          	
-      
-    
+
+      flag = prompt_randomizer.flag()
+
+
+
     #if random.randint(0, 10) >= 7:
     #	prompt = prompt.capitalize()
-    	
-    if random.randint(1, 2) == 2:
-    	prompt += "."
-    
-    #prompt = prompt.capitalize() 
-       
-    return (prompt, simple_move, computed_move)
-    
-#testing
-prompt1 = prompt_randomizer.prompt_maker(5)
-print("Prompt: ", prompt1[0])
-print("Single: ", prompt1[1])
-print("Cumulative: ", prompt1[2])
 
-print("\n")
+    #if random.randint(1, 2) == 2:
+    #prompt += "."
 
-prompt2 = prompt_randomizer.prompt_maker(8)
-print("Prompt: ", prompt2[0])
-print("Single: ", prompt2[1])
-print("Cumulative: ", prompt2[2])
+    add_flags = prompt_randomizer.flag()
+    prompt = prompt + ". " + add_flags[0]
 
-print("\n")
 
-prompt3 = prompt_randomizer.prompt_maker(1)
-print("Prompt: ", prompt3[0])
-print("Single: ", prompt3[1])
-print("Cumulative: ", prompt3[2])
-  
-    
+    #prompt = prompt.capitalize()
+
+    json_fl = {
+      "nl_prompt": prompt,
+      "instructions": equiv,
+      "ground_truth_coordinates": ground_truth,
+      "cumulative": computed_move,
+      "flags": add_flags[1]
+
+    }
+
+    coords = [0, 0, 0]        # reset coords
+
+    return (prompt, simple_move, computed_move, json_fl)
+    #return json_fl
+
+#TEST
+#print(prompt_randomizer.flag()[0])
+
+'''
+if __name__ == "__main__":
+  #testing
+  prompt1 = prompt_randomizer.prompt_maker(5)
+  print("Prompt: ", prompt1[0])
+  print("Single: ", prompt1[1])
+  print("Cumulative: ", prompt1[2])
+  print("Flag: ", prompt1[3])
+
+  print("\n")
+
+  prompt2 = prompt_randomizer.prompt_maker(8, [1, 2, 3])
+  print("Prompt: ", prompt2[0])
+  print("Single: ", prompt2[1])
+  print("Cumulative: ", prompt2[2])
+  print("Flag: ", prompt2[3])
+
+  print("\n")
+
+  prompt3 = prompt_randomizer.prompt_maker(1)
+  print("Prompt: ", prompt3[0])
+  print("Single: ", prompt3[1])
+  print("Cumulative: ", prompt3[2])
+  print("Flag: ", prompt3[3])
+'''
