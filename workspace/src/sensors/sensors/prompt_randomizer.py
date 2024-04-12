@@ -309,23 +309,23 @@ class prompt_randomizer:
     return (prompt, simple_move, computed_move)
     
 #testing
-#prompt1 = prompt_randomizer.prompt_maker(5)
-#print("Prompt: ", prompt1[0])
-#print("Single: ", prompt1[1])
-#print("Cumulative: ", prompt1[2])
+prompt1 = prompt_randomizer.prompt_maker(5)
+print("Prompt: ", prompt1[0])
+print("Single: ", prompt1[1])
+print("Cumulative: ", prompt1[2])
 
-#print("\n")
+print("\n")
 
-#prompt2 = prompt_randomizer.prompt_maker(8)
-#print("Prompt: ", prompt2[0])
-#print("Single: ", prompt2[1])
-#print("Cumulative: ", prompt2[2])
+prompt2 = prompt_randomizer.prompt_maker(8)
+print("Prompt: ", prompt2[0])
+print("Single: ", prompt2[1])
+print("Cumulative: ", prompt2[2])
 
-#print("\n")
+print("\n")
 
-#prompt3 = prompt_randomizer.prompt_maker(1)
-#print("Prompt: ", prompt3[0])
-#print("Single: ", prompt3[1])
-#print("Cumulative: ", prompt3[2])
+prompt3 = prompt_randomizer.prompt_maker(1)
+print("Prompt: ", prompt3[0])
+print("Single: ", prompt3[1])
+print("Cumulative: ", prompt3[2])
   
     
