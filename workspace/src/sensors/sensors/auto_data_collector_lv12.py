@@ -182,9 +182,12 @@ class AutoDataCollector(Node):
         while self.odometry_msg_data_pos == None: time.sleep(0.1)
         while self.odometry_msg == None: time.sleep(0.1)
         
+        self.__publish_twist_message(0.0, 0.0)
+
         twist_msg_jsonized = { # default
                     "linear":(0.0, 0.0, 0.0),
-                    "angular":(0.0, 0.0, 0.0)
+                    "angular":(0.0, 0.0, 0.0),
+                    "time":self.twist_msg
                 }
         
         self.sampling_start = True # unlocks data collection to ensure that there is data from the sensors
@@ -403,18 +406,18 @@ class AutoDataCollector(Node):
 
         return
 
-    def move_x_meters_feedback(self, distance, slowdown_threshold=0.2, vel_x:float = 0.2): # accurate, works up to +- 0.005 meters
+    def move_x_meters_feedback(self, distance, slowdown_threshold=0.4, vel_x:float = 0.2): # accurate, works up to +- 0.005 meters
 
         # implement here
         start = self.odometry_msg_data_pos
         self.distance_traveled = 0.0
         switch = True
 
-        while distance-slowdown_threshold > self.distance_traveled:
+        while distance - slowdown_threshold > self.distance_traveled:
             if switch:
                 self.__publish_twist_message(vel_x,0.0)
                 switch = False
-            time.sleep(0.1)
+        
 
         self.__publish_twist_message(0.0,0.0)
         time.sleep(0.5)
@@ -422,16 +425,13 @@ class AutoDataCollector(Node):
         switch = True
         while distance > self.distance_traveled:
             if switch:
-                self.__publish_twist_message(0.05,0.0)
+                self.__publish_twist_message(0.1,0.0)
                 switch = False
-            time.sleep(0.1)
-
-        
 
         self.__publish_twist_message(0.0,0.0)
         time.sleep(0.5)
         end = self.odometry_msg_data_pos
-        print(round(distance-compute_distance(start, end), 4))
+        print("Distance error:",round(distance-compute_distance(start, end), 4))
 
         return distance-compute_distance(start, end)
 
