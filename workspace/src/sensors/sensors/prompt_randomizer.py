@@ -411,6 +411,8 @@ class prompt_randomizer:
     #if random.randint(1, 2) == 2:
     #prompt += "."
 
+    equiv.append(("STOP"))
+
     add_flags = prompt_randomizer.flag()
     prompt = prompt + ". " + add_flags[0]
 
