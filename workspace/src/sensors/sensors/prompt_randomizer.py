@@ -231,7 +231,7 @@ class prompt_randomizer:
     fl = random.choice(flags)
 
     # Defaults
-    distance = 0                    # distance from obstacle
+    #distance = 0                    # distance from obstacle
     wait = 0                        # amount of time to wait until obstacle is removed from path or until robot tries to move around the obstacle
     stop = False                    # stops at obstacle
     go_around = False               # try to move around the object, else stop
@@ -273,15 +273,13 @@ class prompt_randomizer:
       # replace X
       prompt_addition = prompt_addition.replace("X", str(wait))
 
-    t_or_f = [True, False]
-    announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
+    #t_or_f = [True, False]
+    #announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
 
     json_flags = {
-      "@DISTANCE": distance,
       "@WAIT": wait,
       "@STOP": stop,
       "@GO_AROUND": go_around,
-      "@ANNOUNCE":  announce
       }
 
     #flags = json.loads(str(json_flags))
