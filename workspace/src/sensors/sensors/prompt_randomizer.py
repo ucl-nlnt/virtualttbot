@@ -100,18 +100,18 @@ class prompt_randomizer:
     times = [0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4]
 
     if max_left == 0:
-    	time_int = 0
+      time_int = 0
     elif max_left == 1:
-    	time_int = random.randint(0, 4)
+      time_int = random.randint(0, 4)
     elif max_left == 2:
-    	time_int = random.randint(0, 8)
+      time_int = random.randint(0, 8)
     elif max_left == 3:
-    	time_int = random.randint(0, 11)
+      time_int = random.randint(0, 11)
     else:
-    	time_int = random.randint(0, len(multiples)-1)
-
+      time_int = random.randint(0, len(multiples)-1)
+    
     return (multiples[time_int], times[time_int])
-
+  
   #def rand_insts(max_per_prompt):
   #  no_of_instructions = random.randint(1, max_per_prompt)
   #  return no_of_instructions
@@ -153,7 +153,7 @@ class prompt_randomizer:
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT"] #"DRAW SHAPE"
+    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT"] #, "DRAW SHAPE"]
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     prepositions2 = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
@@ -290,18 +290,18 @@ class prompt_randomizer:
       #print(str(x[0]))
       #print(str(x[1]))
       if x[0] == "MOVE":
-      	init[0] = init[0] + x[1]
-      	init[0] = round(init[0], 2)
+        init[0] = init[0] + x[1]
+        init[0] = round(init[0], 2)
       	#init[0] = init[0] + 1
 
       elif x[0]  == "LEFT":
-      	init[1] = init[1] - x[1]
-      	init[1] = round(init[1], 2)
+        init[1] = init[1] - x[1]
+        init[1] = round(init[1], 2)
       	#init[1] = init[1] - 1
 
       elif x[0]  == "RGHT":
-      	init[1] = init[1] + x[1]
-      	init[1] = round(init[1], 2)
+        init[1] = init[1] + x[1]
+        init[1] = round(init[1], 2)
       	#init[1] = init[1] + 1
 
       return init
@@ -346,23 +346,23 @@ class prompt_randomizer:
     while x < no_of_insts:
       #print(x)
       if (no_of_insts) == 2 and (x != 0):
-      	add = [' and ', ' then ', '. Please also ', ', and ', ', then ', '. Then, ']
-      	to_add = random.choice(add)
+        add = [' and ', ' then ', '. Please also ', ', and ', ', then ', '. Then, ']
+        to_add = random.choice(add)
 
-      	if to_add == '. Please also ' or to_add == '. Then, ' or random.randint(0, 10) >= 7:
-            prompt = prompt.capitalize()
+        if to_add == '. Please also ' or to_add == '. Then, ' or random.randint(0, 10) >= 7:
+          prompt = prompt.capitalize()
 
-      	prompt += to_add
+        prompt += to_add
 
       elif no_of_insts > 2:
       	if (x < no_of_insts - 1) and (x != 0):
-            add = [', ', ', then ']
-            prompt += random.choice(add)
-      	elif (x == no_of_insts - 1) and (x != 0):
-            addition = [', and ', ', then ', ', finally, ']
-            prompt += random.choice(addition)
-      	elif x == 0:
-            prompt = prompt.capitalize()
+          add = [', ', ', then ']
+          prompt += random.choice(add)
+        elif (x == no_of_insts - 1) and (x != 0):
+          addition = [', and ', ', then ', ', finally, ']
+          prompt += random.choice(addition)
+        elif x == 0:
+          prompt = prompt.capitalize()
 
       new_inst = prompt_randomizer.rand_inst()
       prompt += new_inst[0]
