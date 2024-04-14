@@ -528,7 +528,7 @@ class prompt_randomizer:
 #TEST
 #print(prompt_randomizer.flag()[0])
 
-
+'''
 if __name__ == "__main__":
   #testing
   prompt1 = prompt_randomizer.prompt_maker(5)
@@ -552,4 +552,4 @@ if __name__ == "__main__":
   print("Single: ", prompt3[1])
   #print("Cumulative: ", prompt3[2])
   #print("Flag: ", prompt3[3])
-
+'''
