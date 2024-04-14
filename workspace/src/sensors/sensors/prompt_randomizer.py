@@ -153,7 +153,7 @@ class prompt_randomizer:
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT"] #, "DRAW SHAPE"]
+    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT", "DRAW SHAPE", "DRAW SHAPE"]
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     prepositions2 = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
@@ -167,6 +167,8 @@ class prompt_randomizer:
     rephrase_back2 = ["behind you", "backwards", "in reverse", "rearward", "to your rear"]
 
     randtype = random.choice(inst_types)
+
+    #randtype = "DRAW SHAPE"
 
     if randtype == "FWD1":
       dist =  prompt_randomizer.rand_dist()
@@ -218,11 +220,94 @@ class prompt_randomizer:
       dist =  prompt_randomizer.rand_dist()
       rot = prompt_randomizer.rand_rot()
       return (random.choice(rephrase_move) + " " +  dist[0] + " at " + rot[0] + " " + random.choice(rephrase_rrot) , "(RGHT, " + str(round(rot[1], 2)) + "), (MOVE, " + str(round(dist[1],2)) +")", [("RGHT", round(rot[1], 2)), ("MOVE", round(dist[1],2))])
-    #elif randtype == "DRAW SHAPE":
-    #  shapes = ["triangle", "square", "rectangle", "pentagon", "hexagon", "heptagon", "octagon", "nonagon", "decagon"]
-    #  dist =  prompt_randomizer.rand_dist()
+    elif randtype == "DRAW SHAPE":
+      rephrase_start = ["sketch", "create", "outline", "render", "draft", "make", "sketch out", "form", "illustrate", "construct", "design"]
+      shaper = ["triangle", "triangular", "3-sided", "three-sided", "four-sided", "4-sided", "@four-sided", "@4-sided", "square", "quadrilateral with equal sides and right angles", "rectangle", "rectangular", "quadrilateral with equal opposite sides and right angles", "five-sided", "5-sided", "pentagon", "six-sided", "6-sided", "hexagon", "seven-sided", "7-sided", "heptagon", "eight-sided", "8-sided", "octagon", "nine-sided", "9-sided", "nonagon", "10-sided", "ten-sided", "decagon"]
+      shape_sides = [3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10]
+
+      shape_int = random.randint(0, len(shaper)-1)
+      shape = shaper[shape_int]
+
+      if shape == "rectangle" or shape == "rectangular" or shape == "quadrilateral with equal opposite sides and right angles":
+        dist1 = prompt_randomizer.rand_dist()
+        dist2 = prompt_randomizer.rand_dist()
+        if shape == "rectangular":
+          extra = [" shape", " form", " figure"]
+          shape += random.choice(extra)
+        choose = [True, False]
+        chosen = random.choice(choose)
+        if chosen:
+          # ex: sketch a 5x6 rectangular shape
+          rephrase_sides = ["x", " by ", " x "]
+          phrasing = random.choice(rephrase_start) + " a " + dist1[0] + random.choice(rephrase_sides) + dist2[0] + " " + shape
+        else:
+          rephrase_next = ["with dimensions", "measuring", "with sides of", "with dimensions of", "that measures"]
+          rephrase_sides = ["@1x@2", "@1 x @2", "@1 by @2", "@1 wide and @2 tall", "@1 across and @2 high"]
+          phrasing = random.choice(rephrase_start) + " a " + shape + " " + random.choice(rephrase_next) + " " + (random.choice(rephrase_sides)).replace("@1", str(dist1[0])).replace("@2", str(dist2[0]))
+
+        #str_equiv = '[("MOVE", ' + dist1 + ')], [("LEFT", ' + 90 ')], [("MOVE", ' + dist2 + ')], [("LEFT", ' + 90 ')], [("MOVE", ' + dist1 + ')], [("LEFT", ' + 90 ')], [("MOVE", ' + dist2 + ')], [("LEFT", ' + 90 ')]'
+        gen_equiv = [("MOVE", round(dist1[1], 2)), ("LEFT", 90), ("MOVE", round(dist2[1], 2)), ("LEFT", 90), ("MOVE", round(dist1[1], 2)), ("LEFT", 90), ("MOVE", round(dist2[1], 2))]
+        str_equiv = str(gen_equiv)
+        return (phrasing, str_equiv, gen_equiv)
+
+      elif shape == "square" or shape == "quadrilateral with equal sides and right angles" or shape == "@four-sided" or shape == "@4-sided":
+        if shape == "square" or shape == "@four-sided" or shape == "@4-sided":
+          shape = shape.replace("@", "")
+          extra = [" shape", " figure", ""]
+          shape += random.choice(extra)
+
+        dist =  prompt_randomizer.rand_dist()
+
+        chosen = random.randint(0, 1)
+        if chosen:
+          # ex: sketch a 5x5 square shape
+          rephrase_sides = ["x", " by ", " x "]
+          phrasing = random.choice(rephrase_start) + " a " + dist[0] + random.choice(rephrase_sides) + dist[0] + " " + shape
+        else:
+          rephrase_next = ["with dimensions", "measuring", "with sides of", "with dimensions of", "that measures", "with side lengths equal to"]
+          rephrase_sides = ["@x@", "@ by @", "@", "@ x @"]
+          phrasing = random.choice(rephrase_start) + " a " + shape + " " + random.choice(rephrase_next) + " " + (random.choice(rephrase_sides)).replace("@", str(dist[0]))
+      
+        gen_equiv = [("MOVE", round(dist[1], 2)), ("LEFT", 90), ("MOVE", round(dist[1], 2)), ("LEFT", 90), ("MOVE", round(dist[1], 2)), ("LEFT", 90), ("MOVE", round(dist[1], 2))]
+        str_equiv = str(gen_equiv)
+
+        return (phrasing, str_equiv, gen_equiv)
+
+      else: 
+        dist =  prompt_randomizer.rand_dist()
+        angle = round(360/shape_sides[shape_int], 2)
+
+        gen_equiv =[]
+
+        if shape == "triangular" or ("sided" in shape):
+          extra = [" shape", " form", " figure"]
+          shape += random.choice(extra)
+
+        rephrase_next = ["with @-sides", "with sides measuring @", "with sides equal to @", "with side lengths equal to @", "with dimensions equal to @", "with @ dimensions", "measuring @", "that measures @ per side", "with length @ per side"]
+        
+        if shape == "octagon":
+          preposition = " an "
+        else:
+          preposition = " a "
+
+        phrasing = random.choice(rephrase_start) + preposition + shape + " " + (random.choice(rephrase_next)).replace("@", str(dist[0]))
+        
+        gen_equiv = []
+
+        for i in range(shape_sides[shape_int]-1):
+          gen_equiv.append(("MOVE", round(dist[1], 2)))
+          gen_equiv.append(("LEFT", round(angle, 2)))
+
+        gen_equiv.append(("MOVE", round(dist[1], 2)))
+        str_equiv = str(gen_equiv)
+
+        return (phrasing, str_equiv, gen_equiv)
+
       # "create a <shape> with sides with length equal to <dist>"
       # "draw a <shape> "
+      # sketch a @x@ or @by@ <rectangle/square>
+      # sketch a <shape> with @ sides
+      # sketch a <shape> with sides equal to @
 
   def flag(max_time=10):
 
@@ -253,6 +338,8 @@ class prompt_randomizer:
 
       # replace X
       prompt_addition = prompt_addition.replace("@", str(wait))
+      if wait == 1:
+        prompt_addition = prompt_addition.replace("1 seconds", "1 second")
 
 
     elif fl == "@GO_AROUND_I":
@@ -272,6 +359,8 @@ class prompt_randomizer:
 
       # replace X
       prompt_addition = prompt_addition.replace("@", str(wait))
+      if wait == 1:
+        prompt_addition = prompt_addition.replace("1 seconds", "1 second")
 
     #t_or_f = [True, False]
     #announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
@@ -335,11 +424,11 @@ class prompt_randomizer:
     simple_move = []
     equiv = []
     ground_truth = [coords[:]]       # [x, y, phi]
-    print(ground_truth)
+    #print(ground_truth)
     x = 0
     #print("no of insts: ", no_of_insts)
 
-    polite = ('Please ', 'Show me how you can ', '')
+    polite = ('', '', 'Please ', '', 'Show me how you can ', '', '')
     prompt += random.choice(polite)
 
     #for x in range(no_of_insts):
@@ -355,18 +444,19 @@ class prompt_randomizer:
         prompt += to_add
 
       elif no_of_insts > 2:
-      	if (x < no_of_insts - 1) and (x != 0):
+        if (x < no_of_insts - 1) and (x != 0):
           add = [', ', ', then ']
           prompt += random.choice(add)
         elif (x == no_of_insts - 1) and (x != 0):
           addition = [', and ', ', then ', ', finally, ']
           prompt += random.choice(addition)
-        elif x == 0:
-          prompt = prompt.capitalize()
 
       new_inst = prompt_randomizer.rand_inst()
       prompt += new_inst[0]
       simple_move.append(new_inst[1])
+
+      if x == 0:
+        prompt = prompt.capitalize()
 
       for y in new_inst[2]:
         init = prompt_randomizer.compute_total(y, init)
@@ -374,8 +464,8 @@ class prompt_randomizer:
         equiv.append(y)
         gt_next = prompt_randomizer.ground_truth_zero(y, coords)
         coords = gt_next
-        print(y)
-        print(coords[:])
+        #print(y)
+        #print(coords[:])
         ground_truth.append(coords[:])
 
       #max_per_prompt -= 1
@@ -394,8 +484,8 @@ class prompt_randomizer:
             computed_move.append(init[:])
             equiv.append(c)
             gt_next = prompt_randomizer.ground_truth_zero(c, coords)
-            print(c)
-            print(coords)
+            #print(c)
+            #print(coords)
             coords = gt_next
             ground_truth.append(coords[:])
 
@@ -415,6 +505,8 @@ class prompt_randomizer:
 
     add_flags = prompt_randomizer.flag()
     prompt = prompt + ". " + add_flags[0]
+
+    prompt = prompt.replace(" a a ", " a ")
 
 
     #prompt = prompt.capitalize()
@@ -442,22 +534,22 @@ if __name__ == "__main__":
   prompt1 = prompt_randomizer.prompt_maker(5)
   print("Prompt: ", prompt1[0])
   print("Single: ", prompt1[1])
-  print("Cumulative: ", prompt1[2])
-  print("Flag: ", prompt1[3])
+  #print("Cumulative: ", prompt1[2])
+  #print("Flag: ", prompt1[3])
 
   print("\n")
 
   prompt2 = prompt_randomizer.prompt_maker(8, [1, 2, 3])
   print("Prompt: ", prompt2[0])
   print("Single: ", prompt2[1])
-  print("Cumulative: ", prompt2[2])
-  print("Flag: ", prompt2[3])
+  #print("Cumulative: ", prompt2[2])
+  #print("Flag: ", prompt2[3])
 
   print("\n")
 
   prompt3 = prompt_randomizer.prompt_maker(1)
   print("Prompt: ", prompt3[0])
   print("Single: ", prompt3[1])
-  print("Cumulative: ", prompt3[2])
-  print("Flag: ", prompt3[3])
+  #print("Cumulative: ", prompt3[2])
+  #print("Flag: ", prompt3[3])
 
