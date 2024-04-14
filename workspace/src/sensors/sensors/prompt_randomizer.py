@@ -238,40 +238,40 @@ class prompt_randomizer:
 
     if fl == "@STOP_I":
       # stop immediately once obstacle is detected
-      possible_prompts = ["Stop immediately once the obstacle is detected.", "Cease promptly upon detection of the obstacle.", "Once the obstacle is detected, halt immediately.", "Upon detecting the obstacle, stop right away.", "Cease movement as soon as the obstacle is detected.", "Stop instantly upon detection of the obstacle.", "Once the obstacle is spotted, come to a halt immediately.", "Halt without delay once the obstacle is detected.", "Upon detection of the obstacle, stop abruptly.", "Cease motion immediately upon detecting the obstacle.", "Stop at once when the obstacle is detected.", "Come to a stop instantly upon detecting the obstacle."]
+      possible_prompts = ["Stop immediately once the obstacle is detected.", "Cease promptly upon detection of the obstacle.", "Once the obstacle is detected, halt immediately.", "Upon detecting the obstacle, stop right away.", "Cease movement as soon as the obstacle is detected.", "Stop instantly upon detection of the obstacle.", "Once the obstacle is spotted, come to a halt immediately.", "Halt without delay once the obstacle is detected.", "Upon detection of the obstacle, stop abruptly.", "Cease motion immediately upon detecting the obstacle.", "Stop at once when the obstacle is detected.", "Come to a stop instantly upon detecting the obstacle.", "Stop before you hit anything.", "Stop before you hit something."]
       prompt_addition = random.choice(possible_prompts)
 
       stop = True
 
     elif fl == "@STOP_W":
       # stop after X seconds
-      possible_prompts = ["Wait up to X seconds once the obstacle is detected. If the obstacle is still there after X seconds, stop."]
+      possible_prompts = ["Wait up to @ seconds for obstacle removal once the obstacle is detected. If the obstacle is still there after @ seconds, stop.", "Pause for up to @ seconds upon detecting the obstacle and resume when it's gone. If the obstacle persists after @ seconds, come to a halt.", "Delay for a maximum of @ seconds upon detecting the obstacle. If the obstacle remains after @ seconds, cease movement.", "Pause for @ seconds after detecting the obstacle. If it persists, stop.", "After detecting the obstacle, wait for @ seconds. If it remains, halt.", "Wait for @ seconds after detecting the obstacle. If it's still in your way, stop.", "Delay for @ seconds upon detecting the obstacle. If it remains, halt operations.", "After spotting the obstacle, wait for @ seconds before continuing. If it lingers, halt.", "Upon detecting the obstacle, wait for @ seconds before resuming. If it stays there, come to a stop."]
       prompt_addition = random.choice(possible_prompts)
 
       stop = True
       wait = random.randint(0, max_time)
 
       # replace X
-      prompt_addition = prompt_addition.replace("X", str(wait))
+      prompt_addition = prompt_addition.replace("@", str(wait))
 
 
     elif fl == "@GO_AROUND_I":
       # move around obstacle immediately once obstacle is detected. if not possible, stop
-      possible_prompts = ["Try to go around it. If you can't go around it, stop.", "Immediately try to go around it. If you can't go around it, stop"]
+      possible_prompts = ["Try to go around it. If you can't go around it, stop.", "Immediately try to go around it. If you can't go around it, stop.", "Attempt to maneuver around it. If you're unable to, come to a halt.",  "Make an effort to navigate around it. If circling isn't possible, halt.", "Try to bypass it. If bypassing isn't feasible, cease movement.", "Attempt to maneuver past it. If maneuvering isn't feasible, come to a stop.", "Make an effort to avoid it. If avoidance isn't possible, halt."]
       prompt_addition = random.choice(possible_prompts)
 
       go_around = True
 
     elif fl == "@GO_AROUND_W":
       # move around obstacle after <wait> seconds. if not possible, stop
-      possible_prompts = ["Wait up to X seconds once the obstacle is detected. If the obstacle is still there after X seconds, try to go around it. If you can't go around it, stop."]
+      possible_prompts = ["Wait up to @ seconds once the obstacle is detected. If the obstacle is still there after @ seconds, try to go around it. If you can't go around it, stop.", "Wait up to X seconds for obstacle removal. If it persists, attempt avoidance; if unsuccessful, stop.", "Wait until X seconds for barrier clearance. If it persists, try to circumvent; if not possible, stop.", "Wait X seconds maximum for obstruction removal. If it remains, attempt avoidance; if unsuccessful, stop.", "Allow up to X seconds for hurdle elimination. If it lingers, try to navigate around; if not feasible, stop.", "Give it X seconds max for barrier eradication. If it continues, attempt avoidance; if unachievable, stop.", "Wait until X seconds for impediment removal. If it persists, try to sidestep; if impossible, stop."]
       prompt_addition = random.choice(possible_prompts)
 
       go_around = True
       wait = random.randint(0, max_time)
 
       # replace X
-      prompt_addition = prompt_addition.replace("X", str(wait))
+      prompt_addition = prompt_addition.replace("@", str(wait))
 
     #t_or_f = [True, False]
     #announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
@@ -436,7 +436,7 @@ class prompt_randomizer:
 #TEST
 #print(prompt_randomizer.flag()[0])
 
-'''
+
 if __name__ == "__main__":
   #testing
   prompt1 = prompt_randomizer.prompt_maker(5)
@@ -460,4 +460,4 @@ if __name__ == "__main__":
   print("Single: ", prompt3[1])
   print("Cumulative: ", prompt3[2])
   print("Flag: ", prompt3[3])
-'''
+

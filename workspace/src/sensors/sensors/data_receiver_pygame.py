@@ -232,6 +232,10 @@ class turtlebot_controller:
                 elif args.enable_autorandomizer_from_csv == 2:
                     prompt = random_csv.csv_randomizer()
                     print("Random Prompt:", prompt[0])
+
+                    #if ("LEFT" in prompt[1]) or ("RGHT" in prompt[1]):
+                    #    remove
+
                     print("Prompt Equivalent: ", prompt[1])
                 elif args.enable_autorandomizer_from_csv == 3:
                     prompt = self.prompt_generator()
