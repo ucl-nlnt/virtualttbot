@@ -249,7 +249,7 @@ class prompt_randomizer:
 
         #str_equiv = '[("MOVE", ' + dist1 + ')], [("LEFT", ' + 90 ')], [("MOVE", ' + dist2 + ')], [("LEFT", ' + 90 ')], [("MOVE", ' + dist1 + ')], [("LEFT", ' + 90 ')], [("MOVE", ' + dist2 + ')], [("LEFT", ' + 90 ')]'
         gen_equiv = [("MOVE", round(dist1[1], 2)), ("LEFT", 90), ("MOVE", round(dist2[1], 2)), ("LEFT", 90), ("MOVE", round(dist1[1], 2)), ("LEFT", 90), ("MOVE", round(dist2[1], 2))]
-        str_equiv = str(gen_equiv)
+        str_equiv = str(gen_equiv).replace("[", "").replace("]", "")
         return (phrasing, str_equiv, gen_equiv)
 
       elif shape == "square" or shape == "quadrilateral with equal sides and right angles" or shape == "@four-sided" or shape == "@4-sided":
@@ -271,7 +271,7 @@ class prompt_randomizer:
           phrasing = random.choice(rephrase_start) + " a " + shape + " " + random.choice(rephrase_next) + " " + (random.choice(rephrase_sides)).replace("@", str(dist[0]))
       
         gen_equiv = [("MOVE", round(dist[1], 2)), ("LEFT", 90), ("MOVE", round(dist[1], 2)), ("LEFT", 90), ("MOVE", round(dist[1], 2)), ("LEFT", 90), ("MOVE", round(dist[1], 2))]
-        str_equiv = str(gen_equiv)
+        str_equiv = str(gen_equiv).replace("[", "").replace("]", "")
 
         return (phrasing, str_equiv, gen_equiv)
 
@@ -301,7 +301,7 @@ class prompt_randomizer:
           gen_equiv.append(("LEFT", round(angle, 2)))
 
         gen_equiv.append(("MOVE", round(dist[1], 2)))
-        str_equiv = str(gen_equiv)
+        str_equiv = str(gen_equiv).replace("[", "").replace("]", "")
 
         return (phrasing, str_equiv, gen_equiv)
 
