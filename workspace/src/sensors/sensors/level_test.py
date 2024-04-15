@@ -8,6 +8,10 @@ import struct
 import random
 import math
 
+"""
+Used when finding the level-ness of the Engineering building room.
+"""
+
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from rclpy.qos import qos_profile_sensor_data
