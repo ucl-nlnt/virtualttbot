@@ -154,7 +154,7 @@ class prompt_randomizer:
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT", "DRAW SHAPE", "DRAW SHAPE", "WAIT"]
+    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT", "DRAW SHAPE", "DRAW SHAPE"] #, "WAIT"]
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     prepositions2 = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
