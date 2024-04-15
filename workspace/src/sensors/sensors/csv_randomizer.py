@@ -4,10 +4,14 @@ import csv
 import random
 import ast
 import math
+import os
 
 class random_csv:
     def csv_randomizer():
-        with open('Prompts/combined.csv', newline='') as f:
+        this_path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(this_path, "Prompts/combined.csv")
+        
+        with open(path, newline='') as f:
             read_file = csv.reader(f)
             all_prompts = [list(row) for row in read_file]
 
@@ -28,7 +32,7 @@ class random_csv:
         for i, (action, value) in enumerate(prompt[1]):
             if (action == 'RGHT') or (action == 'LEFT'):
                 # Convert the angle value to degrees
-                prompt[1][i] = (action, round(math.degrees(value)))
+                prompt[1][i] = (action, round(math.degrees(value), 2))
             elif action == 'MOVE':
                 continue
 
@@ -36,3 +40,4 @@ class random_csv:
 
         return prompt
 
+print(random_csv.csv_randomizer())
