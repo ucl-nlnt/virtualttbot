@@ -423,12 +423,16 @@ class prompt_randomizer:
     return n_coords
 
   def prompt_maker(max_per_prompt = 3, coords = [0, 0, 0]):
+    '''
     simple_no = random.randint(0, 10)
     if simple_no < 1:
       return prompt_randomizer.prompt_maker_csv(coords)
     else:
       return prompt_randomizer.prompt_maker_here(max_per_prompt, coords)
+    '''
+    return prompt_randomizer.prompt_maker_here(max_per_prompt, coords)
   
+  '''
   def prompt_maker_csv(coords):
     ground_truth = [coords[:]]
     computed_move =[]
@@ -468,7 +472,7 @@ class prompt_randomizer:
     coords = [0, 0, 0]        # reset coords
 
     return (prompt, simple_move, computed_move, json_fl)
-
+'''
   def prompt_maker_here(max_per_prompt, coords):
     # maximum number of steps per prompt ; does not count in repeated steps (ex. 2x)
     prompt = ""
@@ -478,7 +482,7 @@ class prompt_randomizer:
     init = [0.0, 0.0]  # initialize randomizer
     computed_move = []
     #no_of_insts = 5
-    simple_move = ""
+    simple_move = []
     equiv = []
     ground_truth = [coords[:]]       # [x, y, phi]
     #print(ground_truth)
