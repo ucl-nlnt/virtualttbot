@@ -36,6 +36,9 @@ class random_csv:
             elif action == 'MOVE':
                 continue
 
-        prompt = tuple(prompt)
+        str_equiv = str(prompt[1]).replace("[", "").replace("]", "")
+        prompt = (prompt[0], str_equiv, prompt[1])
 
         return prompt
+
+#print(random_csv.csv_randomizer())

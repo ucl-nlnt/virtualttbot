@@ -1,6 +1,7 @@
 import random
 import json
 import math
+from csv_randomizer import random_csv
 
 class prompt_randomizer:
   #def __init__(self):
@@ -422,6 +423,53 @@ class prompt_randomizer:
     return n_coords
 
   def prompt_maker(max_per_prompt = 3, coords = [0, 0, 0]):
+    simple_no = random.randint(0, 10)
+    if simple_no < 1:
+      return prompt_randomizer.prompt_maker_csv(coords)
+    else:
+      return prompt_randomizer.prompt_maker_here(max_per_prompt, coords)
+  
+  def prompt_maker_csv(coords):
+    ground_truth = [coords[:]]
+    computed_move =[]
+    init = [0.0, 0.0]
+    csv_prompt = random_csv.csv_randomizer()
+    print(csv_prompt)
+    prompt = csv_prompt[0]
+    simple_move = csv_prompt[1]
+    equiv = csv_prompt[2][:]
+
+    for y in range(len(equiv)):
+      init = prompt_randomizer.compute_total(equiv[y], init)
+      computed_move.append(init[:])
+      equiv.append(y)
+      gt_next = prompt_randomizer.ground_truth_zero(equiv[y], coords)
+      #print(gt_next)
+      coords = gt_next
+      ground_truth.append(coords[:])
+
+    flag = prompt_randomizer.flag()
+
+    equiv = csv_prompt[2].append(("STOP"))
+
+    add_flags = prompt_randomizer.flag()
+    prompt = prompt + " " + add_flags[0]
+    
+    #computed_move = 
+
+    json_fl = {
+      "nl_prompt": prompt,
+      "instructions": equiv,
+      "ground_truth_coordinates": ground_truth,
+      "cumulative": computed_move,
+      "flags": add_flags[1]
+    }
+
+    coords = [0, 0, 0]        # reset coords
+
+    return (prompt, simple_move, computed_move, json_fl)
+
+  def prompt_maker_here(max_per_prompt, coords):
     # maximum number of steps per prompt ; does not count in repeated steps (ex. 2x)
     prompt = ""
     no_of_insts = random.randint(1, max_per_prompt)
@@ -500,7 +548,7 @@ class prompt_randomizer:
 
           x += 1
 
-      flag = prompt_randomizer.flag()
+    flag = prompt_randomizer.flag()
 
 
 
@@ -537,7 +585,7 @@ class prompt_randomizer:
 #TEST
 #print(prompt_randomizer.flag()[0])
 
-'''
+
 if __name__ == "__main__":
   #testing
   prompt1 = prompt_randomizer.prompt_maker(5)
@@ -561,4 +609,4 @@ if __name__ == "__main__":
   print("Single: ", prompt3[1])
   print("Cumulative: ", prompt3[2])
   print("Flag: ", prompt3[3])
-'''
+
