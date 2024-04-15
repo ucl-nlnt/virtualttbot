@@ -10,7 +10,7 @@ class random_csv:
     def csv_randomizer():
         this_path = os.path.abspath(os.path.dirname(__file__))
         path = os.path.join(this_path, "Prompts/combined.csv")
-        
+
         with open(path, newline='') as f:
             read_file = csv.reader(f)
             all_prompts = [list(row) for row in read_file]
@@ -39,5 +39,3 @@ class random_csv:
         prompt = tuple(prompt)
 
         return prompt
-
-print(random_csv.csv_randomizer())
