@@ -408,9 +408,9 @@ class prompt_randomizer:
       n_coords[2] -= inst[1]      # z
     elif inst[0] == 'RGHT':
       n_coords[2] += inst[1]      # z
-    else:
+    #else:
       # do nothing
-
+      
     n_coords[0] = round(n_coords[0], 2)
     n_coords[1] = round(n_coords[1], 2)
     n_coords[2] = round(n_coords[2], 2)
