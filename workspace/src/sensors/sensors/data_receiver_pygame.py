@@ -39,6 +39,7 @@ class turtlebot_controller:
     def __init__(self, manual_control=True):
 
         self.data_buffer = None
+        
         if args.name == None:
             self.current_user = input("enter a username for logging purposes << ")
         else:

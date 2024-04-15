@@ -36,6 +36,8 @@ parser.add_argument("--samples", type=int, default=1000)
 parser.add_argument("--debug", type=int, default=0)
 parser.add_argument("--comm", type=int, default=1)
 parser.add_argument("--sampler", type=int, default=1)
+parser.add_argument("--name", help="username")
+
 args = parser.parse_args()
 print(args)
 
@@ -109,7 +111,11 @@ class AutoDataCollector(Node):
 
         super().__init__('AutoDataCollector_lv1_lv2')
 
-        self.user = input("Enter your name for logging purposes: ")
+        if args.name == None:
+            self.user = input("Enter your name for logging purposes: ")
+        else:
+            self.user = args.name
+
         self.movement_publisher = self.create_publisher(Twist, '/cmd_vel',10)
         self.create_subscription(Odometry, 'odom', self.odometer_callback, qos_profile_sensor_data)  
         self.create_subscription(Twist,'cmd_vel', self.twist_callback, qos_profile_sensor_data)
