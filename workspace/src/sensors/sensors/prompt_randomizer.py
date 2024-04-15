@@ -478,7 +478,7 @@ class prompt_randomizer:
     init = [0.0, 0.0]  # initialize randomizer
     computed_move = []
     #no_of_insts = 5
-    simple_move = []
+    simple_move = ""
     equiv = []
     ground_truth = [coords[:]]       # [x, y, phi]
     #print(ground_truth)
