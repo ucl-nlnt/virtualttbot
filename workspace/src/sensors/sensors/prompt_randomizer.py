@@ -565,7 +565,7 @@ class prompt_randomizer:
     equiv.append(("STOP"))
 
     add_flags = prompt_randomizer.flag()
-    prompt = prompt + ". " + add_flags[0]
+    #prompt = prompt + ". " + add_flags[0]
 
     prompt = prompt.replace(" a a ", " a ")
 
