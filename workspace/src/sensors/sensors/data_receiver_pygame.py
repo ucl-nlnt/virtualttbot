@@ -29,7 +29,8 @@ parser.add_argument("--enable_autorandomizer_from_csv", type=int, default=0, hel
 parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrases.csv", help="Specifies path to NLNT natural language label dataset.")
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
 parser.add_argument("--disable_log_compression", type=int, default=0, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
-parser.add_argument("--name", help="Username")
+parser.add_argument("--name", default="Unknown",help="Username")
+parser.add_argument("--devmode", type=int, default=0, help="Activate developer mode.")
 
 args = parser.parse_args()
 print(args)
@@ -127,13 +128,16 @@ class turtlebot_controller:
         while True:
             
             if not self.gathering_data: time.sleep(0.007); continue
-            if time.time() > t: 
+
+            if time.time() > t:  # used to calculate framerate for debug purposes
                 t = time.time() + 1.0
                 x = 0
             x += 1
+
             data = json.loads(self.server_data_receiver.receive_data().decode())
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
-            
+
+            # Camera display
             if args.display or args.rotate_r_by:
 
                 # Decode camera data
@@ -250,8 +254,11 @@ class turtlebot_controller:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
 
-            else:
+            elif not args.devmode:
                 prompt = input("Enter prompt <<")
+            
+            else:
+                prompt = "$CONTROL"
 
             if prompt != '$CONTROL':
                 print('sending START')
