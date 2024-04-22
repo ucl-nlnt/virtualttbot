@@ -30,6 +30,7 @@ parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrase
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
 parser.add_argument("--disable_log_compression", type=int, default=0, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
 parser.add_argument("--name", help="Username")
+parser.add_argument("--debug", type=int, default=0)
 
 args = parser.parse_args()
 print(args)

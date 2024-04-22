@@ -45,7 +45,7 @@ import base64
 parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based client.")
 
 parser.add_argument("--send_images", type=int, default=1, help="Enable or Disable OpenCV functions.")
-parser.add_argument("--linear_x_ms", type=float, default=0.15, help="Set Turtlebot3 linear movement speed.")
+parser.add_argument("--linear_x_ms", type=float, default=0.2, help="Set Turtlebot3 linear movement speed.")
 parser.add_argument("--angular_z_rads", type=float, default=1.0, help="Set Turtlebot3 angular turning speed.")
 parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sampling frequency, hz = 1/t. NOTE: DO NOT SET LOWER THAN 0.1 SECONDS.")
 parser.add_argument("--server_ip", type=str, default="None", help="Sets jump server IP address.")
@@ -110,11 +110,26 @@ class SensorsSubscriber(Node):
         self.camera_device = 0
 
         # Sensor messages:
+
+        # laserscan
         self.laserscan_msg = None
+
+        # twist
         self.twist_msg = None
+        self.twist_timestamp = None
+
+        # imu
         self.imu_msg = None
+
+        # odometry
         self.odometry_msg = None
+        self.odometry_msg_orientation = None
+        self.odometry_msg_pos = None
+
+        # battery
         self.battery_state_msg = None
+
+        # total distance/yaw
         self.distance_traveled = 0
         self.degrees_rotated = 0
 
@@ -123,6 +138,7 @@ class SensorsSubscriber(Node):
         
         lock = True
         while lock:
+
             if self.destination_ip == "None": self.destination_ip = input("Please enter the destination server's IP << ")
             try:
                 self.data_transfer_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
@@ -141,14 +157,27 @@ class SensorsSubscriber(Node):
         self.is_collecting_data = False
 
         self.transfer_thread = threading.Thread(target=self.send_to_server)
+        self.transfer_thread.daemon = True
+
+        # Listen for instructions from PC/Laptop
         self.movement_subscriber_thread = threading.Thread(target=self.receive_movement_from_server)
+        self.movement_subscriber_thread.daemon = True
         # Compile Data and Transmit to Server
         self.camera_thread = threading.Thread(target=self.take_photo)
+        self.camera_thread.daemon = True
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
+        self.compilation_thread.daemon = True
+        # Movement message server
+        self.twist_msg_server = threading.Thread(target=self.movement_server)
+        self.twist_direction = None
+        self.twist_msg_server.daemon = True
+        self.twist_msg_server.start()
+        
         self.camera_thread.start()
         self.compilation_thread.start()
         self.transfer_thread.start()
         self.movement_subscriber_thread.start()
+
 
         print('INIT COMPLETE')
 
@@ -202,12 +231,12 @@ class SensorsSubscriber(Node):
                 self.killswitch = True
                 break
 
-            elif inst == b'@0000': self.movement(0.0,0.0)
-            elif inst == b'@FRWD': self.movement(self.linear_x_speed,0.0)
-            elif inst == b'@LEFT': self.movement(0.0,self.angular_z_speed)
-            elif inst == b'@RGHT': self.movement(0.0,-self.angular_z_speed)
-            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2);
-            elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2);
+            elif inst == b'@0000': self.twist_direction = None
+            elif inst == b'@FRWD': self.twist_direction = 'forward'
+            elif inst == b'@LEFT': self.twist_direction = 'left'
+            elif inst == b'@RGHT': self.twist_direction = 'right'
+            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
+            elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
 
             elif inst == b'@KILL': # terminate program
                 self.killswitch = True
@@ -249,6 +278,11 @@ class SensorsSubscriber(Node):
             quart = (q.x,q.y,q.z,q.w)
 
         self.odometry_msg = msg
+        orientation = msg.pose.pose.orientation
+        position = msg.pose.pose.position
+
+        self.odometry_msg_orientation = (orientation.x, orientation.y, orientation.z, orientation.w)
+        self.odometry_msg_pos = (position.x, position.y, position.z)
 
         try:
 
@@ -262,8 +296,9 @@ class SensorsSubscriber(Node):
 
         except Exception as e:
             pass
+
     def battery_state_callback(self,msg):
-        #print('batst')
+
         if msg == None: return
         self.battery_state_msg = msg
 
@@ -274,16 +309,16 @@ class SensorsSubscriber(Node):
         laserscan_msg_jsonized = None
         twist_msg_jsonized = {
                     "linear":(0.0, 0.0, 0.0),
-                    "angular":(0.0, 0.0, 0.0)
+                    "angular":(0.0, 0.0, 0.0),
+                    "time":time.time()
                 }
         imu_msg_jsonized = None
         odometry_msg_jsonized = None
         battery_state_msg_jsonized = None
-        camera_frame = None
 
         while True:
 
-            if not self.is_collecting_data: time.sleep(0.1); continue;
+            if not self.is_collecting_data: time.sleep(0.1); continue
 
             if self.laserscan_msg != None:
 
@@ -306,7 +341,8 @@ class SensorsSubscriber(Node):
 
                 twist_msg_jsonized = {
                     "linear":(self.twist_msg.linear.x, self.twist_msg.linear.y, self.twist_msg.linear.z),
-                    "angular":(self.twist_msg.angular.x, self.twist_msg.angular.y, self.twist_msg.angular.z)
+                    "angular":(self.twist_msg.angular.x, self.twist_msg.angular.y, self.twist_msg.angular.z),
+                    "time":self.twist_timestamp
                 }
 
             if self.imu_msg != None:
@@ -346,114 +382,112 @@ class SensorsSubscriber(Node):
             self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":self.camera_frame_base64})
             time.sleep(self.sampling_delay)
     
-    def movement(self,linear_x,angular_z): # helper function that instantiates turtlebot movement
-    
+    def movement_server(self):
+
+        # Movment server keeps the last significant twist message instruction
+        # meaning, the last timestamp is when the direction last changed
+        
+        last_twist_direction = None
         data = Twist()
-        data.linear.x = linear_x
-        data.angular.z = angular_z
-        print(linear_x, angular_z)
-        print(data.linear.x, data.angular.z)
+        while True: # keep thread on forever
+
+            if self.twist_direction == None:
+                time.sleep(0.05)
+                continue
+
+            # starting odometry is here to help compute the "Reactionary angular z" to help the turtlebot keep straight.
+            elif self.twist_direction == 'stop':
+                
+                self.twist_timestamp = time.time()
+
+                data.linear.x = 0.0
+                data.angular.z = 0.0
+
+                self.movement_publisher.publish(data)
+                time.sleep(0.1)
+
+            elif self.twist_direction == 'forward':
+
+                correctionary_angular_z = 0.0 # just to prevent python3 errors
+
+                # correctional mechanism to keep Turtlebot 3 moving straight
+                starting_odometry = self.odometry_msg_orientation
+                self.twist_timestamp = time.time()
+            
+                slow_start = 1 # used to increase the speed of the turtlebot iteratively to prevent juttering
+            
+                P_gain = 0.2  # Proportional gain for correction; adjust as needed
+
+                while self.twist_direction == 'forward':
+                    yaw_diff = yaw_difference(quaternion2=self.odometry_msg_orientation, quaternion1=starting_odometry)
+                    correctionary_angular_z = -yaw_diff * P_gain
+
+                    # Clamp the correction to maximum limits to avoid too sharp turns
+                    max_angular_z = 1.2
+                    correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
+
+                    if slow_start < 20:
+                        slow_start += 1
+
+                    data.linear.x = slow_start / 20 * self.linear_x_speed
+                    data.angular.z = correctionary_angular_z
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.1)
+            
+                self.stall(0.5)
+
+            elif self.twist_direction == 'left':
+
+                self.twist_timestamp = time.time()
+                data.linear.x = 0.0
+                slow_start = 1
+
+                while self.twist_direction == 'left':
+                    
+                    if slow_start != 10:
+                        slow_start += 1
+        
+                    angular_z = slow_start/10 * self.angular_z_speed
+                    data.angular.z = angular_z
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.1)
+
+                self.stall(0.5)
+
+            elif self.twist_direction == 'right':
+
+                self.twist_timestamp = time.time()
+                data.linear.x = 0.0
+                slow_start = 1
+
+                while self.twist_direction == 'right':
+
+                    if slow_start != 10:
+                        slow_start += 1
+
+                    angular_z = -slow_start/10 * self.angular_z_speed
+                    data.angular.z = angular_z
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.1)
+
+                self.stall(0.5)
+
+    def stall(self, stop_time=-1): 
+        
+        # used to simulate inference steps and to decelerate
+        # the robot
+
+        self.twist_timestamp = time.time()
+        data = Twist()
+        data.linear.x = 0.0
+        data.angular.z = 0.0
         self.movement_publisher.publish(data)
-        
-        return
 
-    # May or may not be useful?
-    def movement_rotate_until(self, target_radians, tolerance=0.1, rotation_s=0.05):
+        if stop_time == -1:
+            return
 
-        """
-        dirrection_right = True
-        current_radians = self.position_odom[2]
-        t1 = target_radians - current_radians
-        t2 = current_radians - target_radians
-        
-        if t1 < 0: t1 += 2 * math.pi
-        if t2 < 0: t2 += 2 * math.pi
+        time.sleep(stop_time)
 
-        if t1 < t2: dirrection_right = True
-        else: dirrection_right = False
-        """
-        
-        while True:
-
-            current_radians = self.position_odom[2]
-
-            # Calculate the difference in radians
-            diff_radians = target_radians - current_radians
-
-            # Normalize the angle difference to the range [-pi, pi]
-            diff_radians = (diff_radians + math.pi) % (2 * math.pi) - math.pi
-
-            # Check if the TurtleBot is within the tolerance of the target orientation
-            if math.isclose(diff_radians, 0, abs_tol=tolerance):
-            
-                self.movement(0.0, 0.0)
-                break
-            
-            # Determine rotation direction for the shortest path
-            if (diff_radians >= 0):
-            
-                if abs(diff_radians) >= 0.25: rotation_speed = rotation_s * 4
-                elif abs(diff_radians) <= 0.25 and abs(diff_radians) >= 0.1: rotation_speed = rotation_s
-                else: rotation_speed = rotation_s / 4  # Positive value for clockwise rotation
-            
-            else:
-            
-                if abs(diff_radians) >= 0.25: rotation_speed = -rotation_s * 4
-                elif abs(diff_radians) <= 0.25 and abs(diff_radians) >= 0.1: rotation_speed = -rotation_s
-                else: rotation_speed = -rotation_s / 4  # Negative value for counterclockwise rotation
-
-            # Execute the rotation
-            if self.debug_randomizer: print(f'rotating to goal... current: {current_radians}, goal: {target_radians}')
-            self.movement(0.0, rotation_speed)
-            time.sleep(0.1)
-
-    def movement_forward_until_xy(self, target_x, target_y, tolerance = 0.2, linear_s = 0.22):
-
-        distance = math.sqrt((target_x - self.position_odom[0])**2 + (target_y - self.position_odom[1])**2)
-        print(f'distance: {distance}')
-        while True:
-
-            current_x, current_y = self.position_odom[0], self.position_odom[1]
-
-            # Calculate the difference in radians
-            if self.debug_movement: print(f'current: {current_x}, {current_y} | goal: {target_x}, {target_y}')
-            diff_x, diff_y = target_x - current_x, target_y - current_y
-            current_distance = math.sqrt(diff_x**2 + diff_y**2)
-            # Check if the TurtleBot is within the tolerance of the target orientation
-         
-            if (math.isclose(diff_x, 0, abs_tol=tolerance) and math.isclose(diff_y, 0, abs_tol=tolerance)): print('b')
-            if (math.isclose(target_x,self.position_odom[0], abs_tol=tolerance) and math.isclose(target_y,self.position_odom[1], abs_tol=tolerance)):
-                self.movement(0.0, 0.0)
-                if self.debug_movement: print('movement complete')
-                break
-
-            # Determine rotation direction for the shortest path
-            if diff_x > 0:
-                if self.debug_movement: print('continuing advance')
-                self.movement(linear_s, 0.0)
-                time.sleep(0.25)
-
-    def movement_forward_until_distance(self, target_distance, tolerance=0.1, linear_s=0.22):
-        
-        starting_x, starting_y = self.position_odom[0], self.position_odom[1] 
-        while True:
-            
-            distance_traveled = math.sqrt((self.position_odom[0] - starting_x)**2 + (self.position_odom[1] - starting_y)**2)
-            if self.debug_movement: print(f'distance traveled: {distance_traveled}, goal: {target_distance}')
-            
-            if (distance_traveled / target_distance) < 0.9: # accelerate while still far away
-                linear_s = 0.22
-            else: linear_s = 0.11
-
-            if distance_traveled > target_distance or math.isclose(distance_traveled, target_distance, abs_tol=tolerance):
-                if self.debug_movement: print('movement complete')
-                self.movement(0.0,0.0)
-                break
-
-            else:
-                if self.debug_randomizer: print('continuing advance')
-                self.movement(linear_s,0.0)
-                time.sleep(0.25)
 
 def main(args=None):
 
