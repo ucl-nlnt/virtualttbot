@@ -30,10 +30,31 @@ parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrase
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
 parser.add_argument("--disable_log_compression", type=int, default=0, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
 parser.add_argument("--name", default="Unknown",help="Username")
+parser.add_argument("--webcam", default=2, type=int, help="Selects webcam for external data gathering. Set to -1 to disable.")
 parser.add_argument("--devmode", type=int, default=0, help="Activate developer mode.")
+parser.add_argument("--webcam_h", type=int, default=720, help="Sets webcam feed height. Defaults to 720p resolution 16x9 aspect ratio.")
+parser.add_argument("--webcam_w", type=int, default=1280, help="Sets webcam feed width. Defaults to 720p resolution 16x9 aspect ratio.")
 
 args = parser.parse_args()
 print(args)
+
+def retrieve_camera_indexes(): # used to check available cameras.
+
+    max_tested = 10
+    num_cameras = 0
+    usable_camera_indexes = []
+
+    for i in range(max_tested):
+        cap = cv2.VideoCapture(i)
+        if cap is None or not cap.isOpened():
+            cap.release()
+            continue
+        else:
+            usable_camera_indexes.append(i)
+        num_cameras += 1
+        cap.release()
+        
+    return usable_camera_indexes
 
 class turtlebot_controller:
 
@@ -69,6 +90,25 @@ class turtlebot_controller:
         self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
         print(f'Server Listening on port 50001')
 
+        if args.webcam >= 0:
+
+            available_cameras = retrieve_camera_indexes()
+
+            if args.webcam not in available_cameras:
+                
+                print(available_cameras)
+                cam_index = input("Error: Your currently-selected webcam is not working. Please select from those listed above (number only): ")
+            
+            else:
+                cam_index = args.webcam
+
+            self.webcam_object = cv2.VideoCapture(cam_index)
+            self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
+            self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
+            self.most_recent_webcam_frame = None
+            self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
+            self.usb_webcam_thread.start()
+
         # multithreading processes
         self.window_thread = threading.Thread(target=self.window_process)   # Pygame window process
         self.window_thread.start() # Thread 1
@@ -76,6 +116,27 @@ class turtlebot_controller:
         self.listener_thread.start() # Thread 2
         self.data_listener_thread = threading.Thread(target=self.super_json_listener)
         self.data_listener_thread.start() # Thread 3
+        
+    
+    def usb_webcam(self):
+
+        # initialize camera here.
+
+        while True:
+            
+            ret, frame = self.webcam_object.read()
+
+            if not ret:
+                continue
+            
+            cv2.imshow('Webcam feed', frame)
+            cv2.waitKey(1)
+
+            success, encoded_image = cv2.imencode('.jpg',frame)
+            if not success:
+                continue
+
+            self.most_recent_webcam_frame_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
     def window_process(self):
 
@@ -169,6 +230,14 @@ class turtlebot_controller:
                     cv2.imshow('frame',frame)
                     cv2.waitKey(1)
 
+            if args.webcam > -1:
+                
+                # append webcam data to 'data' frame
+                data['webcam_data'] = self.most_recent_webcam_frame_base64
+
+            else:
+                data['webcam_data'] = None
+            
             self.data_buffer.append(data)
 
     def prompt_generator(self):
