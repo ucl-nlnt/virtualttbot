@@ -161,16 +161,14 @@ class SensorsSubscriber(Node):
 
         # Listen for instructions from PC/Laptop
         self.movement_subscriber_thread = threading.Thread(target=self.receive_movement_from_server)
-        self.movement_subscriber_thread.daemon = True
+
         # Compile Data and Transmit to Server
         self.camera_thread = threading.Thread(target=self.take_photo)
-        self.camera_thread.daemon = True
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
-        self.compilation_thread.daemon = True
+
         # Movement message server
         self.twist_msg_server = threading.Thread(target=self.movement_server)
         self.twist_direction = None
-        self.twist_msg_server.daemon = True
         self.twist_msg_server.start()
         
         self.camera_thread.start()
@@ -292,7 +290,7 @@ class SensorsSubscriber(Node):
             quart2 = (q.x,q.y,q.z,q.w)
             self.distance_traveled += math.sqrt((x1-x)**2 + (y1-y)**2 + (z1-z)**2)
             self.degrees_rotated += yaw_difference(quart2, quart)
-            print((round(self.distance_traveled,2),round(self.degrees_rotated * 180 / math.pi,2)))
+            #print((round(self.distance_traveled,2),round(self.degrees_rotated * 180 / math.pi,2)))
 
         except Exception as e:
             pass
@@ -414,26 +412,31 @@ class SensorsSubscriber(Node):
                 starting_odometry = self.odometry_msg_orientation
                 self.twist_timestamp = time.time()
             
-                slow_start = 1 # used to increase the speed of the turtlebot iteratively to prevent juttering
-            
-                P_gain = 0.2  # Proportional gain for correction; adjust as needed
+                # slow start is used to avoid jittery movements
+                slow_start = 1
+                P_gain = 0.1  # Proportional gain for correction; adjust as needed
 
                 while self.twist_direction == 'forward':
+                
+                    # pass
                     yaw_diff = yaw_difference(quaternion2=self.odometry_msg_orientation, quaternion1=starting_odometry)
-                    correctionary_angular_z = -yaw_diff * P_gain
+                    print(round(yaw_diff,3))
+                    correctionary_angular_z = -yaw_diff / P_gain
 
                     # Clamp the correction to maximum limits to avoid too sharp turns
                     max_angular_z = 1.2
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
 
-                    if slow_start < 20:
+                    if slow_start < 200:
+
                         slow_start += 1
 
-                    data.linear.x = slow_start / 20 * self.linear_x_speed
+                    data.linear.x = self.linear_x_speed * slow_start/200
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
-                    time.sleep(0.1)
-            
+                    time.sleep(0.01)
+                    
+
                 self.stall(0.5)
 
             elif self.twist_direction == 'left':
@@ -467,6 +470,7 @@ class SensorsSubscriber(Node):
 
                     angular_z = -slow_start/10 * self.angular_z_speed
                     data.angular.z = angular_z
+                    
                     self.movement_publisher.publish(data)
                     time.sleep(0.1)
 
