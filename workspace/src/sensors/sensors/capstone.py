@@ -157,6 +157,7 @@ class SensorsSubscriber(Node):
 
         # Compile Data and Transmit to Server
         self.camera_thread_run = True
+        self.transmit_current_frame = True # initially set to True to capture initial turtlebot position
         self.camera_thread = threading.Thread(target=self.take_photo)
         self.camera_thread.start()
         self.compilation_thread_run = True
@@ -241,7 +242,10 @@ class SensorsSubscriber(Node):
         while self.movement_subscriber_thread_run:
 
             print('waiting for inst')
+
+            
             inst = self.movement_instruction_client.receive_data()
+
             print(f'inst: {inst}')
 
             if isinstance(inst, str): # see KNetworking.py for error codes.
@@ -255,7 +259,13 @@ class SensorsSubscriber(Node):
             elif inst == b'@FRWD': self.twist_direction = 'forward'
             elif inst == b'@LEFT': self.twist_direction = 'left'
             elif inst == b'@RGHT': self.twist_direction = 'right'
-            elif inst == b'@STRT': self.is_collecting_data = True; print("is_collecting_data = True"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
+            elif inst == b'@STRT': 
+                self.is_collecting_data = True
+                print("is_collecting_data = True")
+                self.starting_odometry_set = False
+                time.sleep(0.2)
+                self.transmit_current_frame = True # capture new latest frame
+                time.sleep(0.2)
             elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
 
             elif inst == b'@KILL': # terminate program
@@ -390,8 +400,18 @@ class SensorsSubscriber(Node):
                     "temperature":self.battery_state_msg.temperature,
                     "current":self.battery_state_msg.current,
                 }
+        
+            if self.transmit_current_frame:
+                
+                # as of this iteration, will only send essential camera frames to make sure that file size stays low
+
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":self.camera_frame_base64})
+                self.transmit_current_frame = False
             
-            self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":self.camera_frame_base64})
+            else:
+
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
+
             time.sleep(self.sampling_delay)
     
         print('Super BSON compilation thread closed successfully.')
@@ -443,16 +463,15 @@ class SensorsSubscriber(Node):
                     max_angular_z = 1.2
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
 
-                    if slow_start < 200:
+                    if slow_start < 100:
 
                         slow_start += 1
 
-                    data.linear.x = self.linear_x_speed * slow_start/200
+                    data.linear.x = self.linear_x_speed * slow_start / 100
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
                     time.sleep(0.01)
                     
-
                 self.stall(0.5)
 
             elif self.twist_direction == 'left':
@@ -504,12 +523,15 @@ class SensorsSubscriber(Node):
         data.linear.x = 0.0
         data.angular.z = 0.0
         self.movement_publisher.publish(data)
+        
+        time.sleep(stop_time)
+
+        self.transmit_current_frame = True
+        
+        time.sleep(0.1)
 
         if stop_time == -1:
             return
-
-        time.sleep(stop_time)
-
 
 def main(args=None):
 
