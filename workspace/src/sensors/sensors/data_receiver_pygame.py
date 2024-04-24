@@ -24,11 +24,10 @@ if not os.path.exists("datalogs"):
 
 parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based controller.")
 
-parser.add_argument("--display",type=int, default=0, help='Enable or disable OpenCV camera window for debugging purposes.')
 parser.add_argument("--enable_autorandomizer_from_csv", type=int, default=0, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
 parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrases.csv", help="Specifies path to NLNT natural language label dataset.")
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
-parser.add_argument("--name", default="Unknown",help="Username")
+parser.add_argument("--name", default=None, help="Username")
 parser.add_argument("--webcam", default=2, type=int, help="Selects webcam for external data gathering. Set to -1 to disable.")
 parser.add_argument("--devmode", type=int, default=0, help="Activate developer mode.")
 parser.add_argument("--webcam_h", type=int, default=720, help="Sets webcam feed height. Defaults to 720p resolution 16x9 aspect ratio.")
@@ -130,16 +129,14 @@ class turtlebot_controller:
 
         while True:
 
-            if args.view_webcam and (self.latest_webcam_camera_frame != None):
-
+            if args.view_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
                 cv2.imshow('Webcam', self.latest_webcam_camera_frame)
 
-            if args.view_raspi_cam and (self.latest_raspi_cam_frame != None):
+            if args.view_raspi_cam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
 
                 cv2.imshow('Raspi', self.latest_raspi_camera_frame)
 
             cv2.waitKey(1)
-
 
     def usb_webcam(self):
 
@@ -226,10 +223,11 @@ class turtlebot_controller:
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
 
             # Camera display
-            if args.display or args.rotate_r_by:
+            if args.view_webcam or args.rotate_r_by:
 
                 # Decode camera data
                 camera_frame = data['frame_data']
+
                 if camera_frame != None:
 
                     encoded_data = base64.b64decode(camera_frame)
@@ -255,9 +253,11 @@ class turtlebot_controller:
                         # Update 'frame_data' in the JSON data structure
                         data['frame_data'] = frame_data_as_string
 
+                    self.latest_raspi_camera_frame = frame
                     print('Turtlebot frame was received.')
 
-                self.latest_raspi_camera_frame = frame
+                else:
+                    self.latest_raspi_camera_frame = None
 
             if args.webcam > -1:
                 
@@ -265,6 +265,7 @@ class turtlebot_controller:
                 if data['frame_data'] != None:
 
                     data['webcam_data'] = self.most_recent_webcam_frame_base64
+
 
             else:
 
@@ -429,25 +430,12 @@ class turtlebot_controller:
                             }
                 
                 fname = self.generate_random_filename()
-
-                if not args.disable_log_compression:
-                    fname = fname + ".compressed"
+                fname = fname + ".compressed"
 
                 with open(os.path.join("datalogs",fname),'wb') as f:
-                    if args.disable_log_compression:
-                          f.write(json.dumps(json_file, indent=4).encode('utf-8'))
-                    else:
-                        f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
+                    
+                    f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
 
-                with open(os.path.join("datalogs",fname),'rb') as f:
-                    compressed = f.read()
-
-                if args.disable_log_compression:
-                    print("Saved as: " + fname)
-                    print(json.loads(compressed.decode('utf-8')).keys())
-                else:
-                    print(json.loads(zlib.decompress(compressed).decode('utf-8')).keys())
-                
                 print("Instance saved.")
 
                 self.sesh_count += 1
