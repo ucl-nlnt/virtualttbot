@@ -149,6 +149,7 @@ class SensorsSubscriber(Node):
 
         self.super_json = None
         self.is_collecting_data = False
+        self.imu_timesamp = None
 
         # kill listener:
         self.kill_listener = threading.Thread(target=self.listen_for_shutdown)
@@ -290,6 +291,7 @@ class SensorsSubscriber(Node):
         
         if msg == None: return
         self.imu_msg = msg
+        self.imu_timesamp = time.time()
 
     def odometer_callback(self,msg):
         
@@ -304,7 +306,6 @@ class SensorsSubscriber(Node):
         self.odometry_msg_orientation = (orientation.x, orientation.y, orientation.z, orientation.w)
         self.odometry_msg_pos = (position.x, position.y, position.z)
 
-        print(self.odometry_msg_orientation)
 
     def battery_state_callback(self,msg):
 
@@ -358,6 +359,7 @@ class SensorsSubscriber(Node):
             if self.imu_msg != None:
                 
                 imu_msg_jsonized = {
+                    "time": self.imu_timesamp,
                     "quarternion_orientation": (self.imu_msg.orientation.x, self.imu_msg.orientation.y, self.imu_msg.orientation.z, self.imu_msg.orientation.w),
                     "orientation_covariance": [i for i in self.imu_msg.orientation_covariance],
                     "angular_velocity": (self.imu_msg.angular_velocity.x, self.imu_msg.angular_velocity.y, self.imu_msg.angular_velocity.z),
