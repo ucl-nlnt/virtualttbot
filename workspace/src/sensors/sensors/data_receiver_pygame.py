@@ -152,6 +152,7 @@ class turtlebot_controller:
         pygame.time.Clock().tick(60)
 
         while not self.killswitch:
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.killswitch = True
@@ -159,8 +160,10 @@ class turtlebot_controller:
                     print('Killing program...')
                     pygame.quit()
                     sys.exit()
+
                 elif event.type == pygame.KEYDOWN:
                     self.keyboard_input = event.unicode
+                    print(event.unicode)
                     self.keyboard_impulse = True
                     if self.debug_window_process:
                         print(f"pressed {self.keyboard_input}")
@@ -364,6 +367,12 @@ class turtlebot_controller:
                     self.movement_data_sender.send_data(b'@STOP')
                     self.keyboard_impulse = False
                     print("Data collection is finished for this iteration.")
+                    break
+
+                elif self.keyboard_input == '-':
+                    self.movement_data_sender.send_data(b'@KILL')
+                    self.keyboard_impulse = False
+                    print('Sent termination signal to Turtlebot3.')
                     break
 
                 time.sleep(0.01667)
