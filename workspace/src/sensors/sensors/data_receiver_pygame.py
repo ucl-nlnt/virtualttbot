@@ -28,12 +28,14 @@ parser.add_argument("--display",type=int, default=0, help='Enable or disable Ope
 parser.add_argument("--enable_autorandomizer_from_csv", type=int, default=0, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
 parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrases.csv", help="Specifies path to NLNT natural language label dataset.")
 parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
-parser.add_argument("--disable_log_compression", type=int, default=0, help="Set to True to save data as raw. Turning this feature off is NOT recommended.")
 parser.add_argument("--name", default="Unknown",help="Username")
 parser.add_argument("--webcam", default=2, type=int, help="Selects webcam for external data gathering. Set to -1 to disable.")
 parser.add_argument("--devmode", type=int, default=0, help="Activate developer mode.")
 parser.add_argument("--webcam_h", type=int, default=720, help="Sets webcam feed height. Defaults to 720p resolution 16x9 aspect ratio.")
 parser.add_argument("--webcam_w", type=int, default=1280, help="Sets webcam feed width. Defaults to 720p resolution 16x9 aspect ratio.")
+
+parser.add_argument("--view_webcam", type=int, default=1, help="On by default, set to zero to disable.")
+parser.add_argument("--view_raspi_cam", type=int, default=1, help="On by default, set to zero to disable.")
 
 args = parser.parse_args()
 print(args)
@@ -72,7 +74,6 @@ class turtlebot_controller:
         # will be useful once data gathering automation is started
         self.manual_control = manual_control
 
-        #
         self.sesh_count = 1
 
         # keyboard stuff
@@ -90,6 +91,8 @@ class turtlebot_controller:
         self.movement_data_sender = DataBridgeServer_TCP(port_number=50001)
         print(f'Server Listening on port 50001')
 
+        self.latest_raspi_camera_frame = None
+
         if args.webcam >= 0:
 
             available_cameras = retrieve_camera_indexes()
@@ -102,12 +105,18 @@ class turtlebot_controller:
             else:
                 cam_index = args.webcam
 
+            self.latest_webcam_camera_frame = None
             self.webcam_object = cv2.VideoCapture(cam_index)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
             self.most_recent_webcam_frame = None
             self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
             self.usb_webcam_thread.start()
+
+        if args.view_webcam or args.view_raspi_cam:
+
+            self.display_thread = threading.Thread(target=self.disp_thread)
+            self.display_thread.start()
 
         # multithreading processes
         self.window_thread = threading.Thread(target=self.window_process)   # Pygame window process
@@ -117,7 +126,21 @@ class turtlebot_controller:
         self.data_listener_thread = threading.Thread(target=self.super_json_listener)
         self.data_listener_thread.start() # Thread 3
         
-    
+    def disp_thread(self):
+
+        while True:
+
+            if args.view_webcam and (self.latest_webcam_camera_frame != None):
+
+                cv2.imshow('Webcam', self.latest_webcam_camera_frame)
+
+            if args.view_raspi_cam and (self.latest_raspi_cam_frame != None):
+
+                cv2.imshow('Raspi', self.latest_raspi_camera_frame)
+
+            cv2.waitKey(1)
+
+
     def usb_webcam(self):
 
         # initialize camera here.
@@ -128,14 +151,12 @@ class turtlebot_controller:
 
             if not ret:
                 continue
-            
-            cv2.imshow('Webcam feed', frame)
-            cv2.waitKey(1)
 
             success, encoded_image = cv2.imencode('.jpg',frame)
             if not success:
                 continue
 
+            self.latest_webcam_camera_frame = frame
             self.most_recent_webcam_frame_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
     def window_process(self):
@@ -167,9 +188,12 @@ class turtlebot_controller:
                     self.keyboard_impulse = True
                     if self.debug_window_process:
                         print(f"pressed {self.keyboard_input}")
+
                 elif event.type == pygame.KEYUP:
+
                     self.keyboard_input = None
                     self.keyboard_impulse = True
+
                     if self.debug_window_process:
                         print("Released key.")
 
@@ -207,6 +231,7 @@ class turtlebot_controller:
                 # Decode camera data
                 camera_frame = data['frame_data']
                 if camera_frame != None:
+
                     encoded_data = base64.b64decode(camera_frame)
 
                     # Convert the bytes to a numpy array
@@ -230,15 +255,19 @@ class turtlebot_controller:
                         # Update 'frame_data' in the JSON data structure
                         data['frame_data'] = frame_data_as_string
 
-                    cv2.imshow('frame',frame)
-                    cv2.waitKey(1)
+                    print('Turtlebot frame was received.')
+
+                self.latest_raspi_camera_frame = frame
 
             if args.webcam > -1:
                 
                 # append webcam data to 'data' frame
-                data['webcam_data'] = self.most_recent_webcam_frame_base64
+                if data['frame_data'] != None:
+
+                    data['webcam_data'] = self.most_recent_webcam_frame_base64
 
             else:
+
                 data['webcam_data'] = None
             
             self.data_buffer.append(data)
@@ -440,65 +469,6 @@ class turtlebot_controller:
             next_prompt = prompt_list[rnd_num]
             return next_prompt
         return
-
-    def send_data(self, data: bytes):
-
-        data = data.encode()
-
-        # NOTE: data may or may not be in string format.
-
-        length_bytes = struct.pack('!I', len(data))
-
-        if self.debug:
-            print('[S] Sending byte length...')
-        self.client.sendall(length_bytes)
-        ack = self.client.recv(2)  # wait for other side to process data size
-        if ack != b'OK':
-            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-        if self.debug:
-            print('[S] ACK good')
-
-        if self.debug:
-            print('[S] Sending data...')
-        self.client.sendall(data)  # send data
-        if self.debug:
-            print('[S] Data sent; waiting for ACK...')
-        ack = self.client.recv(2)  # wait for other side to process data size
-        if ack != b'OK':
-            print(f'[S] ERROR: unmatched send ACK. Received: {ack}')
-        if self.debug:
-            print('[S] ACK good. Data send success.')
-
-    def receive_data(self):
-
-        # NOTE: Returns data in BINARY. You must decode it on your own
-
-        if self.debug:
-            print('[R] Waiting for byte length...')
-        length_bytes = self.client.recv(4)
-        length = struct.unpack('!I', length_bytes)[0]
-        if self.debug:
-            print(f'[R] Byte length received. Expecting: {length}')
-        data, data_size = b'', 0
-
-        self.client.send(b'OK')  # allow other side to send over the data
-        if self.debug:
-            print(f'[R] ACK sent.')
-        while data_size < length:
-
-            chunk_size = min(2048, length - data_size)
-            data_size += chunk_size
-            data += self.client.recv(chunk_size)
-            if self.debug:
-                print(f'[R] RECV {chunk_size}')
-
-        if self.debug:
-            print('[R] Transmission received successfull. Sending ACK')
-        self.client.send(b'OK')  # unblock other end
-        if self.debug:
-            print('[R] ACK sent.')
-        return data  # up to user to interpret the data
-
 
 x = turtlebot_controller()
 while not x.killswitch:
