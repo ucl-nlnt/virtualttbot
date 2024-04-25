@@ -75,6 +75,10 @@ class turtlebot_controller:
 
         self.sesh_count = 1
 
+        # display bools
+        self.display_webcam = args.view_webcam
+        self.display_raspi_cam = args.view_raspi_cam
+
         # keyboard stuff
         self.keyboard_input = None
         self.keyboard_impulse = False
@@ -91,6 +95,7 @@ class turtlebot_controller:
         print(f'Server Listening on port 50001')
 
         self.latest_raspi_camera_frame = None
+        self.latest_webcam_camera_frame = None
 
         if args.webcam >= 0:
 
@@ -104,7 +109,6 @@ class turtlebot_controller:
             else:
                 cam_index = args.webcam
 
-            self.latest_webcam_camera_frame = None
             self.webcam_object = cv2.VideoCapture(cam_index)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
@@ -129,13 +133,22 @@ class turtlebot_controller:
 
         while True:
 
-            if args.view_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
-                cv2.imshow('Webcam', self.latest_webcam_camera_frame)
+            if self.display_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
+                
+                try:
+                    cv2.imshow('Webcam', self.latest_webcam_camera_frame)
+                except:
+                    print('could not show webcam')
+                    self.display_webcam = False
 
             if args.view_raspi_cam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
 
-                cv2.imshow('Raspi', self.latest_raspi_camera_frame)
-
+                try:
+                    cv2.imshow('Raspi', self.latest_raspi_camera_frame)
+                except:
+                    print('could not show raspi camera')
+                    self.display_raspi_cam = False
+                    
             cv2.waitKey(1)
 
     def usb_webcam(self):
