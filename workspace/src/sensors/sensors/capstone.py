@@ -421,7 +421,8 @@ class SensorsSubscriber(Node):
                 twist_msg_jsonized = {
                     "linear":(self.twist_msg.linear.x, self.twist_msg.linear.y, self.twist_msg.linear.z),
                     "angular":(self.twist_msg.angular.x, self.twist_msg.angular.y, self.twist_msg.angular.z),
-                    "time":self.twist_timestamp
+                    "time":self.twist_timestamp,
+                    "is_blocked": 1 if self.front_is_blocked else 0
                 }
 
             if self.imu_msg != None:
