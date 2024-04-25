@@ -13,6 +13,7 @@ from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Twist
 import json
 import argparse
+from copy import deepcopy
 
 from KNetworking import DataBridgeServer_TCP, DataBridgeClient_TCP
 
@@ -50,6 +51,8 @@ parser.add_argument("--angular_z_rads", type=float, default=1.0, help="Set Turtl
 parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sampling frequency, hz = 1/t. NOTE: DO NOT SET LOWER THAN 0.1 SECONDS.")
 parser.add_argument("--server_ip", type=str, default="None", help="Sets jump server IP address.")
 parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
+parser.add_argument("--softbarrier", type=int, default=1, help="Stops the Turtlebot a certain distance from an object in front of it. Set to 0 to disable.")
+parser.add_argument("--softbarr_dist", type=float, default=0.4, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
 
 args = parser.parse_args()
 print(args)
@@ -146,7 +149,6 @@ class SensorsSubscriber(Node):
                 print(e)
 
         # threads
-
         self.super_json = None
         self.is_collecting_data = False
         self.imu_timesamp = None
@@ -155,6 +157,20 @@ class SensorsSubscriber(Node):
         self.kill_listener = threading.Thread(target=self.listen_for_shutdown)
         self.kill_listener.start()
 
+        # Movement message server
+        self.twist_msg_server_run = True
+        self.twist_msg_server = threading.Thread(target=self.movement_server)
+        self.twist_direction = None
+        self.twist_msg_server.start()
+        
+        # lidar-based soft barrier
+        self.barrier_thread_run = True
+        if args.softbarrier:
+
+            self.front_is_blocked = False
+            self.barrier_thread = threading.Thread(target=self.soft_barrier)
+            self.barrier_thread.start()
+        
         # Compile Data and Transmit to Server
         self.camera_thread_run = True
         self.transmit_current_frame = True # initially set to True to capture initial turtlebot position
@@ -164,11 +180,6 @@ class SensorsSubscriber(Node):
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
         self.compilation_thread.start()
 
-        # Movement message server
-        self.twist_msg_server_run = True
-        self.twist_msg_server = threading.Thread(target=self.movement_server)
-        self.twist_direction = None
-        self.twist_msg_server.start()
         
         # Data sending to server
         self.transfer_thread_run = True
@@ -181,6 +192,53 @@ class SensorsSubscriber(Node):
         self.movement_subscriber_thread.start()
         
         print('INIT COMPLETE')
+
+    def soft_barrier(self):
+
+        while self.laserscan_msg == None: time.sleep(0.1) # wait for lidar scanner to wake up
+
+
+        max_value = self.laserscan_msg.range_max
+        min_value = self.laserscan_msg.range_min
+
+        while self.barrier_thread_run:
+
+            scans = deepcopy(self.laserscan_msg.ranges) # prevent race conditions
+            
+            # i = degree
+            # val = depth or distance
+            
+            for i, val in enumerate(scans): # clip too small and too large values
+
+                if (i > 45 and i < 314): 
+                    continue 
+
+                if (val < min_value and val != 0.0): 
+                    scans[i] = min_value
+
+                if (val > max_value): 
+                    scans[i] = max_value
+
+            degrees_blocked = 0
+    
+            for i, val in enumerate(scans):
+
+                if (i > 45 and i < 314): 
+                    continue 
+
+                if val < args.softbarr_dist and val != 0.0:
+
+                    degrees_blocked += 1
+
+                    if degrees_blocked >= 5:
+
+                        self.front_is_blocked = True
+                        break # no need to iterate through other values
+
+            if degrees_blocked < 5:
+                self.front_is_blocked = False
+
+            time.sleep(0.09) # slightly faster than nyquist frequency of lidar, which runs at a period of t = 0.2 seconds
 
     def listen_for_shutdown(self):
 
@@ -421,6 +479,8 @@ class SensorsSubscriber(Node):
         # Movment server keeps the last significant twist message instruction
         # meaning, the last timestamp is when the direction last changed
         
+        # Slow starts stop the wheels from slipping, increasing precision of movement
+
         last_twist_direction = None
         data = Twist()
         while self.twist_msg_server_run: # keep thread on forever
@@ -442,7 +502,13 @@ class SensorsSubscriber(Node):
 
             elif self.twist_direction == 'forward':
 
-                correctionary_angular_z = 0.0 # just to prevent python3 errors
+                if args.softbarrier:
+
+                    if self.front_is_blocked:
+
+                        print("Cannot move forward! Front is blocked.")
+                        time.sleep(0.5)
+                        continue
 
                 # correctional mechanism to keep Turtlebot 3 moving straight
                 starting_odometry = self.odometry_msg_orientation
@@ -470,6 +536,14 @@ class SensorsSubscriber(Node):
                     data.linear.x = self.linear_x_speed * slow_start / 100
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
+
+                    if args.softbarrier:
+
+                        if self.front_is_blocked:
+                            
+                            print("Cannot move forward! Front is blocked.")
+                            break
+
                     time.sleep(0.01)
                     
                 self.stall(0.5)
