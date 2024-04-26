@@ -293,7 +293,6 @@ class turtlebot_controller:
 
                     data['webcam_data'] = self.most_recent_webcam_frame_base64
 
-
             else:
 
                 data['webcam_data'] = None
@@ -386,6 +385,7 @@ class turtlebot_controller:
             elif not args.devmode:
 
                 prompt = input("Enter prompt << ")
+                print(f'Prompt is: "{prompt}"')
                 prompt_level_set = False
                 while not prompt_level_set and prompt != '$CONTROL' and not args.devmode:
                     
@@ -463,13 +463,15 @@ class turtlebot_controller:
             if confirmation == 'y' or confirmation == 'e':
 
                 # save data into a buffer
+
+                print('=================================')
                 
+                print('saving:', prompt)
                 json_file = {
                             "username":self.current_user, "natural_language_prompt": prompt,
                             "timestamp_s":time.ctime(), "timestamp_float":time.time(),
                             "states":self.data_buffer, "prompt_level" : prompt_level
                             }
-                
                 fname = self.generate_random_filename()
                 fname = fname + ".compressed_lzma"
 
