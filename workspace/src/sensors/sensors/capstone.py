@@ -219,7 +219,7 @@ class SensorsSubscriber(Node):
             
             for i, val in enumerate(scans): # clip too small and too large values
 
-                if (i > 45 and i < 314): 
+                if (i > 30 and i < 329): 
                     continue 
 
                 if (val < min_value and val != 0.0): 
@@ -232,7 +232,7 @@ class SensorsSubscriber(Node):
     
             for i, val in enumerate(scans):
 
-                if (i > 45 and i < 314): 
+                if (i > 30 and i < 329): 
                     continue 
 
                 if val < args.softbarr_dist and val != 0.0:
@@ -573,16 +573,10 @@ class SensorsSubscriber(Node):
                     distance_lock += 1
                     time.sleep(0.01)
 
-                data.linear.x = 0.0
-                data.angular.z = 0.0
-                self.movement_publisher.publish(data)
-
-                time.sleep(0.2)
+                self.stall(0.5)
 
                 print('[frwd] Final travel distance:', round(get_point_distance(self.odometry_msg_pos, starting_position),3))
                 print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
-
-                self.stall(0.5)
 
             elif self.twist_direction == 'left':
 
@@ -616,16 +610,10 @@ class SensorsSubscriber(Node):
                     iter_lock += 1
                     time.sleep(0.01)
 
+                self.stall(0.5)
 
-                data.linear.x = 0.0
-                data.angular.z = 0.0
-                self.movement_publisher.publish(data)
-
-                time.sleep(0.2)
                 total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                 print(f'[left] Final total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-
-                self.stall(0.5)
 
             elif self.twist_direction == 'right':
 
@@ -659,15 +647,12 @@ class SensorsSubscriber(Node):
                     iter_lock += 1
                     time.sleep(0.01)
 
-                data.linear.x = 0.0
-                data.angular.z = 0.0
-                self.movement_publisher.publish(data)
+                self.stall(0.5)
 
-                time.sleep(0.2)
                 total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                 print(f'[rght] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
 
-                self.stall(0.5)
+                
 
         print('Movement thread closed successfully.')
 
@@ -675,6 +660,8 @@ class SensorsSubscriber(Node):
         
         # used to simulate inference steps and to decelerate
         # the robot
+
+        print('total time:', time.time() - self.twist_timestamp)
 
         self.twist_timestamp = time.time()
         data = Twist()
