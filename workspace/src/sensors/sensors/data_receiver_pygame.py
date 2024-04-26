@@ -133,14 +133,6 @@ class turtlebot_controller:
 
         while True:
             
-            if self.display_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
-                
-                try:
-                    cv2.imshow('Webcam (0.5 scale)', self.latest_webcam_camera_frame)
-                except:
-                    print('could not show webcam')
-                    self.display_webcam = False
-
             if self.display_raspi_cam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
 
                 try:
@@ -149,7 +141,15 @@ class turtlebot_controller:
                 except:
                     print('could not show raspi camera')
                     self.display_raspi_cam = False
-                    
+
+            if self.display_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
+                
+                try:
+                    cv2.imshow('Webcam (0.5 scale)', self.latest_webcam_camera_frame)
+                except:
+                    print('could not show webcam')
+                    self.display_webcam = False
+
             cv2.waitKey(1)
 
     def usb_webcam(self):
@@ -460,7 +460,7 @@ class turtlebot_controller:
                 elif confirmation == 'e':
                     prompt = input("Revised Prompt: ")
 
-            if confirmation == 'y':
+            if confirmation == 'y' or confirmation == 'e':
 
                 # save data into a buffer
                 
