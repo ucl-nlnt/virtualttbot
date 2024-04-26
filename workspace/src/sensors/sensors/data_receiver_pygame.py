@@ -13,7 +13,7 @@ import numpy as np
 import cv2
 import argparse
 import random
-import zlib
+import lzma
 
 from KNetworking import DataBridgeServer_TCP
 from prompt_randomizer import prompt_randomizer
@@ -132,19 +132,20 @@ class turtlebot_controller:
     def disp_thread(self):
 
         while True:
-
+            
             if self.display_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
                 
                 try:
-                    cv2.imshow('Webcam', self.latest_webcam_camera_frame)
+                    cv2.imshow('Webcam (0.5 scale)', self.latest_webcam_camera_frame)
                 except:
                     print('could not show webcam')
                     self.display_webcam = False
 
-            if args.view_raspi_cam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
+            if self.display_raspi_cam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
 
                 try:
-                    cv2.imshow('Raspi', self.latest_raspi_camera_frame)
+                    cv2.imshow('Raspi (0.5 scale)', self.latest_raspi_camera_frame)
+
                 except:
                     print('could not show raspi camera')
                     self.display_raspi_cam = False
@@ -165,6 +166,12 @@ class turtlebot_controller:
             success, encoded_image = cv2.imencode('.jpg',frame)
             if not success:
                 continue
+
+            width = int(frame.shape[1] * 0.5)
+            height = int(frame.shape[0] * 0.5)
+            new_dimensions = (width, height)
+
+            frame = cv2.resize(frame, new_dimensions,interpolation = cv2.INTER_AREA)
 
             self.latest_webcam_camera_frame = frame
             self.most_recent_webcam_frame_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
@@ -266,6 +273,13 @@ class turtlebot_controller:
                         # Update 'frame_data' in the JSON data structure
                         data['frame_data'] = frame_data_as_string
 
+                        # scaling 50 percent image to make sure that it fits on the
+                        # laptop screen
+                        width = int(frame.shape[1] * 0.5)
+                        height = int(frame.shape[0] * 0.5)
+                        new_dimensions = (width, height)
+
+                        frame = cv2.resize(frame, new_dimensions,interpolation = cv2.INTER_AREA)
                     self.latest_raspi_camera_frame = frame
                     print('Turtlebot frame was received.')
 
@@ -370,8 +384,22 @@ class turtlebot_controller:
                     print("Random Prompt:",prompt)
 
             elif not args.devmode:
-                prompt = input("Enter prompt <<")
-            
+
+                prompt = input("Enter prompt << ")
+                prompt_level_set = False
+                while not prompt_level_set and prompt != '$CONTROL' and not args.devmode:
+                    
+                    try:
+                        prompt_level = int(input("Input prompt level for documentation (1, 2, or 3) << "))
+                        if prompt_level not in [1, 2, 3]:
+                            print('Please input a valid level number.')
+                        else:
+                            prompt_level_set = True
+
+                    except Exception as e:
+                        print(e)
+                        print('Please input a valid entry number.')
+                
             else:
                 prompt = "$CONTROL"
 
@@ -439,18 +467,18 @@ class turtlebot_controller:
                 json_file = {
                             "username":self.current_user, "natural_language_prompt": prompt,
                             "timestamp_s":time.ctime(), "timestamp_float":time.time(),
-                            "states":self.data_buffer
+                            "states":self.data_buffer, "prompt_level" : prompt_level
                             }
                 
                 fname = self.generate_random_filename()
-                fname = fname + ".compressed"
+                fname = fname + ".compressed_lzma"
 
                 with open(os.path.join("datalogs",fname),'wb') as f:
                     
-                    f.write(zlib.compress(json.dumps(json_file, indent=4).encode('utf-8')))
+                    f.write(lzma.compress(json.dumps(json_file, indent=4).encode('utf-8')))
+
 
                 print("Instance saved.")
-
                 self.sesh_count += 1
             
             else:
