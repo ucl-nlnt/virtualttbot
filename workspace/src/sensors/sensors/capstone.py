@@ -573,6 +573,12 @@ class SensorsSubscriber(Node):
                     distance_lock += 1
                     time.sleep(0.01)
 
+                data.linear.x = 0.0
+                data.angular.z = 0.0
+                self.movement_publisher.publish(data)
+
+                time.sleep(0.2)
+
                 print('[frwd] Final travel distance:', round(get_point_distance(self.odometry_msg_pos, starting_position),3))
                 print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
 
@@ -610,6 +616,12 @@ class SensorsSubscriber(Node):
                     iter_lock += 1
                     time.sleep(0.01)
 
+
+                data.linear.x = 0.0
+                data.angular.z = 0.0
+                self.movement_publisher.publish(data)
+
+                time.sleep(0.2)
                 total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                 print(f'[left] Final total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
 
@@ -624,7 +636,6 @@ class SensorsSubscriber(Node):
                 iter_lock = 0
                 total_rotation = 0.0
                 last_orientation = self.odometry_msg_orientation
-
 
                 while self.twist_direction == 'right':
 
@@ -648,6 +659,11 @@ class SensorsSubscriber(Node):
                     iter_lock += 1
                     time.sleep(0.01)
 
+                data.linear.x = 0.0
+                data.angular.z = 0.0
+                self.movement_publisher.publish(data)
+
+                time.sleep(0.2)
                 total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                 print(f'[rght] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
 
