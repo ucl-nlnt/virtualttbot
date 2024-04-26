@@ -182,7 +182,7 @@ class SensorsSubscriber(Node):
         
         # Compile Data and Transmit to Server
         self.camera_thread_run = True
-        self.transmit_current_frame = True # initially set to True to capture initial turtlebot position
+        self.transmit_current_frame = False
         self.camera_thread = threading.Thread(target=self.take_photo)
         self.camera_thread.start()
         self.compilation_thread_run = True
