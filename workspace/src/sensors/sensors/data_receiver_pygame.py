@@ -467,6 +467,7 @@ class turtlebot_controller:
                 print('=================================')
                 
                 print('saving:', prompt)
+
                 json_file = {
                             "username":self.current_user, "natural_language_prompt": prompt,
                             "timestamp_s":time.ctime(), "timestamp_float":time.time(),
@@ -477,7 +478,7 @@ class turtlebot_controller:
 
                 with open(os.path.join("datalogs",fname),'wb') as f:
                     
-                    f.write(lzma.compress(json.dumps(json_file, indent=4).encode('utf-8')))
+                    f.write(lzma.compress(json.dumps(json_file).encode('utf-8')))
 
 
                 print("Instance saved.")

@@ -52,7 +52,7 @@ parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sa
 parser.add_argument("--server_ip", type=str, default="None", help="Sets jump server IP address.")
 parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
 parser.add_argument("--softbarrier", type=int, default=1, help="Stops the Turtlebot a certain distance from an object in front of it. Set to 0 to disable.")
-parser.add_argument("--softbarr_dist", type=float, default=0.4, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
+parser.add_argument("--softbarr_dist", type=float, default=0.25, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
 
 args = parser.parse_args()
 print(args)
