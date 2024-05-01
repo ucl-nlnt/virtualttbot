@@ -23,6 +23,8 @@ import os
 import time
 import sys
 
+from new_prompt_randomizer import prompt_maker
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--ip", type=str, default="localhost")
@@ -80,7 +82,11 @@ def normalize_radians(float_num):
     return (float_num + np.pi) % (2 * np.pi) - np.pi
 
 def generate_trial_instruction():
-    prompt = prompt_randomizer.prompt_maker()
+    #prompt = prompt_randomizer.prompt_maker()
+
+    maker = prompt_maker()
+    prompt = maker.maker()
+
     x = prompt[1]
     instructions = []
     for i in x:

@@ -1,6 +1,8 @@
 import random
 import json
 import math
+import csv
+import os
 from csv_randomizer import random_csv
 
 class prompt_randomizer:
@@ -154,7 +156,7 @@ class prompt_randomizer:
 
   # Simple Randomizer
   def rand_inst():
-    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT", "DRAW SHAPE", "DRAW SHAPE"] #, "WAIT"]
+    inst_types = ["FWD1", "FWD2",  "LROT1", "LROT2", "RROT1", "RROT2", "LSIDE1", "LSIDE2", "RSIDE1", "RSIDE2", "BACK1", "BACK2", "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD", "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT", "DRAW SHAPE", "DRAW SHAPE"] #, "WAIT", "MAP"]
     rephrase_move = ["move", "go", "advance", "coast", "glide", "get yourself", "move yourself", "proceed"]
     prepositions = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
     prepositions2 = ["", "by", "a distance of", "for", "for a total distance of", "equal to", "by a measure of", "about", "by about", "about", "around"]
@@ -228,6 +230,10 @@ class prompt_randomizer:
       gen_equiv = [("WAIT", wait_time)]
       str_equiv = "(WAIT, " + str(wait_time) + ")"
       return (phrasing, str_equiv, gen_equiv)
+    elif randtype == "MAP":
+      rephrase_map = ["Map out your surroundings."]
+      phrasing = random.choice(rephrase_map)
+      return (phrasing, "[('MAP', None)]", [("MAP", None)])
     elif randtype == "DRAW SHAPE":
       rephrase_start = ["sketch", "create", "outline", "render", "draft", "make", "sketch out", "form", "illustrate", "construct", "design"]
       shaper = ["triangle", "triangular", "3-sided", "three-sided", "four-sided", "4-sided", "@four-sided", "@4-sided", "square", "quadrilateral with equal sides and right angles", "rectangle", "rectangular", "quadrilateral with equal opposite sides and right angles", "five-sided", "5-sided", "pentagon", "six-sided", "6-sided", "hexagon", "seven-sided", "7-sided", "heptagon", "eight-sided", "8-sided", "octagon", "nine-sided", "9-sided", "nonagon", "10-sided", "ten-sided", "decagon"]
@@ -342,7 +348,7 @@ class prompt_randomizer:
       prompt_addition = random.choice(possible_prompts)
 
       stop = True
-      wait = random.randint(0, max_time)
+      wait = random.randint(1, max_time)
 
       # replace X
       prompt_addition = prompt_addition.replace("@", str(wait))
@@ -359,11 +365,11 @@ class prompt_randomizer:
 
     elif fl == "@GO_AROUND_W":
       # move around obstacle after <wait> seconds. if not possible, stop
-      possible_prompts = ["Wait up to @ seconds once the obstacle is detected. If the obstacle is still there after @ seconds, try to go around it. If you can't go around it, stop.", "Wait up to X seconds for obstacle removal. If it persists, attempt avoidance; if unsuccessful, stop.", "Wait until X seconds for barrier clearance. If it persists, try to circumvent; if not possible, stop.", "Wait X seconds maximum for obstruction removal. If it remains, attempt avoidance; if unsuccessful, stop.", "Allow up to X seconds for hurdle elimination. If it lingers, try to navigate around; if not feasible, stop.", "Give it X seconds max for barrier eradication. If it continues, attempt avoidance; if unachievable, stop.", "Wait until X seconds for impediment removal. If it persists, try to sidestep; if impossible, stop."]
+      possible_prompts = ["Wait up to @ seconds once the obstacle is detected. If the obstacle is still there after @ seconds, try to go around it. If you can't go around it, stop.", "Wait up to @ seconds for obstacle removal. If it persists, attempt avoidance; if unsuccessful, stop.", "Wait until @ seconds for barrier clearance. If it persists, try to circumvent; if not possible, stop.", "Wait @ seconds maximum for obstruction removal. If it remains, attempt avoidance; if unsuccessful, stop.", "Allow up to @ seconds for hurdle elimination. If it lingers, try to navigate around; if not feasible, stop.", "Give it @ seconds max for barrier eradication. If it continues, attempt avoidance; if unachievable, stop.", "Wait until @ seconds for impediment removal. If it persists, try to sidestep; if impossible, stop."]
       prompt_addition = random.choice(possible_prompts)
 
       go_around = True
-      wait = random.randint(0, max_time)
+      wait = random.randint(1, max_time)
 
       # replace X
       prompt_addition = prompt_addition.replace("@", str(wait))
@@ -382,7 +388,17 @@ class prompt_randomizer:
     #flags = json.loads(str(json_flags))
     return (prompt_addition, json_flags)
 
+  def impossible():
+        this_path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(this_path, "Prompts/impossible.csv")      # no csv file yet
 
+        with open(path, newline='') as f:
+          read_file = csv.reader(f)
+          all_prompts = [list(row) for row in read_file]
+          impossible_prompt = random.choice(all_prompts)
+
+        return impossible_prompt
+  
   def compute_total(x, init):
       #print(str(x[0]))
       #print(str(x[1]))
@@ -577,8 +593,10 @@ class prompt_randomizer:
       "instructions": equiv,
       "ground_truth_coordinates": ground_truth,
       "cumulative": computed_move,
+      "impossible": impossible,
+      "bogus": bogus,
+      "vague": vague,
       "flags": add_flags[1]
-
     }
 
     coords = [0, 0, 0]        # reset coords
@@ -586,10 +604,6 @@ class prompt_randomizer:
     return (prompt, simple_move, computed_move, json_fl)
     #return json_fl
 
-#TEST
-#print(prompt_randomizer.flag()[0])
-
-'''
 if __name__ == "__main__":
   #testing
   prompt1 = prompt_randomizer.prompt_maker(5)
@@ -613,4 +627,3 @@ if __name__ == "__main__":
   print("Single: ", prompt3[1])
   print("Cumulative: ", prompt3[2])
   print("Flag: ", prompt3[3])
-'''

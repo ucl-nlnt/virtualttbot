@@ -18,6 +18,7 @@ import lzma
 from KNetworking import DataBridgeServer_TCP
 from prompt_randomizer import prompt_randomizer
 from csv_randomizer import random_csv
+from l3_csv_randomizer import l3_prompt_randomizer
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
@@ -36,8 +37,17 @@ parser.add_argument("--webcam_w", type=int, default=1280, help="Sets webcam feed
 parser.add_argument("--view_webcam", type=int, default=1, help="On by default, set to zero to disable.")
 parser.add_argument("--view_raspi_cam", type=int, default=1, help="On by default, set to zero to disable.")
 
+parser.add_argument("--l3_s_obj", type=int, default=0, help="Off by default, set to one to use l3_simple_object.csv.")
+parser.add_argument("--l3_d_obj", type=int, default=0, help="Off by default, set to one to use l3_described_object.csv.")
+parser.add_argument("--l3_stand", type=int, default=0, help="Off by default, set to one to use l3_stand_on_x.csv.")
+parser.add_argument("--l3_ffw", type=int, default=0, help="Off by default, set to one to use l3_following.csv.")
+parser.add_argument("--l3_all", type=int, default=0, help="Off by default, set to one to use l3_following.csv.")
+
 args = parser.parse_args()
 print(args)
+
+l3 = args.l3_s_obj + args.l3_d_obj + args.l3_stand + args.l3_ffw + args.l3_all
+l3_prompt = l3_prompt_randomizer(args.l3_s_obj, args.l3_d_obj, args.l3_stand, args.l3_ffw)
 
 def retrieve_camera_indexes(): # used to check available cameras.
 
@@ -352,14 +362,18 @@ class turtlebot_controller:
         """
 
         # start host loop -> enter prompt -> start logging -> do stuff -> end logging -> generate unique id -> confirm save -> save data as a json with unique id
-
     
         # assumption: socket connection is successful
         while not self.killswitch:  # Start host loop
             
             print("Prompt #", str(self.sesh_count))                             # count number of saved prompts in current session
 
-            if args.enable_autorandomizer_from_csv:
+            if l3:
+                # Level 3 Random Generated Prompts
+                prompt = l3_prompt.new_prompt()
+                print("Random Prompt:", prompt)
+
+            elif args.enable_autorandomizer_from_csv:
             	# Random Generated Prompts  
                 if args.enable_autorandomizer_from_csv == 1:
                     random_prompt = prompt_randomizer.prompt_maker()                      # generates up to 5 consecutive unique actions
@@ -381,7 +395,6 @@ class turtlebot_controller:
                 elif args.enable_autorandomizer_from_csv == 4:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
-
             elif not args.devmode:
 
                 prompt = input("Enter prompt << ")
