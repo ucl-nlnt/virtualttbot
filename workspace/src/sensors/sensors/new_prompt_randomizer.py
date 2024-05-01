@@ -740,18 +740,18 @@ class prompt_maker:
 
     coords = [0, 0, 0]        # reset coords
 
-    return (self.prompt, str(self.equiv), str(self.cumulative), json_fl)
+    return (self.prompt, self.equiv, str(self.cumulative), json_fl)
   
 ####################################################################################################################################################
 
 if __name__ == "__main__":
   #testing
-  
+
   maker = prompt_maker()
   prompt1 = maker.maker()
   print("Prompt: ", prompt1[0])
   print("Single: ", prompt1[1])
-  print("Cumulative: ", prompt1[2])
+  print("Cumulative: ", prompt1[2]maker)
   #print("Flag: ", prompt1[3])
 
   print("\n")

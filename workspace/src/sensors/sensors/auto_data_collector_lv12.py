@@ -89,22 +89,23 @@ def generate_trial_instruction():
 
     x = prompt[1]
     instructions = []
-    for i in x:
-        q = i.split(', ')
-        s = '['
-        for j in range(0,len(q),2):
-            s += q[j].replace("(",'("') + '", ' + q[j+1]
-            if j + 2 != len(q):
-                s += ", "
-        s += ']'
-        instructions.append(s)
+    #for i in x:
+    #    q = i.split(', ')
+    #    s = '['
+    #    for j in range(0,len(q),2):
+    #        s += q[j].replace("(",'("') + '", ' + q[j+1]
+    #        if j + 2 != len(q):
+    #            s += ", "
+    #    s += ']'
+    #    instructions.append(s)
         #print(s)
 
-    instructions_parsed = []
-    for i in instructions:
-        instructions_parsed += ast.literal_eval(i)
+    #instructions_parsed = []
+    #for i in instructions:
+    #    instructions_parsed += ast.literal_eval(i)
 
-    return (prompt[0], instructions_parsed, prompt[2])
+    #return (prompt[0], instructions_parsed, prompt[2])
+    return (prompt[0], prompt[1], prompt[2])
 
 def generate_random_filename():
 
