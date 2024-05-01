@@ -724,7 +724,6 @@ class prompt_maker:
       flags = None
 
     # compute cumulative
-    print(self.cumulative)
     self.computed_move(self.equiv)
 
     json_fl = {
@@ -751,7 +750,7 @@ if __name__ == "__main__":
   prompt1 = maker.maker()
   print("Prompt: ", prompt1[0])
   print("Single: ", prompt1[1])
-  print("Cumulative: ", prompt1[2]maker)
+  print("Cumulative: ", prompt1[2])
   #print("Flag: ", prompt1[3])
 
   print("\n")
