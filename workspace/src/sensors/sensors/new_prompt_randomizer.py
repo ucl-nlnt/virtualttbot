@@ -299,9 +299,9 @@ class prompt_generator:
         rephrase_sides = ["@1x@2", "@1 x @2", "@1 by @2", "@1 wide and @2 tall", "@1 across and @2 high"]
 
         prompt = f"{random.choice(self.rephrase_start)} a {shape} {random.choice(rephrase_next)} {((random.choice(rephrase_sides)).replace('@1', dist1[0])).replace('@2', dist2[0])}"
-        equiv = [("MOVE", dist1[1]), ("LEFT", 90), ("MOVE", dist2[1]), ("LEFT", 90), ("MOVE", dist1[1]), ("LEFT", 90), ("MOVE", dist2[1], 2)]
+        equiv = [("MOVE", dist1[1]), ("LEFT", 90), ("MOVE", dist2[1]), ("LEFT", 90), ("MOVE", dist1[1]), ("LEFT", 90), ("MOVE", dist2[1])]
 
-        return (prompt, equiv)
+      return (prompt, equiv)
 
     elif shape == "square" or shape == "quadrilateral with equal sides and right angles" or shape == "@four-sided" or shape == "@4-sided":
       if shape == "square" or shape == "@four-sided" or shape == "@4-sided":
