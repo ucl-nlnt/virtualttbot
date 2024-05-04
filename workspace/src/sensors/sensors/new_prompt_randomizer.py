@@ -142,21 +142,21 @@ class prompt_generator:
   def vague_small_forward(self):
     prompt = random.choice(self.rephrase_sforward)
     #equiv = round(float(random.randint(5, 50))/100, 2)
-    equiv = 0.20
+    equiv =  [("MOVE", 0.20)]
 
     return (prompt, equiv)
 
   def vague_ave_forward(self):
     prompt = random.choice(self.rephrase_aveforward)
     #equiv = round(float(random.randint(20, 80))/100, 2)
-    equiv = 0.80
+    equiv = [("MOVE", 0.80)]
 
     return (prompt, equiv)
 
   def vague_big_forward(self):
     prompt = random.choice(self.rephrase_bforward)
     #equiv = round(float(random.randint(100, 300))/100, 2)
-    equiv = 1.50
+    equiv = [("MOVE", 1.50)]
 
     return (prompt, equiv)
 
