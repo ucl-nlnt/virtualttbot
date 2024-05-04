@@ -132,7 +132,7 @@ class prompt_generator:
 
   def draw_star(self):
     dist = random_value.dist()
-    prompt = random.choice(self.rephrase_drawstar)
+    prompt = f"random.choice(self.rephrase_drawstar) using {dist[0]} long lines}"
     equiv = [("MOVE", dist[1])]
     for i in range(4):
       equiv.extend([("RGHT", 36), ("MOVE", dist[1])])
