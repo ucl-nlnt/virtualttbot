@@ -275,7 +275,17 @@ class prompt_generator:
     equiv = [("MAP", None)]
 
     return (prompt, equiv)
-
+  
+  def draw_star(self):
+    dist = random_value.dist()
+    prompt = "draw a star"
+    
+    equiv = [("MOVE", dist[1])]
+    for i in range(4):
+      equiv.extend([("RGHT", 36), ("MOVE", dist[1])])
+    
+    return (prompt, equiv)
+  
   def draw_shape(self):
     shape_int = random.randint(0, len(self.shaper)-1)
     shape = self.shaper[shape_int]
@@ -299,9 +309,10 @@ class prompt_generator:
         rephrase_sides = ["@1x@2", "@1 x @2", "@1 by @2", "@1 wide and @2 tall", "@1 across and @2 high"]
 
         prompt = f"{random.choice(self.rephrase_start)} a {shape} {random.choice(rephrase_next)} {((random.choice(rephrase_sides)).replace('@1', dist1[0])).replace('@2', dist2[0])}"
-        equiv = [("MOVE", dist1[1]), ("LEFT", 90), ("MOVE", dist2[1]), ("LEFT", 90), ("MOVE", dist1[1]), ("LEFT", 90), ("MOVE", dist2[1], 2)]
+    
+      equiv = [("MOVE", round(dist1[1],2)), ("LEFT", 90), ("MOVE", round(dist2[1],2)), ("LEFT", 90), ("MOVE", round(dist1[1],2)), ("LEFT", 90), ("MOVE", round(dist2[1],2))]
 
-        return (prompt, equiv)
+      return (prompt, equiv)
 
     elif shape == "square" or shape == "quadrilateral with equal sides and right angles" or shape == "@four-sided" or shape == "@4-sided":
       if shape == "square" or shape == "@four-sided" or shape == "@4-sided":
