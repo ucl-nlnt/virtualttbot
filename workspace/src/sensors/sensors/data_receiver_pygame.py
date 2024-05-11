@@ -101,6 +101,8 @@ class turtlebot_controller:
         self.increment_twist_message = None # allows for robot turnability
         self.exempt_increment = False
 
+        self.most_recent_webcam_frame = None
+
         # socket programming stuff
         self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
         print(f'Server Listening on port 50000')
@@ -126,7 +128,6 @@ class turtlebot_controller:
             self.webcam_object = cv2.VideoCapture(cam_index)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
-            self.most_recent_webcam_frame = None
             self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
             self.usb_webcam_thread.start()
 
@@ -163,7 +164,7 @@ class turtlebot_controller:
                     print('could not show raspi camera', e)
                     self.display_raspi_cam = False
 
-            if self.display_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
+            if self.display_webcam and isinstance(self.latest_webcam_camera_frame, np.ndarray):
                 
                 try:
                     cv2.imshow('Webcam (0.5 scale)', self.latest_webcam_camera_frame)
@@ -364,7 +365,7 @@ class turtlebot_controller:
 
                     print('Saved webcam data.')
                     self.new_frame_impulse = True
-                    data['webcam_data'] = self.most_recent_webcam_frame_base64
+                    data['webcam_data'] = self.most_recent_webcam_frame
 
             else:
 
