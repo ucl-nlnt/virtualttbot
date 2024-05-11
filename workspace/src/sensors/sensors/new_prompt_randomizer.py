@@ -31,6 +31,13 @@ class prompt_generator:
     self.rephrase_move_vague_doubles.extend(self.rephrase_move)
     self.rephrase_backnforth = ["back and forth", "alternate directions", "shift vertically", "to and fro"]
     self.rephrase_sideways = ["sideways", "to the side", "laterally", "horizontally"]
+    self.rephrase_lrotate = ["rotate slightly to your left", "rotate a little to your left", "rotate a little bit to your left", "turn a little to your left", "turn just a bit towards your left", "shift slightly to your left side", "angle yourself a tad to the left", "adjust slightly in the direction of your left", "tilt slightly leftwards", "nudge yourself a bit leftward", "slide gently to your left", "swivel a touch to your left", "slightly veer towards your left", "lean a bit to the left", "scoot over a bit to your left", "tip slightly towards your left side", "ease yourself a tad to the left", "inch a bit towards your left", "shift your position a tad to the left"] # gpt-rephrased
+    self.rephrase_rrotate = ["rotate slightly to your right", "rotate a bit to your right", "turn just a bit towards your right", "shift slightly to your right side", "angle yourself a tad to the right", "adjust slightly in the direction of your right", "tilt slightly rightwards", "nudge yourself a bit rightward", "slide gently to your right", "swivel a touch to your right", "slightly veer towards your right", "lean a bit to the right", "scoot over a bit to your right", "tip slightly towards your right side", "ease yourself a tad to the right", "inch a bit towards your right", "shift your position a tad to the right"] # gpt-rephrased
+    self.rephrase_vrotate = ["rotate slightly", "rotate a little bit", "turn just a bit", "shift slightly", "angle yourself a tad", "adjust slightly", "tilt slightly", "swivel a touch", "veer slightly", "tip slightly", "shift your position a tad"] # gpt-rephrased
+    self.rephrase_sforward = ["take a teeny step forward", "move a little forward", "scoot a little forward", "move a little bit", "advance a bit","take a small step forward","move forward slightly","proceed a little","step forward a bit","advance a tad","take a small forward movement","shift forward a bit","progress a little","move ahead slightly","take a slight step forward","move just a bit forward","nudge forward a little","move forward a touch","shift ahead a bit", "take a tiny step forward", "slide a little forward", "gently shift forward", "ease forward slightly", "move forward a tad", "slip forward just a bit", "glide forward a touch", "nudge forward a little", "proceed forward a smidge", "shift ahead slightly", "advance a bit forward", "scoot forward just a tad", "progress forward slightly", "take a small step forward", "move ahead a little", "gently inch forward", "slide forward a touch"] # gpt-rephrased
+    self.rephrase_aveforward = ["proceed a normal amount forward", "advance an average distance forward","move forward a standard amount", "proceed forward an ordinary distance", "continue forward a typical distance", "move ahead a regular amount", "advance forward a customary distance", "progress forward a common distance", "move forward a usual amount", "proceed forward a typical distance", "continue ahead an average distance", "move forward an average distance", "advance forward a standard amount", "proceed ahead a normal distance", "move forward a standard distance", "progress forward an ordinary amount"] # gpt-rephrased
+    self.rephrase_bforward = ["coast a large distance forward", "glide a significant distance forward", "sail a considerable way forward", "drift a long distance ahead", "glide a vast distance forward", "skate a substantial distance forward", "sail a great distance ahead", "glide a considerable distance forward", "drift a substantial distance ahead", "sail a significant distance forward",  "skate a long distance ahead", "glide a substantial distance forward", "drift a considerable distance ahead", "sail a large distance forward", "skate a considerable distance ahead", "glide a significant distance forward"] # gpt-rephrased
+    self.rephrase_drawstar = ["draw a star", "sketch a star", "make a star", "create a star", "outline a star", "depict a star", "design a star", "render a star", "draft a star", "portray a star", "illustrate a star", "trace a star", "craft a star", "form a star", "produce a star"] # gpt-rephrased
 
   def generate_inst(self):
     #inst_types = ["FWD", "LROT", "RROT", "LSIDE", "RSIDE", "BACK",
@@ -38,9 +45,9 @@ class prompt_generator:
     #              "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT",
     #              "DRAW SHAPE", "WAIT", "MAP"]
 
-    inst_types = ["DRAW SHAPE", "B&F", "S2S", "vSIDEWAYS"]
+    inst_types = ["DRAW SHAPE", "B&F", "S2S", "vSIDEWAYS", "DRAW STAR", "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
 
-    randtype = numpy.random.choice(inst_types, p=[0.50, 0.20, 0.20, 0.10])
+    randtype = numpy.random.choice(inst_types, p=[0.10, 0.10, 0.10, 0.10, 0.15, 0.15, 0.10, 0.10, 0.10])
 
     if randtype == "FWD":
       return self.move_forward()
@@ -74,36 +81,105 @@ class prompt_generator:
       return self.side2side()
     elif randtype == "vSIDEWAYS":
       return self.vague_sideways()
+    elif randtype == "DRAW STAR":
+      return self.draw_star()
+    elif randtype == "vsFORWARD":
+      return self.vague_small_forward()
+    elif randtype == "vaFORWARD":
+      return self.vague_ave_forward()
+    elif randtype == "vbFORWARD":
+      return self.vague_big_forward()
+    elif randtype == "vsROTATE":
+      return self.vague_small_rotate()
     #elif randtype == "vZIGZAG":
     #  return prompt_generator.vague_zigzag()
 
   def extra_times(self):
-    number_of_times = random.randint(1, 15)
-    rephrase_total = [" ", " a total of ", " for a total of "]
-    rephrase_intro = [" for ", " "]
+    chs1 = numpy.random.choice([True, False], p=[0.25, 0.75])
 
-    if number_of_times == 1:
-      chs = random.choice([True, False])
-
-      if chs:
-        number_val = ["1", "one", "a single"]
-        rephrase_times = [" time", " instance", " iteration", " round", " cycle", " turn"]
-        add_to_prompt = f"{random.choice(rephrase_intro)}{random.choice(number_val)}{random.choice(rephrase_times)}"
-      else:
-        add_to_prompt = random.choice(["", " once"])
+    if chs1:
+      pick_rep = random.randint(0, 2)
+      rep = ["once", "twice", "thrice"]
+      add_to_prompt = f" {rep[pick_rep]}"
+      number_of_times = pick_rep + 1
     else:
-      rephrase_times = [" times", " instances", " repetitions", " iterations", " rounds", " cycles", " turns", " repeats", " occurrences"]
-      chs = random.choice([True, False])
+      number_of_times = random.randint(1, 15)
+      rephrase_total = [" ", " a total of ", " for a total of "]
+      rephrase_intro = [" for ", " "]
 
-      if chs:
-        number_val = [None, None, "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"]
+      if number_of_times == 1:
+        chs2 = random.choice([True, False])
+
+        if chs2:
+          number_val = ["1", "one", "a single"]
+          rephrase_times = [" time", " instance", " iteration", " round", " cycle", " turn"]
+          add_to_prompt = f"{random.choice(rephrase_intro)}{random.choice(number_val)}{random.choice(rephrase_times)}"
+        else:
+          add_to_prompt = random.choice(["", " once"])
       else:
-        number_val = [number_of_times]
-        rephrase_times.append("x")
+        rephrase_times = [" times", " instances", " repetitions", " iterations", " rounds", " cycles", " turns", " repeats", " occurrences"]
+        chs = random.choice([True, False])
 
-      add_to_prompt = f"{random.choice(rephrase_total)} {str(random.choice(number_val))}{random.choice(rephrase_times)}"
+        if chs:
+          number_val = [None, None, "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"]
+        else:
+          number_val = [number_of_times]
+          rephrase_times.append("x")
+
+        add_to_prompt = f"{random.choice(rephrase_total)} {str(random.choice(number_val))}{random.choice(rephrase_times)}"
 
     return (add_to_prompt, number_of_times)
+
+  def draw_star(self):
+    dist = random_value.dist()
+    prompt = f"{random.choice(self.rephrase_drawstar)} using {dist[0]} long lines"
+    equiv = [("MOVE", dist[1])]
+    for i in range(4):
+      equiv.extend([("RGHT", 36), ("MOVE", dist[1])])
+
+    return (prompt, equiv)
+  
+  def vague_small_forward(self):
+    prompt = random.choice(self.rephrase_sforward)
+    #equiv = round(float(random.randint(5, 50))/100, 2)
+    equiv =  [("MOVE", 0.20)]
+
+    return (prompt, equiv)
+
+  def vague_ave_forward(self):
+    prompt = random.choice(self.rephrase_aveforward)
+    #equiv = round(float(random.randint(20, 80))/100, 2)
+    equiv = [("MOVE", 0.80)]
+
+    return (prompt, equiv)
+
+  def vague_big_forward(self):
+    prompt = random.choice(self.rephrase_bforward)
+    #equiv = round(float(random.randint(100, 300))/100, 2)
+    equiv = [("MOVE", 1.50)]
+
+    return (prompt, equiv)
+
+  def vague_small_rotate(self):
+    rotate_dir = random.choice(["LEFT", "RGHT", "EITHER"])
+    
+    if rotate_dir == "LEFT":
+      dir = "LEFT"
+      prompt = random.choice(self.rephrase_lrotate)
+
+    elif rotate_dir == "RGHT":
+      dir = "RGHT"
+      prompt = random.choice(self.rephrase_rrotate)
+    
+    else:
+      dir = random.choice(["LEFT", "RGHT"])
+      prompt = random.choice(self.rephrase_vrotate)
+    
+    #v_rot = random.randint(5, 45)
+    v_rot = 30
+    equiv = [(dir, v_rot)]
+
+    return (prompt, equiv)
 
   def backnforth(self):
     # example: "move 30in back and forth 5 times"
