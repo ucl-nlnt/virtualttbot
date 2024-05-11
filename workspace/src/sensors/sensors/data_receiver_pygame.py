@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description="Turtlebot3 NLNT terminal-based con
 
 parser.add_argument("--enable_autorandomizer_from_csv", type=int, default=0, help="Creates a level 1 or 2 prompt based on a provided CSV file.")
 parser.add_argument("--csv_path",type=str, default="nlnt_prompts/level2_rephrases.csv", help="Specifies path to NLNT natural language label dataset.")
-parser.add_argument("--rotate_r_by",type=int, default=0, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
+parser.add_argument("--rotate_r_by",type=int, default=1, help="Rotate NLNT image by some amount before saving. Measured in Clockwise rotations.")
 parser.add_argument("--name", default=None, help="Username")
 parser.add_argument("--webcam", default=2, type=int, help="Selects webcam for external data gathering. Set to -1 to disable.")
 parser.add_argument("--devmode", type=int, default=0, help="Activate developer mode.")
@@ -97,6 +97,10 @@ class turtlebot_controller:
         self.debug_window_process = True
         self.label = None
 
+        self.new_frame_impulse = False
+        self.increment_twist_message = None # allows for robot turnability
+        self.exempt_increment = False
+
         # socket programming stuff
         self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
         print(f'Server Listening on port 50000')
@@ -143,23 +147,31 @@ class turtlebot_controller:
 
         while True:
             
+            if not self.new_frame_impulse:
+                time.sleep(0.05)
+                continue
+
+            print("raspi type",type(self.latest_raspi_camera_frame))
+            print("webcam type",type(self.latest_webcam_camera_frame))
+
             if self.display_raspi_cam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
 
                 try:
                     cv2.imshow('Raspi (0.5 scale)', self.latest_raspi_camera_frame)
 
-                except:
-                    print('could not show raspi camera')
+                except Exception as e:
+                    print('could not show raspi camera', e)
                     self.display_raspi_cam = False
 
             if self.display_webcam and isinstance(self.latest_raspi_camera_frame, np.ndarray):
                 
                 try:
                     cv2.imshow('Webcam (0.5 scale)', self.latest_webcam_camera_frame)
-                except:
-                    print('could not show webcam')
+                except Exception as e:
+                    print('could not show webcam',e)
                     self.display_webcam = False
 
+            self.new_frame_impulse = False
             cv2.waitKey(1)
 
     def usb_webcam(self):
@@ -210,20 +222,58 @@ class turtlebot_controller:
                     sys.exit()
 
                 elif event.type == pygame.KEYDOWN:
-                    self.keyboard_input = event.unicode
-                    print(event.unicode)
+
                     self.keyboard_impulse = True
-                    if self.debug_window_process:
-                        print(f"pressed {self.keyboard_input}")
+                    keys = pygame.key.get_pressed()
+
+                    if keys[pygame.K_w] and keys[pygame.K_d]:
+                        
+                        self.keyboard_input = "wd"
+
+                    elif keys[pygame.K_w] and keys[pygame.K_a]:
+
+                        self.keyboard_input = "wa"
+
+                    elif keys[pygame.K_w]:
+
+                        self.keyboard_input = "w"
+
+                    elif keys[pygame.K_d]:
+
+                        self.keyboard_input = 'd'
+
+                    elif keys[pygame.K_a]:
+
+                        self.keyboard_input = 'a'
+
+                    elif keys[pygame.K_RIGHTBRACKET]:
+
+                        self.keyboard_input = ']'
+
+                    elif keys[pygame.K_F10]:
+
+                        self.keyboard_input = 'F10'
+
+                    elif keys[pygame.K_KP_PLUS]:
+                        
+                        self.increment_twist_message = 0.3
+                        self.exempt_increment = True
+                        self.keyboard_impulse = True
+
+                    elif keys[pygame.K_KP_MINUS]:
+
+                        self.increment_twist_message = -0.3
+                        self.exempt_increment = True
+                        self.keyboard_impulse = True
 
                 elif event.type == pygame.KEYUP:
-
-                    self.keyboard_input = None
-                    self.keyboard_impulse = True
-
-                    if self.debug_window_process:
-                        print("Released key.")
-
+                
+                    if not self.exempt_increment:
+                        self.keyboard_input = None
+                        self.keyboard_impulse = True
+                    else:
+                        continue
+                
             # Fill the screen with a background color
             self.screen.fill((255, 255, 255))
 
@@ -249,7 +299,14 @@ class turtlebot_controller:
                 x = 0
             x += 1
 
-            data = json.loads(self.server_data_receiver.receive_data().decode())
+            item = self.server_data_receiver.receive_data()
+
+            if item == None:
+                print("ERROR: super json is NoneType")
+                break
+
+            data = json.loads(item.decode())
+
             if self.data_buffer == None: print("WARNING: data buffer is still None type."); continue
 
             # Camera display
@@ -260,6 +317,7 @@ class turtlebot_controller:
 
                 if camera_frame != None:
 
+                    print('camera_frame is not None')
                     encoded_data = base64.b64decode(camera_frame)
 
                     # Convert the bytes to a numpy array
@@ -278,6 +336,9 @@ class turtlebot_controller:
 
                         # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
                         retval, buffer = cv2.imencode('.jpg', frame)
+                        
+                        print("TTB imencode:", retval)
+
                         frame_data_as_string = base64.b64encode(buffer).decode('utf-8')
 
                         # Update 'frame_data' in the JSON data structure
@@ -290,17 +351,19 @@ class turtlebot_controller:
                         new_dimensions = (width, height)
 
                         frame = cv2.resize(frame, new_dimensions,interpolation = cv2.INTER_AREA)
-                    self.latest_raspi_camera_frame = frame
-                    print('Turtlebot frame was received.')
-
-                else:
-                    self.latest_raspi_camera_frame = None
+                    
+                        self.latest_raspi_camera_frame = frame
+                        print('Turtlebot frame was received.')
+                        self.new_frame_impulse = True
 
             if args.webcam > -1:
-                
+
                 # append webcam data to 'data' frame
+                
                 if data['frame_data'] != None:
 
+                    print('Saved webcam data.')
+                    self.new_frame_impulse = True
                     data['webcam_data'] = self.most_recent_webcam_frame_base64
 
             else:
@@ -395,6 +458,7 @@ class turtlebot_controller:
                 elif args.enable_autorandomizer_from_csv == 4:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
+
             elif not args.devmode:
 
                 prompt = input("Enter prompt << ")
@@ -428,32 +492,54 @@ class turtlebot_controller:
 
             while True: # Inner loop, data collection
             
-                if not self.keyboard_impulse: time.sleep(0.01667); continue
-                print("input received:", self.keyboard_input)
+                if not self.keyboard_impulse: 
 
-                if self.keyboard_input == 'w': 
+                    time.sleep(0.01667)
+                    continue
+
+                if self.increment_twist_message != None:
+
+                    self.rad_changer.send_data(str(self.increment_twist_message).encode())
+                    self.increment_twist_message = None
+
+                if self.keyboard_input == 'wa' and not self.exempt_increment:
+
+                    self.movement_data_sender.send_data(b'@NTWS') # north-west
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == 'wd' and not self.exempt_increment:
+
+                    self.movement_data_sender.send_data(b'@NTES') # north-east
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == 'w' and not self.exempt_increment: 
+
                     self.movement_data_sender.send_data(b'@FRWD')
                     self.keyboard_impulse = False                   # set to False to be able to tell when user lets go of the key.
 
-                elif self.keyboard_input == 'a':
+                elif self.keyboard_input == 'a' and not self.exempt_increment:
+
                     self.movement_data_sender.send_data(b'@LEFT')
                     self.keyboard_impulse = False
 
-                elif self.keyboard_input == 'd':
+                elif self.keyboard_input == 'd' and not self.exempt_increment:
+
                     self.movement_data_sender.send_data(b'@RGHT')
                     self.keyboard_impulse = False
 
-                elif self.keyboard_input == None:                   # Key was let go
+                elif self.keyboard_input == None and not self.exempt_increment:  # key was let go
+            
                     self.movement_data_sender.send_data(b'@0000')
                     self.keyboard_impulse = False
 
-                elif self.keyboard_input == ']':
+                elif self.keyboard_input == ']' and not self.exempt_increment:
+
                     self.movement_data_sender.send_data(b'@STOP')
                     self.keyboard_impulse = False
                     print("Data collection is finished for this iteration.")
                     break
 
-                elif self.keyboard_input == '-':
+                elif self.keyboard_input == '-' and not self.exempt_increment:
                     self.movement_data_sender.send_data(b'@KILL')
                     self.keyboard_impulse = False
                     print('Sent termination signal to Turtlebot3.')
@@ -486,15 +572,15 @@ class turtlebot_controller:
                             "timestamp_s":time.ctime(), "timestamp_float":time.time(),
                             "states":self.data_buffer, "prompt_level" : prompt_level
                             }
+
                 fname = self.generate_random_filename()
                 fname = fname + ".compressed_lzma"
 
                 with open(os.path.join("datalogs",fname),'wb') as f:
                     
                     f.write(lzma.compress(json.dumps(json_file).encode('utf-8')))
+                    print("Instance saved.")
 
-
-                print("Instance saved.")
                 self.sesh_count += 1
             
             else:
