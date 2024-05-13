@@ -52,7 +52,7 @@ parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sa
 parser.add_argument("--server_ip", type=str, default="None", help="Sets jump server IP address.")
 parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
 parser.add_argument("--softbarrier", type=int, default=1, help="Stops the Turtlebot a certain distance from an object in front of it. Set to 0 to disable.")
-parser.add_argument("--softbarr_dist", type=float, default=0.25, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
+parser.add_argument("--softbarr_dist", type=float, default=0.3, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
 
 args = parser.parse_args()
 print(args)
@@ -107,6 +107,8 @@ class SensorsSubscriber(Node):
         self.sampling_delay = args.sampling_delay_t
         self.server_ip_address = None
 
+        self.mixed_twist_angular_mag = args.angular_z_rads
+
         # DEBUG LOCKS
         self.debug_send_data = False
         self.debug_odometer = False
@@ -153,6 +155,7 @@ class SensorsSubscriber(Node):
                 time.sleep(0.5) # wait for the server to open the 2nd port.
                 self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                                 destination_port=args.server_port + 1)
+
                 lock = False
             except Exception as e:
                 print(e)
@@ -199,8 +202,26 @@ class SensorsSubscriber(Node):
         self.movement_subscriber_thread_run = True
         self.movement_subscriber_thread = threading.Thread(target=self.receive_movement_from_server)
         self.movement_subscriber_thread.start()
-        
         print('INIT COMPLETE')
+
+    def ang_vel_changer(self):
+        
+            while self.rad_changer_thread_run:
+
+                inst = self.rad_changer.receive_data().decode()
+
+                if self.mixed_twist_angular_mag + float(inst.decode()) < 0:
+                    self.mixed_twist_angular_mag = 0
+                    print("Mixed rad speed:",self.mixed_twist_angular_mag)
+                    continue
+
+                if self.mixed_twist_angular_mag + float(inst.decode()) > 2.8:
+                    self.mixed_twist_angular_mag = 2.8
+                    print("Mixed rad speed:",self.mixed_twist_angular_mag)
+                    continue
+
+                self.mixed_twist_angular_mag += float(inst.decode())
+                print("Mixed rad speed:",self.mixed_twist_angular_mag)
 
     def soft_barrier(self):
 
@@ -222,6 +243,11 @@ class SensorsSubscriber(Node):
                 if (i > 30 and i < 329): 
                     continue 
 
+                if val < 0.1:
+
+                    scans[i] == 0.0
+                    continue
+
                 if (val < min_value and val != 0.0): 
                     scans[i] = min_value
 
@@ -230,6 +256,7 @@ class SensorsSubscriber(Node):
 
             degrees_blocked = 0
     
+            #print('------------------------------------------')
             for i, val in enumerate(scans):
 
                 if (i > 30 and i < 329): 
@@ -239,6 +266,7 @@ class SensorsSubscriber(Node):
 
                     degrees_blocked += 1
 
+                    #print(i, val)
                     if degrees_blocked >= 5:
 
                         self.front_is_blocked = True
@@ -290,18 +318,11 @@ class SensorsSubscriber(Node):
         
         while self.camera_thread_run:
             
-            ret, frame = cap.read()
+            ret, self.camera_frame_base64 = cap.read()
             if not ret:
                 print('WARNING: Camera failed to return an image.')
                 continue
 
-            success, encoded_image = cv2.imencode('.jpg',frame)
-            if not success:
-                print('WARNING: Failed to encode image.')
-                continue
-        
-            self.camera_frame_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
-        
         cap.release() # close Raspi camera
 
         print("Camera thread closed successfully.")
@@ -328,13 +349,17 @@ class SensorsSubscriber(Node):
             elif inst == b'@FRWD': self.twist_direction = 'forward'
             elif inst == b'@LEFT': self.twist_direction = 'left'
             elif inst == b'@RGHT': self.twist_direction = 'right'
+            elif inst == b'@NTWS': self.twist_direction = 'forward-left'
+            elif inst == b'@NTES': self.twist_direction = 'forward-right'
             elif inst == b'@STRT': 
+
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
                 self.starting_odometry_set = False
                 time.sleep(0.2)
                 self.transmit_current_frame = True # capture new latest frame
                 time.sleep(0.2)
+
             elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
 
             elif inst == b'@KILL': # terminate program
@@ -343,7 +368,7 @@ class SensorsSubscriber(Node):
 
             self.movement_instruction_client.send_data(b'@CONT') # give an ACK
 
-        print('Instruction receiver thread closed successfully.')
+        print('Instruction receiver thread closed successfully.')    
 
     def send_to_server(self):
 
@@ -475,7 +500,14 @@ class SensorsSubscriber(Node):
                 
                 # as of this iteration, will only send essential camera frames to make sure that file size stays low
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":self.camera_frame_base64})
+                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64)
+                if not success:
+                    print('WARNING: Failed to encode image.')
+                    continue
+        
+                data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
+
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
@@ -512,6 +544,105 @@ class SensorsSubscriber(Node):
 
                 self.movement_publisher.publish(data)
                 time.sleep(0.1)
+
+            elif self.twist_direction == 'forward-left':
+                
+                if args.softbarrier:
+
+                    if self.front_is_blocked:
+
+                        print("Cannot move forward! Front is blocked.")
+                        time.sleep(0.5)
+                        continue
+
+                # correctional mechanism to keep Turtlebot 3 moving straight
+                starting_odometry = self.odometry_msg_orientation
+                starting_position = self.odometry_msg_pos
+
+                total_distance_traveled = 0.0
+                self.twist_timestamp = time.time()
+            
+                # slow start is used to avoid jittery movements
+                slow_start = 1
+                # P_gain = 0.1  # Proportional gain for correction; adjust as needed
+                distance_lock = 0
+                while self.twist_direction == 'forward-left':
+
+                    if slow_start < 50:
+
+                        slow_start += 1
+
+                    data.linear.x = self.linear_x_speed * slow_start / 50
+                    data.angular.z = self.mixed_twist_angular_mag * slow_start / 50
+                    self.movement_publisher.publish(data)
+
+                    if args.softbarrier:
+
+                        if self.front_is_blocked:
+                            
+                            print("Cannot move forward! Front is blocked.")
+                            break
+
+                    if distance_lock == 20:
+
+                        distance_lock = 0
+                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
+
+                    distance_lock += 1
+                    time.sleep(0.01)
+
+                self.mixed_twist_angular_mag = args.angular_z_rads
+                self.stall(0.5)
+
+            elif self.twist_direction == 'forward-right':
+                
+                if args.softbarrier:
+
+                    if self.front_is_blocked:
+
+                        print("Cannot move forward! Front is blocked.")
+                        time.sleep(0.5)
+                        continue
+
+                # correctional mechanism to keep Turtlebot 3 moving straight
+                starting_odometry = self.odometry_msg_orientation
+                starting_position = self.odometry_msg_pos
+
+                total_distance_traveled = 0.0
+                self.twist_timestamp = time.time()
+            
+                # slow start is used to avoid jittery movements
+                slow_start = 1
+                # P_gain = 0.1  # Proportional gain for correction; adjust as needed
+
+                distance_lock = 0
+                while self.twist_direction == 'forward-right':
+
+                    if slow_start < 50:
+
+                        slow_start += 1
+
+                    data.linear.x = self.linear_x_speed * slow_start / 50
+                    data.angular.z = -self.mixed_twist_angular_mag * slow_start / 50
+                    self.movement_publisher.publish(data)
+
+                    if args.softbarrier:
+
+                        if self.front_is_blocked:
+                            
+                            print("Cannot move forward! Front is blocked.")
+                            break
+
+                    if distance_lock == 20:
+
+                        distance_lock = 0
+                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
+
+                    distance_lock += 1
+                    time.sleep(0.01)
+
+                self.mixed_twist_angular_mag = args.angular_z_rads
+                self.stall(0.5)
 
             elif self.twist_direction == 'forward':
 
