@@ -53,6 +53,7 @@ parser.add_argument("--server_ip", type=str, default="None", help="Sets jump ser
 parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
 parser.add_argument("--softbarrier", type=int, default=1, help="Stops the Turtlebot a certain distance from an object in front of it. Set to 0 to disable.")
 parser.add_argument("--softbarr_dist", type=float, default=0.3, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
+parser.add_argument("--deg_blocked", type=int, default=5, help="Sets the degrees sensitivity of the lidar-based stop 'softbarrier'.")
 
 args = parser.parse_args()
 print(args)
@@ -137,6 +138,9 @@ class SensorsSubscriber(Node):
         self.odometry_msg = None
         self.odometry_msg_orientation = None
         self.odometry_msg_pos = None
+
+        # total distance and total rotation while avoiding object
+        self.stop_counting_total = False
 
         # battery
         self.battery_state_msg = None
@@ -267,12 +271,12 @@ class SensorsSubscriber(Node):
                     degrees_blocked += 1
 
                     #print(i, val)
-                    if degrees_blocked >= 5:
+                    if degrees_blocked >= args.deg_blocked:
 
                         self.front_is_blocked = True
                         break # no need to iterate through other values
 
-            if degrees_blocked < 5:
+            if degrees_blocked < args.deg_blocked:
                 self.front_is_blocked = False
 
             time.sleep(0.09) # slightly faster than nyquist frequency of lidar, which runs at a period of t = 0.2 seconds
@@ -351,6 +355,7 @@ class SensorsSubscriber(Node):
             elif inst == b'@RGHT': self.twist_direction = 'right'
             elif inst == b'@NTWS': self.twist_direction = 'forward-left'
             elif inst == b'@NTES': self.twist_direction = 'forward-right'
+            elif inst == b'@OBST': self.stop_counting_total = True
             elif inst == b'@STRT': 
 
                 self.is_collecting_data = True

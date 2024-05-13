@@ -253,6 +253,9 @@ class turtlebot_controller:
 
                         self.keyboard_input = ']'
 
+                    elif keys[pygame.K_COMMA]:
+                        self.keyboard_input = ','
+
                     elif keys[pygame.K_F10]:
 
                         self.keyboard_input = 'F10'
@@ -555,6 +558,12 @@ class turtlebot_controller:
                     self.movement_data_sender.send_data(b'@KILL')
                     self.keyboard_impulse = False
                     print('Sent termination signal to Turtlebot3.')
+                    break
+
+                elif self.keyboard_input == ',' and not self.exempt_increment:
+                    self.movement_data_sender.send_data(b'@OBST')
+                    self.keyboard_impulse = False
+                    print('Starting Obstacle Avoidance..')
                     break
 
                 time.sleep(0.01667)

@@ -42,9 +42,13 @@ class prompt_generator:
   def generate_inst(self):
     inst_types = ["FWD", "LROT", "RROT", "LSIDE", "RSIDE", "BACK",
                   "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD",
-                  "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT",
-                  "DRAW SHAPE", "B&F", "S2S", "DRAW STAR", "vSIDEWAYS", 
-                  "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
+                  "X METERS AT ANGLE Y LEFT"]
+    
+    #inst_types = ["FWD", "LROT", "RROT", "LSIDE", "RSIDE", "BACK",
+    #              "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD",
+    #              "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT",
+    #              "DRAW SHAPE", "B&F", "S2S", "DRAW STAR", "vSIDEWAYS", 
+    #              "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
 
     #inst_types = ["DRAW SHAPE", "B&F", "S2S", "vSIDEWAYS", "DRAW STAR", "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
 
@@ -663,7 +667,8 @@ class prompt_maker:
 
     #flags = ["@STOP_I", "@STOP_W", "@GO_AROUND_I", "@GO_AROUND_W"]
 
-    flags = ["@STOP_I", "@GO_AROUND_I", "@ROTATE_AND_CONTINUE"]
+    #flags = ["@STOP_I", "@GO_AROUND_I", "@ROTATE_AND_CONTINUE"]
+    flags = ["@STOP_I"]
 
     fl = random.choice(flags)
 
@@ -739,7 +744,8 @@ class prompt_maker:
 
     #flags = json.loads(str(json_flags))
 
-    self.prompt += prompt_addition
+    self.prompt = self.prompt.capitalize()
+    self.prompt += f". {prompt_addition}"
 
     return json_flags
 
