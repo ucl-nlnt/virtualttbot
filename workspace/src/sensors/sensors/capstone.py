@@ -598,6 +598,7 @@ class SensorsSubscriber(Node):
 
                 self.mixed_twist_angular_mag = args.angular_z_rads
                 self.stall(0.5)
+                print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
 
             elif self.twist_direction == 'forward-right':
                 
@@ -646,8 +647,10 @@ class SensorsSubscriber(Node):
                     distance_lock += 1
                     time.sleep(0.01)
 
+                
                 self.mixed_twist_angular_mag = args.angular_z_rads
                 self.stall(0.5)
+                print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
 
             elif self.twist_direction == 'forward':
 
