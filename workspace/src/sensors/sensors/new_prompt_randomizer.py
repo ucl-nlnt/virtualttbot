@@ -658,10 +658,12 @@ class prompt_maker:
     self.bogus = False
     self.vague = False                        # ask for clarification
 
-  def flags():
+  def flags(self):
     # Flags are created here
 
-    flags = ["@STOP_I", "@STOP_W", "@GO_AROUND_I", "@GO_AROUND_W"]
+    #flags = ["@STOP_I", "@STOP_W", "@GO_AROUND_I", "@GO_AROUND_W"]
+
+    flags = ["@STOP_I", "@GO_AROUND_I", "@ROTATE_AND_CONTINUE"]
 
     fl = random.choice(flags)
 
@@ -670,6 +672,7 @@ class prompt_maker:
     wait = 0                        # amount of time to wait until obstacle is removed from path or until robot tries to move around the obstacle
     stop = False                    # stops at obstacle
     go_around = False               # try to move around the object, else stop
+    rotate_and_continue = False     # try to move around the object, else stop
 
     if fl == "@STOP_I":
       # stop immediately once obstacle is detected
@@ -714,7 +717,15 @@ class prompt_maker:
 
     elif fl == "@ROTATE_AND_CONTINUE":
       # rotate to face an open space and continue counting from then
+      possible_prompts = ["Rotate to face an open space if you encounter an obstacle and continue counting the distance set.", "Adjust your direction towards an unoccupied area upon encountering an obstacle, then resume measuring the specified distance.", "Align towards an available space if obstructed and proceed with the designated distance count.",
+                          "Turn to face an open area if blocked and keep track of the distance intended.", "Adjust orientation toward empty space when faced with an obstacle and maintain distance tally.", "Rotate to confront an unoccupied zone upon hindrance and persist in distance enumeration.", "Direct towards an open expanse if impeded and persist in distance reckoning.", "Face a vacant area if obstructed and continue measuring the distance established.", 
+                          "Shift to face an unoccupied space upon encountering an obstacle and resume distance counting.", "Adjust orientation to confront an open space when encountering an obstruction and continue distance monitoring.", "Turn to face an empty area if obstructed and maintain the set distance count.", "Align towards an available space when faced with an obstacle and continue tracking the specified distance.", 
+                          "Rotate to confront an unoccupied zone if hindered and persist in distance enumeration.", "Direct towards an open expanse upon obstruction and continue distance reckoning.", "Shift to face an unoccupied space if blocked and resume distance counting.", "Adjust orientation to confront an open space when obstructed and maintain distance monitoring.", "Turn to face an empty area upon encountering an obstacle and continue measuring the established distance."]
+    
+      prompt_addition = random.choice(possible_prompts)
       
+      rotate_and_continue = True
+
 
     #t_or_f = [True, False]
     #announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
@@ -723,6 +734,7 @@ class prompt_maker:
       "@WAIT": wait,
       "@STOP": stop,
       "@GO_AROUND": go_around,
+      "@ROT_AND_CONT": rotate_and_continue
       }
 
     #flags = json.loads(str(json_flags))
