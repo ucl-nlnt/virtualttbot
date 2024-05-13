@@ -690,11 +690,11 @@ class SensorsSubscriber(Node):
                     max_angular_z = 1.2
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
 
-                    if slow_start < 50:
+                    if slow_start < 5:
 
                         slow_start += 1
 
-                    data.linear.x = self.linear_x_speed * slow_start / 50
+                    data.linear.x = self.linear_x_speed * slow_start / 5
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
 
@@ -711,7 +711,7 @@ class SensorsSubscriber(Node):
                         print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
 
                     distance_lock += 1
-                    time.sleep(0.01)
+                    time.sleep(0.2)
 
                 self.stall(0.5)
 
@@ -729,25 +729,19 @@ class SensorsSubscriber(Node):
                 last_orientation = self.odometry_msg_orientation
 
                 while self.twist_direction == 'left':
-                    
-                    if slow_start != 10:
+                
+                    if slow_start != 5:
                         slow_start += 1
-        
-                    angular_z = slow_start/10 * self.angular_z_speed
+
+                    angular_z = -slow_start/10 * self.angular_z_speed
                     data.angular.z = angular_z
+                    
                     self.movement_publisher.publish(data)
-
-                    if iter_lock == args.iter_lock:
-                        iter_lock = 0
-                        print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-                        total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-
-                    if not iter_lock % args.iter_lock:
-
-                        last_orientation = self.odometry_msg_orientation
-                        
-                    iter_lock += 1
-                    time.sleep(0.01)
+                    
+                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                    last_orientation = self.odometry_msg_orientation
+                    print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
+                    time.sleep(0.20)
 
                 self.stall(0.5)
 
@@ -766,25 +760,18 @@ class SensorsSubscriber(Node):
 
                 while self.twist_direction == 'right':
 
-                    if slow_start != 10:
+                    if slow_start != 5:
                         slow_start += 1
 
                     angular_z = -slow_start/10 * self.angular_z_speed
                     data.angular.z = angular_z
                     
                     self.movement_publisher.publish(data)
-                    if iter_lock == args.iter_lock:
-                        
-                        iter_lock = 0
-                        print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-                        total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-
-                    if not iter_lock % args.iter_lock:
-
-                        last_orientation = self.odometry_msg_orientation
-                        
-                    iter_lock += 1
-                    time.sleep(0.01)
+                    
+                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                    last_orientation = self.odometry_msg_orientation
+                    print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
+                    time.sleep(0.20)
 
                 self.stall(0.5)
 
