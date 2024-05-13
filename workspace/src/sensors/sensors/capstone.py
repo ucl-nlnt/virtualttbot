@@ -54,7 +54,7 @@ parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebo
 parser.add_argument("--softbarrier", type=int, default=1, help="Stops the Turtlebot a certain distance from an object in front of it. Set to 0 to disable.")
 parser.add_argument("--softbarr_dist", type=float, default=0.3, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
 parser.add_argument("--deg_blocked", type=int, default=5, help="Sets the degrees sensitivity of the lidar-based stop 'softbarrier'.")
-parser.add_argument("--iter_lock", type=int, default=3, help="Sets the degrees sensitivity of the lidar-based stop 'softbarrier'.")
+parser.add_argument("--iter_lock", type=int, default=5, help="Sets the degrees sensitivity of the lidar-based stop 'softbarrier'.")
 
 args = parser.parse_args()
 print(args)
