@@ -712,6 +712,10 @@ class prompt_maker:
       if wait == 1:
         prompt_addition = prompt_addition.replace("1 seconds", "1 second")
 
+    elif fl == "@ROTATE_AND_CONTINUE":
+      # rotate to face an open space and continue counting from then
+      
+
     #t_or_f = [True, False]
     #announce = random.choice(t_or_f)            # announce that an obstacle was detected in status
 

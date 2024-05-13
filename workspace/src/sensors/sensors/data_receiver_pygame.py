@@ -462,7 +462,8 @@ class turtlebot_controller:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
             elif args.l12:
-                prompt = prompt_maker.maker(add_flags=True)
+                mk = prompt_maker()
+                prompt = mk.maker(add_flags=True)
                 prompt_level = 3
                 print(f'Prompt: {prompt}')
                 
