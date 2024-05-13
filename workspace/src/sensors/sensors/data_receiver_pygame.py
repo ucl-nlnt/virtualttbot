@@ -19,6 +19,7 @@ from KNetworking import DataBridgeServer_TCP
 from prompt_randomizer import prompt_randomizer
 from csv_randomizer import random_csv
 from l3_csv_randomizer import l3_prompt_randomizer
+from new_prompt_randomizer import prompt_maker
 
 if not os.path.exists("datalogs"):
     os.mkdir("datalogs")
