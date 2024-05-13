@@ -463,9 +463,12 @@ class turtlebot_controller:
                     print("Random Prompt:",prompt)
             elif args.l12:
                 mk = prompt_maker()
-                prompt = mk.maker(add_flags=True)
+                inst = mk.maker(add_flags=True)
+                prompt = inst[0]
+                cumulative = inst[1]
                 prompt_level = 3
                 print(f'Prompt: {prompt}')
+                print(f'Ground Truth: {cumulative}')
                 
 
             elif not args.devmode:
