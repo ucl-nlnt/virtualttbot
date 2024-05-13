@@ -736,14 +736,14 @@ class SensorsSubscriber(Node):
                     data.angular.z = angular_z
                     self.movement_publisher.publish(data)
 
-                    if iter_lock == 20:
+                    if iter_lock == args.iter_lock:
                         
                         iter_lock = 0
                         print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-                    
-                    if not iter_lock % 5:
-
                         total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+
+                    if not iter_lock % args.iter_lock:
+
                         last_orientation = self.odometry_msg_orientation
                         
                     iter_lock += 1
@@ -773,18 +773,18 @@ class SensorsSubscriber(Node):
                     data.angular.z = angular_z
                     
                     self.movement_publisher.publish(data)
-                    if iter_lock == 20:
+                    if iter_lock == args.iter_lock:
                         
                         iter_lock = 0
-                        print(f'[rght] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-                    
-                    if not iter_lock % 5:
-
+                        print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
                         total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+
+                    if not iter_lock % args.iter_lock:
+
                         last_orientation = self.odometry_msg_orientation
                         
                     iter_lock += 1
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 self.stall(0.5)
 
