@@ -654,11 +654,8 @@ class SensorsSubscriber(Node):
                 print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
 
             elif self.twist_direction == 'forward':
-
                 if args.softbarrier:
-
                     if self.front_is_blocked:
-
                         print("Cannot move forward! Front is blocked.")
                         time.sleep(0.5)
                         continue
@@ -666,14 +663,12 @@ class SensorsSubscriber(Node):
                 # correctional mechanism to keep Turtlebot 3 moving straight
                 starting_odometry = self.odometry_msg_orientation
                 starting_position = self.odometry_msg_pos
-
                 total_distance_traveled = 0.0
                 self.twist_timestamp = time.time()
             
                 # slow start is used to avoid jittery movements
                 slow_start = 1
                 P_gain = 0.1  # Proportional gain for correction; adjust as needed
-
                 distance_lock = 0
 
                 while self.twist_direction == 'forward':
@@ -683,38 +678,29 @@ class SensorsSubscriber(Node):
                     
                     if yaw_diff == 0.0:
                         print('WARN: yaw diff is zero.')
-
                     correctionary_angular_z = -yaw_diff / P_gain
-
                     # Clamp the correction to maximum limits to avoid too sharp turns
                     max_angular_z = 1.2
+
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
-
-                    if slow_start < 5:
-
+                    if slow_start < 50:
                         slow_start += 1
-
-                    data.linear.x = self.linear_x_speed * slow_start / 5
+                    data.linear.x = self.linear_x_speed * slow_start / 50
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
-
                     if args.softbarrier:
-
-                        if self.front_is_blocked:
-                            
+                        if self.front_is_blocked:  
                             print("Cannot move forward! Front is blocked.")
                             break
 
                     if distance_lock == args.iter_lock:
-
                         distance_lock = 0
                         print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
-
+                    
                     distance_lock += 1
-                    time.sleep(0.2)
-
+                    time.sleep(0.01)
+                
                 self.stall(0.5)
-
                 print('[frwd] Final travel distance:', round(get_point_distance(self.odometry_msg_pos, starting_position),3))
                 print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
 
