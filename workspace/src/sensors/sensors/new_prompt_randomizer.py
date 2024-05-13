@@ -40,14 +40,17 @@ class prompt_generator:
     self.rephrase_drawstar = ["draw a star", "sketch a star", "make a star", "create a star", "outline a star", "depict a star", "design a star", "render a star", "draft a star", "portray a star", "illustrate a star", "trace a star", "craft a star", "form a star", "produce a star"] # gpt-rephrased
 
   def generate_inst(self):
-    #inst_types = ["FWD", "LROT", "RROT", "LSIDE", "RSIDE", "BACK",
-    #              "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD",
-    #              "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT",
-    #              "DRAW SHAPE", "WAIT", "MAP"]
+    inst_types = ["FWD", "LROT", "RROT", "LSIDE", "RSIDE", "BACK",
+                  "DIAGONAL LEFT FORWARD", "DIAGONAL RIGHT FORWARD",
+                  "X METERS AT ANGLE Y LEFT", "X METERS AT ANGLE Y RIGHT",
+                  "DRAW SHAPE", "B&F", "S2S", "DRAW STAR", "vSIDEWAYS", 
+                  "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
 
-    inst_types = ["DRAW SHAPE", "B&F", "S2S", "vSIDEWAYS", "DRAW STAR", "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
+    #inst_types = ["DRAW SHAPE", "B&F", "S2S", "vSIDEWAYS", "DRAW STAR", "vsFORWARD", "vaFORWARD", "vbFORWARD", "vsROTATE"]
 
-    randtype = numpy.random.choice(inst_types, p=[0.10, 0.10, 0.10, 0.10, 0.15, 0.15, 0.10, 0.10, 0.10])
+    randtype = numpy.random.choice(inst_types)
+
+    #randtype = numpy.random.choice(inst_types, p=[0.10, 0.10, 0.10, 0.10, 0.15, 0.15, 0.10, 0.10, 0.10])
 
     if randtype == "FWD":
       return self.move_forward()

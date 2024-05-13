@@ -395,6 +395,11 @@ class turtlebot_controller:
                 elif args.enable_autorandomizer_from_csv == 4:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
+            elif args.new_prompt_randomizer:
+                prompt = prompt_maker.maker(add_flags=True)
+                prompt_level = 3
+                print(f'Prompt: {prompt}')
+                
             elif not args.devmode:
 
                 prompt = input("Enter prompt << ")
