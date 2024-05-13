@@ -738,7 +738,6 @@ class SensorsSubscriber(Node):
                     self.movement_publisher.publish(data)
 
                     if iter_lock == args.iter_lock:
-                        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
                         iter_lock = 0
                         print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
                         total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
