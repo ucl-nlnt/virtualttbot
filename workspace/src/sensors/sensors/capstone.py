@@ -52,7 +52,9 @@ parser.add_argument("--sampling_delay_t", type=float, default=0.1, help="Sets sa
 parser.add_argument("--server_ip", type=str, default="None", help="Sets jump server IP address.")
 parser.add_argument("--server_port", type=int, default=50000, help="Set Turtlebot server port.")
 parser.add_argument("--softbarrier", type=int, default=1, help="Stops the Turtlebot a certain distance from an object in front of it. Set to 0 to disable.")
-parser.add_argument("--softbarr_dist", type=float, default=0.25, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
+parser.add_argument("--softbarr_dist", type=float, default=0.3, help="Sets the distance at which the Turtlebot will stop with the lidar-based stop 'softbarrier.' [WARNING: Minimum value should be 0.2 meters.]")
+parser.add_argument("--deg_blocked", type=int, default=5, help="Sets the degrees sensitivity of the lidar-based stop 'softbarrier'.")
+parser.add_argument("--iter_lock", type=int, default=5, help="Sets the degrees sensitivity of the lidar-based stop 'softbarrier'.")
 
 args = parser.parse_args()
 print(args)
@@ -107,6 +109,8 @@ class SensorsSubscriber(Node):
         self.sampling_delay = args.sampling_delay_t
         self.server_ip_address = None
 
+        self.mixed_twist_angular_mag = args.angular_z_rads
+
         # DEBUG LOCKS
         self.debug_send_data = False
         self.debug_odometer = False
@@ -136,6 +140,9 @@ class SensorsSubscriber(Node):
         self.odometry_msg_orientation = None
         self.odometry_msg_pos = None
 
+        # total distance and total rotation while avoiding object
+        self.stop_counting_total = False
+
         # battery
         self.battery_state_msg = None
 
@@ -153,6 +160,7 @@ class SensorsSubscriber(Node):
                 time.sleep(0.5) # wait for the server to open the 2nd port.
                 self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                                 destination_port=args.server_port + 1)
+
                 lock = False
             except Exception as e:
                 print(e)
@@ -199,8 +207,26 @@ class SensorsSubscriber(Node):
         self.movement_subscriber_thread_run = True
         self.movement_subscriber_thread = threading.Thread(target=self.receive_movement_from_server)
         self.movement_subscriber_thread.start()
-        
         print('INIT COMPLETE')
+
+    def ang_vel_changer(self):
+        
+            while self.rad_changer_thread_run:
+
+                inst = self.rad_changer.receive_data().decode()
+
+                if self.mixed_twist_angular_mag + float(inst.decode()) < 0:
+                    self.mixed_twist_angular_mag = 0
+                    print("Mixed rad speed:",self.mixed_twist_angular_mag)
+                    continue
+
+                if self.mixed_twist_angular_mag + float(inst.decode()) > 2.8:
+                    self.mixed_twist_angular_mag = 2.8
+                    print("Mixed rad speed:",self.mixed_twist_angular_mag)
+                    continue
+
+                self.mixed_twist_angular_mag += float(inst.decode())
+                print("Mixed rad speed:",self.mixed_twist_angular_mag)
 
     def soft_barrier(self):
 
@@ -222,6 +248,11 @@ class SensorsSubscriber(Node):
                 if (i > 30 and i < 329): 
                     continue 
 
+                if val < 0.1:
+
+                    scans[i] == 0.0
+                    continue
+
                 if (val < min_value and val != 0.0): 
                     scans[i] = min_value
 
@@ -230,6 +261,7 @@ class SensorsSubscriber(Node):
 
             degrees_blocked = 0
     
+            #print('------------------------------------------')
             for i, val in enumerate(scans):
 
                 if (i > 30 and i < 329): 
@@ -239,12 +271,13 @@ class SensorsSubscriber(Node):
 
                     degrees_blocked += 1
 
-                    if degrees_blocked >= 5:
+                    #print(i, val)
+                    if degrees_blocked >= args.deg_blocked:
 
                         self.front_is_blocked = True
                         break # no need to iterate through other values
 
-            if degrees_blocked < 5:
+            if degrees_blocked < args.deg_blocked:
                 self.front_is_blocked = False
 
             time.sleep(0.09) # slightly faster than nyquist frequency of lidar, which runs at a period of t = 0.2 seconds
@@ -290,18 +323,11 @@ class SensorsSubscriber(Node):
         
         while self.camera_thread_run:
             
-            ret, frame = cap.read()
+            ret, self.camera_frame_base64 = cap.read()
             if not ret:
                 print('WARNING: Camera failed to return an image.')
                 continue
 
-            success, encoded_image = cv2.imencode('.jpg',frame)
-            if not success:
-                print('WARNING: Failed to encode image.')
-                continue
-        
-            self.camera_frame_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
-        
         cap.release() # close Raspi camera
 
         print("Camera thread closed successfully.")
@@ -328,13 +354,18 @@ class SensorsSubscriber(Node):
             elif inst == b'@FRWD': self.twist_direction = 'forward'
             elif inst == b'@LEFT': self.twist_direction = 'left'
             elif inst == b'@RGHT': self.twist_direction = 'right'
+            elif inst == b'@NTWS': self.twist_direction = 'forward-left'
+            elif inst == b'@NTES': self.twist_direction = 'forward-right'
+            elif inst == b'@OBST': self.stop_counting_total = True
             elif inst == b'@STRT': 
+
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
                 self.starting_odometry_set = False
                 time.sleep(0.2)
                 self.transmit_current_frame = True # capture new latest frame
                 time.sleep(0.2)
+
             elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
 
             elif inst == b'@KILL': # terminate program
@@ -343,7 +374,7 @@ class SensorsSubscriber(Node):
 
             self.movement_instruction_client.send_data(b'@CONT') # give an ACK
 
-        print('Instruction receiver thread closed successfully.')
+        print('Instruction receiver thread closed successfully.')    
 
     def send_to_server(self):
 
@@ -475,7 +506,14 @@ class SensorsSubscriber(Node):
                 
                 # as of this iteration, will only send essential camera frames to make sure that file size stays low
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":self.camera_frame_base64})
+                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64)
+                if not success:
+                    print('WARNING: Failed to encode image.')
+                    continue
+        
+                data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
+
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
@@ -513,8 +551,8 @@ class SensorsSubscriber(Node):
                 self.movement_publisher.publish(data)
                 time.sleep(0.1)
 
-            elif self.twist_direction == 'forward':
-
+            elif self.twist_direction == 'forward-left':
+                
                 if args.softbarrier:
 
                     if self.front_is_blocked:
@@ -532,30 +570,16 @@ class SensorsSubscriber(Node):
             
                 # slow start is used to avoid jittery movements
                 slow_start = 1
-                P_gain = 0.1  # Proportional gain for correction; adjust as needed
-
+                # P_gain = 0.1  # Proportional gain for correction; adjust as needed
                 distance_lock = 0
-
-                while self.twist_direction == 'forward':
-                
-                    # pass
-                    yaw_diff = yaw_difference(quaternion2=self.odometry_msg_orientation, quaternion1=starting_odometry)
-                    
-                    if yaw_diff == 0.0:
-                        print('WARN: yaw diff is zero.')
-
-                    correctionary_angular_z = -yaw_diff / P_gain
-
-                    # Clamp the correction to maximum limits to avoid too sharp turns
-                    max_angular_z = 1.2
-                    correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
+                while self.twist_direction == 'forward-left':
 
                     if slow_start < 50:
 
                         slow_start += 1
 
                     data.linear.x = self.linear_x_speed * slow_start / 50
-                    data.angular.z = correctionary_angular_z
+                    data.angular.z = self.mixed_twist_angular_mag * slow_start / 50
                     self.movement_publisher.publish(data)
 
                     if args.softbarrier:
@@ -573,8 +597,110 @@ class SensorsSubscriber(Node):
                     distance_lock += 1
                     time.sleep(0.01)
 
+                self.mixed_twist_angular_mag = args.angular_z_rads
                 self.stall(0.5)
+                print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
 
+            elif self.twist_direction == 'forward-right':
+                
+                if args.softbarrier:
+
+                    if self.front_is_blocked:
+
+                        print("Cannot move forward! Front is blocked.")
+                        time.sleep(0.5)
+                        continue
+
+                # correctional mechanism to keep Turtlebot 3 moving straight
+                starting_odometry = self.odometry_msg_orientation
+                starting_position = self.odometry_msg_pos
+
+                total_distance_traveled = 0.0
+                self.twist_timestamp = time.time()
+            
+                # slow start is used to avoid jittery movements
+                slow_start = 1
+                # P_gain = 0.1  # Proportional gain for correction; adjust as needed
+
+                distance_lock = 0
+                while self.twist_direction == 'forward-right':
+
+                    if slow_start < 50:
+
+                        slow_start += 1
+
+                    data.linear.x = self.linear_x_speed * slow_start / 50
+                    data.angular.z = -self.mixed_twist_angular_mag * slow_start / 50
+                    self.movement_publisher.publish(data)
+
+                    if args.softbarrier:
+
+                        if self.front_is_blocked:
+                            
+                            print("Cannot move forward! Front is blocked.")
+                            break
+
+                    if distance_lock == 20:
+
+                        distance_lock = 0
+                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
+
+                    distance_lock += 1
+                    time.sleep(0.01)
+
+                
+                self.mixed_twist_angular_mag = args.angular_z_rads
+                self.stall(0.5)
+                print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
+
+            elif self.twist_direction == 'forward':
+                if args.softbarrier:
+                    if self.front_is_blocked:
+                        print("Cannot move forward! Front is blocked.")
+                        time.sleep(0.5)
+                        continue
+
+                # correctional mechanism to keep Turtlebot 3 moving straight
+                starting_odometry = self.odometry_msg_orientation
+                starting_position = self.odometry_msg_pos
+                total_distance_traveled = 0.0
+                self.twist_timestamp = time.time()
+            
+                # slow start is used to avoid jittery movements
+                slow_start = 1
+                P_gain = 0.1  # Proportional gain for correction; adjust as needed
+                distance_lock = 0
+
+                while self.twist_direction == 'forward':
+                
+                    # pass
+                    yaw_diff = yaw_difference(quaternion2=self.odometry_msg_orientation, quaternion1=starting_odometry)
+                    
+                    if yaw_diff == 0.0:
+                        print('WARN: yaw diff is zero.')
+                    correctionary_angular_z = -yaw_diff / P_gain
+                    # Clamp the correction to maximum limits to avoid too sharp turns
+                    max_angular_z = 1.2
+
+                    correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
+                    if slow_start < 50:
+                        slow_start += 1
+                    data.linear.x = self.linear_x_speed * slow_start / 50
+                    data.angular.z = correctionary_angular_z
+                    self.movement_publisher.publish(data)
+                    if args.softbarrier:
+                        if self.front_is_blocked:  
+                            print("Cannot move forward! Front is blocked.")
+                            break
+
+                    if distance_lock == args.iter_lock:
+                        distance_lock = 0
+                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
+                    
+                    distance_lock += 1
+                    time.sleep(0.01)
+                
+                self.stall(0.5)
                 print('[frwd] Final travel distance:', round(get_point_distance(self.odometry_msg_pos, starting_position),3))
                 print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
 
@@ -589,26 +715,19 @@ class SensorsSubscriber(Node):
                 last_orientation = self.odometry_msg_orientation
 
                 while self.twist_direction == 'left':
-                    
-                    if slow_start != 10:
+                
+                    if slow_start != 5:
                         slow_start += 1
-        
-                    angular_z = slow_start/10 * self.angular_z_speed
+
+                    angular_z = -slow_start/10 * self.angular_z_speed
                     data.angular.z = angular_z
-                    self.movement_publisher.publish(data)
-
-                    if iter_lock == 20:
-                        
-                        iter_lock = 0
-                        print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
                     
-                    if not iter_lock % 5:
-
-                        total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                        last_orientation = self.odometry_msg_orientation
-                        
-                    iter_lock += 1
-                    time.sleep(0.01)
+                    self.movement_publisher.publish(data)
+                    
+                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                    last_orientation = self.odometry_msg_orientation
+                    print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
+                    time.sleep(0.20)
 
                 self.stall(0.5)
 
@@ -627,25 +746,18 @@ class SensorsSubscriber(Node):
 
                 while self.twist_direction == 'right':
 
-                    if slow_start != 10:
+                    if slow_start != 5:
                         slow_start += 1
 
                     angular_z = -slow_start/10 * self.angular_z_speed
                     data.angular.z = angular_z
                     
                     self.movement_publisher.publish(data)
-                    if iter_lock == 20:
-                        
-                        iter_lock = 0
-                        print(f'[rght] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
                     
-                    if not iter_lock % 5:
-
-                        total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                        last_orientation = self.odometry_msg_orientation
-                        
-                    iter_lock += 1
-                    time.sleep(0.01)
+                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                    last_orientation = self.odometry_msg_orientation
+                    print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
+                    time.sleep(0.20)
 
                 self.stall(0.5)
 
