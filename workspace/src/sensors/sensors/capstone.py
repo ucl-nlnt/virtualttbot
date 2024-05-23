@@ -14,6 +14,7 @@ from geometry_msgs.msg import Twist
 import json
 import argparse
 from copy import deepcopy
+import ast
 
 from KNetworking import DataBridgeServer_TCP, DataBridgeClient_TCP
 
@@ -161,6 +162,9 @@ class SensorsSubscriber(Node):
                 self.movement_instruction_client = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
                                                                 destination_port=args.server_port + 1)
 
+                self.movement_mag_modifier = DataBridgeClient_TCP(destination_ip_address=self.destination_ip,
+                                                                destination_port=args.server_port + 1)
+
                 lock = False
             except Exception as e:
                 print(e)
@@ -176,8 +180,11 @@ class SensorsSubscriber(Node):
 
         # Movement message server
         self.twist_msg_server_run = True
+        self.reset_movement_stats = False
+        self.instruction_impulse = True
+
+        self.instruction_buffer = []
         self.twist_msg_server = threading.Thread(target=self.movement_server)
-        self.twist_direction = None
         self.twist_msg_server.start()
         
         # lidar-based soft barrier
@@ -203,35 +210,112 @@ class SensorsSubscriber(Node):
         self.transfer_thread = threading.Thread(target=self.send_to_server)
         self.transfer_thread.start()
         
+        self.direction = None
+
         # Listen for instructions from PC/Laptop
         self.movement_subscriber_thread_run = True
         self.movement_subscriber_thread = threading.Thread(target=self.receive_movement_from_server)
         self.movement_subscriber_thread.start()
+
+        self.rad_changer_thread_run = True
+        self.rad_changer_thread = threading.Thread(target=self.ang_vel_changer)
+        self.rad_changer_thread.start()
+
         print('INIT COMPLETE')
 
     def ang_vel_changer(self):
         
             while self.rad_changer_thread_run:
 
-                inst = self.rad_changer.receive_data().decode()
+                if 'w' in self.instruction_buffer and not 'a' in self.instruction_buffer and not 'd' in self.instruction_buffer:
+                    self.direction = 'forwards'
 
-                if self.mixed_twist_angular_mag + float(inst.decode()) < 0:
-                    self.mixed_twist_angular_mag = 0
-                    print("Mixed rad speed:",self.mixed_twist_angular_mag)
-                    continue
+                elif 'a' in self.instruction_buffer and not 'w' in self.instruction_buffer and not 'd' in self.instruction_buffer:
+                    self.direction = 'left'
+                
+                elif 'd' in self.instruction_buffer and not 'w' in self.instruction_buffer and not 'a' in self.instruction_buffer:
+                    self.direction = 'right'
 
-                if self.mixed_twist_angular_mag + float(inst.decode()) > 2.8:
-                    self.mixed_twist_angular_mag = 2.8
-                    print("Mixed rad speed:",self.mixed_twist_angular_mag)
-                    continue
+                elif 'w' in self.instruction_buffer and 'a' in self.instruction_buffer and not 'd' in self.instruction_buffer:
+                    self.direction = 'left-forwards'
+                
+                elif 'w' in self.instruction_buffer and 'd' in self.instruction_buffer and not 'a' in self.instruction_buffer:
+                    self.direction = 'right-forwards'
+ 
+                else:
+                    self.direction = None
 
-                self.mixed_twist_angular_mag += float(inst.decode())
-                print("Mixed rad speed:",self.mixed_twist_angular_mag)
+                if 'kp8' in self.instruction_buffer:
+                    
+                    if self.linear_x_speed + 0.04 <= 0.2:
+                        self.linear_x_speed += 0.04
+
+                    else:
+                        self.linear_x_speed = 0.2
+                        
+                elif 'kp2' in self.instruction_buffer:
+
+                    if self.linear_x_speed - 0.04 >= 0.0:
+                        self.linear_x_speed -= 0.04
+
+                    else:
+                        self.linear_x_speed = 0.0
+
+                if 'kp4' in self.instruction_buffer:
+
+                    # turn right
+                    if 'd' in self.instruction_buffer and not 'a' in self.instruction_buffer:
+                        
+                        if self.angular_z_speed - 0.5 >= 0.0:
+                            self.angular_z_speed -= 0.5
+
+                        else:
+                            self.angular_z_speed = 0.0
+
+                    # turn left
+                    elif 'a' in self.instruction_buffer and not 'd' in self.instruction_buffer:
+
+                        if self.angular_z_speed + 0.5 <= 2.5:
+                            self.angular_z_speed += 0.5
+                        
+                        else:
+                            self.angular_z_speed = 2.5
+
+                elif 'kp6' in self.instruction_buffer:
+                    
+                    # turn right
+                    if 'd' in self.instruction_buffer and not 'a' in self.instruction_buffer:
+
+                        if self.angular_z_speed + 0.5 <= 2.5:
+                            self.angular_z_speed += 0.5
+
+                        else:
+                            self.angular_z_speed = 2.5
+                    
+                    # turn left
+                    elif 'a' in self.instruction_buffer and not 'd' in self.instruction_buffer:
+
+                        if self.angular_z_speed - 0.5 >= 0.0:
+                            self.angular_z_speed -= 0.5
+                        
+                        else:
+                            self.angular_z_speed = 0.0
+
+                if 'kp5' in self.instruction_buffer:
+                    
+                    self.angular_z_speed = args.angular_z_rads
+                    self.linear_x_speed = args.linear_x_ms
+
+                if 'kp0' in self.instruction_buffer:
+
+                    self.angular_z_speed = 0.0
+
+
+                time.sleep(0.2)
 
     def soft_barrier(self):
 
         while self.laserscan_msg == None: time.sleep(0.1) # wait for lidar scanner to wake up
-
 
         max_value = self.laserscan_msg.range_max
         min_value = self.laserscan_msg.range_min
@@ -337,42 +421,22 @@ class SensorsSubscriber(Node):
 
         while self.movement_subscriber_thread_run:
 
-            print('waiting for inst')
+            #print('waiting for inst')
 
-            inst = self.movement_instruction_client.receive_data()
+            inst = self.movement_instruction_client.receive_data().decode()
 
-            print(f'inst: {inst}')
+            #print(f'inst: {inst}')
+            self.instruction_buffer = ast.literal_eval(inst)
 
-            if isinstance(inst, str): # see KNetworking.py for error codes.
-                # TODO: implement error-handling
-
-                print("An error has occured in the movement instruction listener client. Closing the thread. Please restart the program.")
-                self.killswitch = True
-                break
-
-            elif inst == b'@0000': self.twist_direction = None
-            elif inst == b'@FRWD': self.twist_direction = 'forward'
-            elif inst == b'@LEFT': self.twist_direction = 'left'
-            elif inst == b'@RGHT': self.twist_direction = 'right'
-            elif inst == b'@NTWS': self.twist_direction = 'forward-left'
-            elif inst == b'@NTES': self.twist_direction = 'forward-right'
-            elif inst == b'@OBST': self.stop_counting_total = True
-            elif inst == b'@STRT': 
-
+            if self.instruction_buffer == ['start']:
+                self.transmit_current_frame = True
+                self.reset_movement_stats = True
                 self.is_collecting_data = True
-                print("is_collecting_data = True")
-                self.starting_odometry_set = False
                 time.sleep(0.2)
-                self.transmit_current_frame = True # capture new latest frame
-                time.sleep(0.2)
+                self.movement_instruction_client.send_data('OK')
 
-            elif inst == b'@STOP': self.is_collecting_data = False; print("is_collecting_data = False"); self.starting_odometry_set = False; self.degrees_rotated = 0; self.distance_traveled = 0; time.sleep(0.2)
-
-            elif inst == b'@KILL': # terminate program
-                self.killswitch = True
-                break
-
-            self.movement_instruction_client.send_data(b'@CONT') # give an ACK
+            if ']' in self.instruction_buffer:
+                self.is_collecting_data = False
 
         print('Instruction receiver thread closed successfully.')    
 
@@ -502,6 +566,12 @@ class SensorsSubscriber(Node):
                     "current":self.battery_state_msg.current,
                 }
         
+            
+            instructions = {
+                'instructions' : self.instruction_buffer,
+                'time' : time.time()
+            }
+
             if self.transmit_current_frame:
                 
                 # as of this iteration, will only send essential camera frames to make sure that file size stays low
@@ -513,15 +583,15 @@ class SensorsSubscriber(Node):
         
                 data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data, 'inst' : instructions})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
             else:
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None, 'ins' : instructions})
 
-            time.sleep(self.sampling_delay)
+            time.sleep(self.sampling_delay / 2)
     
         print('Super BSON compilation thread closed successfully.')
 
@@ -532,263 +602,222 @@ class SensorsSubscriber(Node):
         
         # Slow starts stop the wheels from slipping, increasing precision of movement
 
-        last_twist_direction = None
+        while self.odometry_msg == None:
+            time.sleep(0.5)
+            print("Waiting for odometry...")
+
         data = Twist()
+        last_direction = None
+        P_gain = 0.1
+        starting_pos = self.odometry_msg_pos
+        starting_orientation = self.odometry_msg_orientation
+        total_distance_cartesian = 0.0
+        total_distance_angular = 0.0
+        slow_start = 0
+        sstart_max = 10
+        direction_is_called = False
+        called = False
+
         while self.twist_msg_server_run: # keep thread on forever
 
-            if self.twist_direction == None:
-                time.sleep(0.05)
-                continue
+            # case: no movement
+            while self.direction == None:
 
-            # starting odometry is here to help compute the "Reactionary angular z" to help the turtlebot keep straight.
-            elif self.twist_direction == 'stop':
-                
-                self.twist_timestamp = time.time()
+                if last_direction != None:
+                    last_direction = None
+                    self.twist_timestamp = time.time()
+                    self.reset_movement_stats = True
 
                 data.linear.x = 0.0
                 data.angular.z = 0.0
-
                 self.movement_publisher.publish(data)
-                time.sleep(0.1)
-
-            elif self.twist_direction == 'forward-left':
+        
+            # case: forwards
+            if not direction_is_called:
                 
-                if args.softbarrier:
+                while self.direction == 'forwards':
+                    if last_direction != 'forwards':
+        
+                        direction_is_called = True
+                        self.twist_timestamp = time.time()
+                        self.reset_movement_stats = True
+                        last_direction = 'forwards'
+                        
+                    yaw_diff = yaw_difference(quaternion2=self.odometry_msg_orientation, quaternion1=starting_orientation)
 
-                    if self.front_is_blocked:
-
-                        print("Cannot move forward! Front is blocked.")
-                        time.sleep(0.5)
-                        continue
-
-                # correctional mechanism to keep Turtlebot 3 moving straight
-                starting_odometry = self.odometry_msg_orientation
-                starting_position = self.odometry_msg_pos
-
-                total_distance_traveled = 0.0
-                self.twist_timestamp = time.time()
-            
-                # slow start is used to avoid jittery movements
-                slow_start = 1
-                # P_gain = 0.1  # Proportional gain for correction; adjust as needed
-                distance_lock = 0
-                while self.twist_direction == 'forward-left':
-
-                    if slow_start < 50:
-
-                        slow_start += 1
-
-                    data.linear.x = self.linear_x_speed * slow_start / 50
-                    data.angular.z = self.mixed_twist_angular_mag * slow_start / 50
-                    self.movement_publisher.publish(data)
-
-                    if args.softbarrier:
-
-                        if self.front_is_blocked:
-                            
-                            print("Cannot move forward! Front is blocked.")
-                            break
-
-                    if distance_lock == 20:
-
-                        distance_lock = 0
-                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
-
-                    distance_lock += 1
-                    time.sleep(0.01)
-
-                self.mixed_twist_angular_mag = args.angular_z_rads
-                self.stall(0.5)
-                print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
-
-            elif self.twist_direction == 'forward-right':
-                
-                if args.softbarrier:
-
-                    if self.front_is_blocked:
-
-                        print("Cannot move forward! Front is blocked.")
-                        time.sleep(0.5)
-                        continue
-
-                # correctional mechanism to keep Turtlebot 3 moving straight
-                starting_odometry = self.odometry_msg_orientation
-                starting_position = self.odometry_msg_pos
-
-                total_distance_traveled = 0.0
-                self.twist_timestamp = time.time()
-            
-                # slow start is used to avoid jittery movements
-                slow_start = 1
-                # P_gain = 0.1  # Proportional gain for correction; adjust as needed
-
-                distance_lock = 0
-                while self.twist_direction == 'forward-right':
-
-                    if slow_start < 50:
-
-                        slow_start += 1
-
-                    data.linear.x = self.linear_x_speed * slow_start / 50
-                    data.angular.z = -self.mixed_twist_angular_mag * slow_start / 50
-                    self.movement_publisher.publish(data)
-
-                    if args.softbarrier:
-
-                        if self.front_is_blocked:
-                            
-                            print("Cannot move forward! Front is blocked.")
-                            break
-
-                    if distance_lock == 20:
-
-                        distance_lock = 0
-                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
-
-                    distance_lock += 1
-                    time.sleep(0.01)
-
-                
-                self.mixed_twist_angular_mag = args.angular_z_rads
-                self.stall(0.5)
-                print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
-
-            elif self.twist_direction == 'forward':
-                if args.softbarrier:
-                    if self.front_is_blocked:
-                        print("Cannot move forward! Front is blocked.")
-                        time.sleep(0.5)
-                        continue
-
-                # correctional mechanism to keep Turtlebot 3 moving straight
-                starting_odometry = self.odometry_msg_orientation
-                starting_position = self.odometry_msg_pos
-                total_distance_traveled = 0.0
-                self.twist_timestamp = time.time()
-            
-                # slow start is used to avoid jittery movements
-                slow_start = 1
-                P_gain = 0.1  # Proportional gain for correction; adjust as needed
-                distance_lock = 0
-
-                while self.twist_direction == 'forward':
-                
-                    # pass
-                    yaw_diff = yaw_difference(quaternion2=self.odometry_msg_orientation, quaternion1=starting_odometry)
-                    
                     if yaw_diff == 0.0:
-                        print('WARN: yaw diff is zero.')
-                    correctionary_angular_z = -yaw_diff / P_gain
-                    # Clamp the correction to maximum limits to avoid too sharp turns
+                        print('WARNING: linear yaw diff is zero.')
+                    
+                    correctionary_z = -yaw_diff / P_gain
                     max_angular_z = 1.2
 
-                    correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
-                    if slow_start < 50:
+                    #correctionary_z = max(-max_angular_z, min(max_angular_z, correctionary_z))
+                    
+                    if self.linear_x_speed == 0.0:
+                        slow_start = 0
+
+                    if slow_start < sstart_max:
                         slow_start += 1
-                    data.linear.x = self.linear_x_speed * slow_start / 50
-                    data.angular.z = correctionary_angular_z
-                    self.movement_publisher.publish(data)
-                    if args.softbarrier:
-                        if self.front_is_blocked:  
-                            print("Cannot move forward! Front is blocked.")
-                            break
-
-                    if distance_lock == args.iter_lock:
-                        distance_lock = 0
-                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
                     
-                    distance_lock += 1
-                    time.sleep(0.01)
-                
-                self.stall(0.5)
-                print('[frwd] Final travel distance:', round(get_point_distance(self.odometry_msg_pos, starting_position),3))
-                print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
+                    data.linear.x = self.linear_x_speed * slow_start / sstart_max
+                    data.angular.z = correctionary_z
 
-            elif self.twist_direction == 'left':
+                    self.movement_publisher.publish(data)
 
-                self.twist_timestamp = time.time()
-                data.linear.x = 0.0
-                slow_start = 1
+                    if last_direction != 'forwards':
 
-                iter_lock = 0
-                total_rotation = 0.0
-                last_orientation = self.odometry_msg_orientation
+                        self.reset_movement_stats = True
+                        last_direction = 'forwards'
 
-                while self.twist_direction == 'left':
-                
-                    if slow_start != 5:
+                    time.sleep(0.05)
+
+                if called:
+
+                    self.twist_timestamp = time.time()
+                    data.linear.x = 0.0
+                    data.angular.z = 0.0
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.3)
+
+            # case: forwards-left
+            if not direction_is_called:
+
+                while self.direction == 'left-forwards':
+                    called = True
+                    if last_direction != 'left-forwards':
+                        direction_is_called = True
+                        self.twist_timestamp = time.time()
+                        self.reset_movement_stats = True
+                        last_direction = 'left-forwards'
+
+                    if self.linear_x_speed == 0.0 and self.angular_z_speed == 0.0:
+                        slow_start = 1
+
+                    if slow_start < sstart_max:
                         slow_start += 1
-
-                    angular_z = -slow_start/10 * self.angular_z_speed
-                    data.angular.z = angular_z
                     
+                    data.linear.x = self.linear_x_speed * slow_start / sstart_max
+                    data.angular.z = self.angular_z_speed * slow_start / sstart_max
+
                     self.movement_publisher.publish(data)
-                    
-                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                    last_orientation = self.odometry_msg_orientation
-                    print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.20)
+                    time.sleep(0.05)
 
-                self.stall(0.5)
+                if called:
 
-                total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                print(f'[left] Final total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-
-            elif self.twist_direction == 'right':
-
-                self.twist_timestamp = time.time()
-                data.linear.x = 0.0
-                slow_start = 1
-
-                iter_lock = 0
-                total_rotation = 0.0
-                last_orientation = self.odometry_msg_orientation
-
-                while self.twist_direction == 'right':
-
-                    if slow_start != 5:
-                        slow_start += 1
-
-                    angular_z = -slow_start/10 * self.angular_z_speed
-                    data.angular.z = angular_z
-                    
+                    self.twist_timestamp = time.time()
+                    data.linear.x = 0.0
+                    data.angular.z = 0.0
                     self.movement_publisher.publish(data)
-                    
-                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                    last_orientation = self.odometry_msg_orientation
-                    print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.20)
+                    time.sleep(0.3)
 
-                self.stall(0.5)
+            # case: forwards-right
+            if not direction_is_called:
 
-                total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                print(f'[rght] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
+                while self.direction == 'right-forwards':
 
+                    if last_direction != 'right-forwards':
+                        self.twist_timestamp = time.time()
+                        direction_is_called = True     
+                        self.reset_movement_stats = True
+                        last_direction = 'right-forwards'
                 
+                    if self.linear_x_speed == 0.0 and self.angular_z_speed == 0.0:
+                        slow_start = 1
 
+                    if slow_start < sstart_max:
+                        slow_start += 1
+                    
+                    data.linear.x = self.linear_x_speed * slow_start / sstart_max
+                    data.angular.z = -self.angular_z_speed * slow_start / sstart_max
+
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.05)
+
+                if direction_is_called:
+
+                    self.twist_timestamp = time.time()
+                    data.linear.x = 0.0
+                    data.angular.z = 0.0
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.3)
+
+            # case: left
+            if not direction_is_called:
+
+                while self.direction == 'left':
+                    if last_direction != 'left':
+                        self.twist_timestamp = time.time()
+                        direction_is_called = True
+                        self.reset_movement_stats = True
+                        last_direction = 'left'
+                    
+                    if self.angular_z_speed == 0.0:
+                        slow_start = 1
+
+                    if slow_start < sstart_max:
+                        slow_start += 1
+                    
+                    data.linear.x = 0.0
+                    data.angular.z = self.angular_z_speed * slow_start / sstart_max
+
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.05)
+
+                if direction_is_called:
+
+                    self.twist_timestamp = time.time()
+                    data.linear.x = 0.0
+                    data.angular.z = 0.0
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.3)
+
+            # case: right
+            if not direction_is_called:
+    
+                while self.direction == 'right':
+                    if last_direction != 'right':
+                        self.twist_timestamp = time.time()
+                        direction_is_called = True
+                        self.reset_movement_stats = True
+                        last_direction = 'right'
+                    
+                    if self.angular_z_speed == 0.0:
+                        slow_start = 1
+
+                    if slow_start < sstart_max:
+                        slow_start += 1
+                    
+                    data.linear.x = 0.0
+                    data.angular.z = -self.angular_z_speed * slow_start / sstart_max
+                    print(data.angular.z)
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.05)
+                
+                if direction_is_called:
+                    self.twist_timestamp = time.time()
+                    data.linear.x = 0.0
+                    data.angular.z = 0.0
+                    self.movement_publisher.publish(data)
+                    time.sleep(0.3)
+                    
+            if self.reset_movement_stats:
+
+                called = False
+
+                last_direction = None
+                direction_is_called = False                
+                self.transmit_current_frame = True
+                self.linear_x_speed = args.linear_x_ms
+                self.angular_z_speed = args.angular_z_rads
+                starting_pos = self.odometry_msg_pos
+                
+                starting_orientation = self.odometry_msg_orientation
+                total_distance_cartesian = 0.0
+                total_distance_angular = 0.0
+                self.reset_movement_stats = False
+                slow_start = 0
+                
         print('Movement thread closed successfully.')
-
-    def stall(self, stop_time=-1): 
-        
-        # used to simulate inference steps and to decelerate
-        # the robot
-
-        print('total time:', time.time() - self.twist_timestamp)
-
-        self.twist_timestamp = time.time()
-        data = Twist()
-        data.linear.x = 0.0
-        data.angular.z = 0.0
-        self.movement_publisher.publish(data)
-        
-        time.sleep(stop_time)
-
-        self.transmit_current_frame = True
-        
-        time.sleep(0.1)
-
-        if stop_time == -1:
-            return
 
 def main(args=None):
 
