@@ -506,7 +506,7 @@ class SensorsSubscriber(Node):
                 
                 # as of this iteration, will only send essential camera frames to make sure that file size stays low
 
-                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
                 if not success:
                     print('WARNING: Failed to encode image.')
                     continue
