@@ -532,6 +532,10 @@ class SensorsSubscriber(Node):
         
         # Slow starts stop the wheels from slipping, increasing precision of movement
 
+        while self.odometry_msg == None:
+            print('Waiting for odom...', time.ctime())
+            time.sleep(1)
+
         last_twist_direction = None
         data = Twist()
         while self.twist_msg_server_run: # keep thread on forever
@@ -719,7 +723,7 @@ class SensorsSubscriber(Node):
                     if slow_start != 5:
                         slow_start += 1
 
-                    angular_z = -slow_start/10 * self.angular_z_speed
+                    angular_z = slow_start/5 * self.angular_z_speed
                     data.angular.z = angular_z
                     
                     self.movement_publisher.publish(data)
@@ -749,7 +753,7 @@ class SensorsSubscriber(Node):
                     if slow_start != 5:
                         slow_start += 1
 
-                    angular_z = -slow_start/10 * self.angular_z_speed
+                    angular_z = -slow_start/5 * self.angular_z_speed
                     data.angular.z = angular_z
                     
                     self.movement_publisher.publish(data)
