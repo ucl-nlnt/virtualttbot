@@ -188,7 +188,7 @@ class turtlebot_controller:
             if not ret:
                 continue
 
-            success, encoded_image = cv2.imencode('.jpg',frame, [int(cv2.IMWRITE_JPEG_QUALITY), 40])
+            success, encoded_image = cv2.imencode('.jpg',frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
             if not success:
                 continue
 
@@ -310,7 +310,7 @@ class turtlebot_controller:
             frame = cv2.warpAffine(frame, rot_matrix, (w, h))
 
             # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
-            retval, buffer = cv2.imencode('.jpg', frame[int(cv2.IMWRITE_JPEG_QUALITY), 40])
+            retval, buffer = cv2.imencode('.jpg', frame[int(cv2.IMWRITE_JPEG_QUALITY), 70])
             
             print("TTB imencode:", retval)
 
