@@ -628,6 +628,21 @@ class turtlebot_controller:
                                 print('Webcam data is not good.')
                                 break
 
+                            frame_data = base64.b64decode(state['frame_data'])
+                            frame_data_arr = cv2.imdecode(np.frombuffer(frame_data, dtype=np.uint8), cv2.IMREAD_COLOR)
+
+                            webcam_data = base64.b64decode(state['webcam_data'])
+                            webcam_data_arr = cv2.imdecode(np.frombuffer(webcam_data, dtype=np.uint8), cv2.IMREAD_COLOR)
+                            if np.all(webcam_data_arr == 0):
+                                is_good = False
+                                print('Webcam data is all zeros.')
+                                break
+                            
+                            if np.all(frame_data_arr == 0):
+                                is_good = False
+                                print('Raspi data is all zeros.')
+                                break
+
                 if is_good:
                     self.sesh_count += 1
                 else:
