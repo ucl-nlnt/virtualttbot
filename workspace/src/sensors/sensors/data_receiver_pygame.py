@@ -291,6 +291,46 @@ class turtlebot_controller:
             # Update the display
             pygame.display.flip()
 
+    def format_raspi_image(self, camera_frame: str, data):
+
+        encoded_data = base64.b64decode(camera_frame)
+
+        # Convert the bytes to a numpy array
+        nparr = np.frombuffer(encoded_data, np.uint8)
+
+        # Decode the numpy array to an OpenCV image
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # Frame Rotator
+        if args.rotate_r_by:
+
+            h, w = frame.shape[:2]
+            angle = -90 * args.rotate_r_by
+            rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle, 1)
+            frame = cv2.warpAffine(frame, rot_matrix, (w, h))
+
+            # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
+            retval, buffer = cv2.imencode('.jpg', frame)
+            
+            print("TTB imencode:", retval)
+
+            frame_data_as_string = base64.b64encode(buffer).decode('utf-8')
+
+            # Update 'frame_data' in the JSON data structure
+            data['frame_data'] = frame_data_as_string
+
+            # scaling 50 percent image to make sure that it fits on the
+            # laptop screen
+            width = int(frame.shape[1] * 0.5)
+            height = int(frame.shape[0] * 0.5)
+            new_dimensions = (width, height)
+
+            frame = cv2.resize(frame, new_dimensions,interpolation = cv2.INTER_AREA)
+        
+            self.latest_raspi_camera_frame = frame
+            print('Turtlebot frame was received.')
+            self.new_frame_impulse = True
+
     def super_json_listener(self):
 
         t = time.time() + 1.0
@@ -321,46 +361,7 @@ class turtlebot_controller:
                 # Decode camera data
                 camera_frame = data['frame_data']
 
-                if camera_frame != None:
-
-                    print('camera_frame is not None')
-                    encoded_data = base64.b64decode(camera_frame)
-
-                    # Convert the bytes to a numpy array
-                    nparr = np.frombuffer(encoded_data, np.uint8)
-
-                    # Decode the numpy array to an OpenCV image
-                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-                    # Frame Rotator
-                    if args.rotate_r_by:
-
-                        h, w = frame.shape[:2]
-                        angle = -90 * args.rotate_r_by
-                        rot_matrix = cv2.getRotationMatrix2D((w/2, h/2), angle, 1)
-                        frame = cv2.warpAffine(frame, rot_matrix, (w, h))
-
-                        # Re-encode the rotated frame to a format (e.g., JPEG) before converting it to base64
-                        retval, buffer = cv2.imencode('.jpg', frame)
-                        
-                        print("TTB imencode:", retval)
-
-                        frame_data_as_string = base64.b64encode(buffer).decode('utf-8')
-
-                        # Update 'frame_data' in the JSON data structure
-                        data['frame_data'] = frame_data_as_string
-
-                        # scaling 50 percent image to make sure that it fits on the
-                        # laptop screen
-                        width = int(frame.shape[1] * 0.5)
-                        height = int(frame.shape[0] * 0.5)
-                        new_dimensions = (width, height)
-
-                        frame = cv2.resize(frame, new_dimensions,interpolation = cv2.INTER_AREA)
-                    
-                        self.latest_raspi_camera_frame = frame
-                        print('Turtlebot frame was received.')
-                        self.new_frame_impulse = True
+                if camera_frame != None: self.format_raspi_image(camera_frame=camera_frame, data=data)
 
             if args.webcam > -1:
 
@@ -368,9 +369,9 @@ class turtlebot_controller:
                 
                 if data['frame_data'] != None:
 
-                    print('Saved webcam data.')
                     self.new_frame_impulse = True
-                    data['webcam_data'] = self.most_recent_webcam_frame
+                    print(type(self.most_recent_webcam_frame_base64), len(self.most_recent_webcam_frame_base64))
+                    data['webcam_data'] = self.most_recent_webcam_frame_base64
 
             else:
 
@@ -464,7 +465,9 @@ class turtlebot_controller:
                 elif args.enable_autorandomizer_from_csv == 4:
                     prompt = self.csv_randomizer()
                     print("Random Prompt:",prompt)
+
             elif args.l12:
+
                 mk = prompt_maker()
                 inst = mk.maker(add_flags=True)
                 prompt = inst[0]
@@ -575,6 +578,7 @@ class turtlebot_controller:
                 continue
 
             while True:
+                
                 confirmation = input("Save log? (y/n/e) << ")
                 if confirmation == 'y' or confirmation == 'n': break
                 elif confirmation == 'e':
@@ -602,8 +606,33 @@ class turtlebot_controller:
                     f.write(lzma.compress(json.dumps(json_file).encode('utf-8')))
                     print("Instance saved.")
 
-                self.sesh_count += 1
-            
+                # integrity test
+
+                print('Checking data integrity...')
+
+                is_good = True
+                with open(os.path.join('datalogs',fname),'rb') as f:
+
+                    data_file = json.loads(lzma.decompress(f.read()))
+                    states = data_file['states']
+
+                    for state in states:
+
+                        if 'webcam_data' in state.keys():
+                            if state['frame_data'] == None:
+                                is_good = False
+                                print('Raspi camera data is no good.')
+                                break
+                            if state['webcam_data'] == None:
+                                is_good = False
+                                print('Webcam data is not good.')
+                                break
+
+                if is_good:
+                    self.sesh_count += 1
+                else:
+                    os.remove(os.path.join('datalogs', fname))
+                    print(f"{fname} deleted from directory due to erroneous save.") 
             else:
                 print("Instance removed.")
 
