@@ -506,7 +506,7 @@ class SensorsSubscriber(Node):
                 
                 # as of this iteration, will only send essential camera frames to make sure that file size stays low
 
-                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64)
+                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
                 if not success:
                     print('WARNING: Failed to encode image.')
                     continue
@@ -687,9 +687,10 @@ class SensorsSubscriber(Node):
                     max_angular_z = 1.2
 
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
-                    if slow_start < 50:
+                    if slow_start < 25:
                         slow_start += 1
-                    data.linear.x = self.linear_x_speed * slow_start / 50
+
+                    data.linear.x = self.linear_x_speed * slow_start / 25
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
                     if args.softbarrier:
