@@ -204,7 +204,7 @@ class turtlebot_controller:
     def window_process(self):
 
         pygame.init()
-        self.screen = pygame.display.set_mode((300, 300))
+        self.screen = pygame.display.set_mode((600, 600))
         pygame.display.set_caption('Turtlebot Controller')
         self.pygame_font = pygame.font.SysFont('Arial', 20)
         self.text_color = (25, 25, 25)
@@ -370,7 +370,7 @@ class turtlebot_controller:
                 if data['frame_data'] != None:
 
                     self.new_frame_impulse = True
-                    print(type(self.most_recent_webcam_frame_base64), len(self.most_recent_webcam_frame_base64))
+                    print("Webcam capture:",type(self.most_recent_webcam_frame_base64), len(self.most_recent_webcam_frame_base64))
                     data['webcam_data'] = self.most_recent_webcam_frame_base64
 
             else:
