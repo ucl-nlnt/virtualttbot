@@ -99,6 +99,20 @@ class turtlebot_controller:
         self.debug_window_process = True
         self.label = None
 
+        self.pressed_keys = []
+        self.watch_for = {
+            pygame.K_w : 'w',
+            pygame.K_d : 'd',
+            pygame.K_a : 'a',
+            pygame.K_RIGHTBRACKET : ']',
+            pygame.K_KP8 : 'kp8',
+            pygame.K_KP4 : 'kp4',
+            pygame.K_KP6 : 'kp6',
+            pygame.K_KP2 : 'kp2',
+            pygame.K_KP5 : 'kp5',
+            pygame.K_KP0 : 'kp0'
+        }
+
         self.new_frame_impulse = False
         self.increment_twist_message = None # allows for robot turnability
         self.exempt_increment = False
@@ -146,6 +160,15 @@ class turtlebot_controller:
         self.data_listener_thread = threading.Thread(target=self.super_json_listener)
         self.data_listener_thread.start() # Thread 3
         
+        self.angular_speed_adjuster = threading.Thread(target=self.magnitude_editor)
+        self.angular_speed_adjuster.start()
+
+    def magnitude_editor(self):
+
+        while True:
+
+            pass
+
     def disp_thread(self):
 
         while True:
@@ -212,7 +235,7 @@ class turtlebot_controller:
         self.is_collecting_data = False
 
         # Cap the frame rate
-        pygame.time.Clock().tick(60)
+        pygame.time.Clock().tick(1/0.2) # 5hz control
 
         while not self.killswitch:
 
@@ -224,62 +247,18 @@ class turtlebot_controller:
                     pygame.quit()
                     sys.exit()
 
-                elif event.type == pygame.KEYDOWN:
+                keys = pygame.key.get_pressed()
+                for key in self.watch_for.keys():
+                    if keys[key]:
+                        if self.watch_for[key] in self.pressed_keys:
+                            continue # key is already in pressed keys
+                        else:
+                            self.pressed_keys.append(self.watch_for[key])
 
-                    self.keyboard_impulse = True
-                    keys = pygame.key.get_pressed()
+                    else: # remove if key is no longer being pressed
+                        if self.watch_for[key] in self.pressed_keys:
+                            self.pressed_keys.pop(self.pressed_keys.index(self.watch_for[key]))
 
-                    if keys[pygame.K_w] and keys[pygame.K_d]:
-                        
-                        self.keyboard_input = "wd"
-
-                    elif keys[pygame.K_w] and keys[pygame.K_a]:
-
-                        self.keyboard_input = "wa"
-
-                    elif keys[pygame.K_w]:
-
-                        self.keyboard_input = "w"
-
-                    elif keys[pygame.K_d]:
-
-                        self.keyboard_input = 'd'
-
-                    elif keys[pygame.K_a]:
-
-                        self.keyboard_input = 'a'
-
-                    elif keys[pygame.K_RIGHTBRACKET]:
-
-                        self.keyboard_input = ']'
-
-                    elif keys[pygame.K_COMMA]:
-                        self.keyboard_input = ','
-
-                    elif keys[pygame.K_F10]:
-
-                        self.keyboard_input = 'F10'
-
-                    elif keys[pygame.K_KP_PLUS]:
-                        
-                        self.increment_twist_message = 0.3
-                        self.exempt_increment = True
-                        self.keyboard_impulse = True
-
-                    elif keys[pygame.K_KP_MINUS]:
-
-                        self.increment_twist_message = -0.3
-                        self.exempt_increment = True
-                        self.keyboard_impulse = True
-
-                elif event.type == pygame.KEYUP:
-                
-                    if not self.exempt_increment:
-                        self.keyboard_input = None
-                        self.keyboard_impulse = True
-                    else:
-                        continue
-                
             # Fill the screen with a background color
             self.screen.fill((255, 255, 255))
 
@@ -502,7 +481,7 @@ class turtlebot_controller:
                 print('sending START')
                 self.data_buffer = []                               # reset buffer. this will be filled up somewhere else (self.super_json_listener)
                 self.gathering_data = True
-                self.movement_data_sender.send_data('@STRT')        # send data gathering start signal
+                self.movement_data_sender.send_data("['start']")        # send data gathering start signal
                 print('waiting for CONT')
                 self.movement_data_sender.receive_data()            # wait for @CONT
             else:
@@ -510,66 +489,12 @@ class turtlebot_controller:
 
             while True: # Inner loop, data collection
             
-                if not self.keyboard_impulse: 
-
-                    time.sleep(0.01667)
-                    continue
-
-                if self.increment_twist_message != None:
-
-                    self.rad_changer.send_data(str(self.increment_twist_message).encode())
-                    self.increment_twist_message = None
-
-                if self.keyboard_input == 'wa' and not self.exempt_increment:
-
-                    self.movement_data_sender.send_data(b'@NTWS') # north-west
-                    self.keyboard_impulse = False
-
-                elif self.keyboard_input == 'wd' and not self.exempt_increment:
-
-                    self.movement_data_sender.send_data(b'@NTES') # north-east
-                    self.keyboard_impulse = False
-
-                elif self.keyboard_input == 'w' and not self.exempt_increment: 
-
-                    self.movement_data_sender.send_data(b'@FRWD')
-                    self.keyboard_impulse = False                   # set to False to be able to tell when user lets go of the key.
-
-                elif self.keyboard_input == 'a' and not self.exempt_increment:
-
-                    self.movement_data_sender.send_data(b'@LEFT')
-                    self.keyboard_impulse = False
-
-                elif self.keyboard_input == 'd' and not self.exempt_increment:
-
-                    self.movement_data_sender.send_data(b'@RGHT')
-                    self.keyboard_impulse = False
-
-                elif self.keyboard_input == None and not self.exempt_increment:  # key was let go
-            
-                    self.movement_data_sender.send_data(b'@0000')
-                    self.keyboard_impulse = False
-
-                elif self.keyboard_input == ']' and not self.exempt_increment:
-
-                    self.movement_data_sender.send_data(b'@STOP')
-                    self.keyboard_impulse = False
-                    print("Data collection is finished for this iteration.")
+                print(self.pressed_keys)
+                self.movement_data_sender.send_data(str(self.pressed_keys))
+                if ']' in self.pressed_keys:
                     break
 
-                elif self.keyboard_input == '-' and not self.exempt_increment:
-                    self.movement_data_sender.send_data(b'@KILL')
-                    self.keyboard_impulse = False
-                    print('Sent termination signal to Turtlebot3.')
-                    break
-
-                elif self.keyboard_input == ',' and not self.exempt_increment:
-                    self.movement_data_sender.send_data(b'@OBST')
-                    self.keyboard_impulse = False
-                    print('Starting Obstacle Avoidance..')
-                    break
-
-                time.sleep(0.01667)
+                time.sleep(0.1)
 
             # confirm if data is good to be saved
             self.gathering_data = False
@@ -578,7 +503,7 @@ class turtlebot_controller:
                 continue
 
             while True:
-                
+
                 confirmation = input("Save log? (y/n/e) << ")
                 if confirmation == 'y' or confirmation == 'n': break
                 elif confirmation == 'e':
@@ -611,6 +536,7 @@ class turtlebot_controller:
                 print('Checking data integrity...')
 
                 is_good = True
+                number_of_images = 0
                 with open(os.path.join('datalogs',fname),'rb') as f:
 
                     data_file = json.loads(lzma.decompress(f.read()))
@@ -619,6 +545,7 @@ class turtlebot_controller:
                     for state in states:
 
                         if 'webcam_data' in state.keys():
+
                             if state['frame_data'] == None:
                                 is_good = False
                                 print('Raspi camera data is no good.')
@@ -628,7 +555,10 @@ class turtlebot_controller:
                                 print('Webcam data is not good.')
                                 break
 
+                            number_of_images += 1
+
                 if is_good:
+                    print(f'Found {number_of_images} image pairs.')
                     self.sesh_count += 1
                 else:
                     os.remove(os.path.join('datalogs', fname))
