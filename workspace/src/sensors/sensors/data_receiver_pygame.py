@@ -611,6 +611,7 @@ class turtlebot_controller:
                 print('Checking data integrity...')
 
                 is_good = True
+                detected_keyframes = 0
                 with open(os.path.join('datalogs',fname),'rb') as f:
 
                     data_file = json.loads(lzma.decompress(f.read()))
@@ -643,8 +644,11 @@ class turtlebot_controller:
                                 print('Raspi data is all zeros.')
                                 break
 
+                            detected_keyframes += 1
+
                 if is_good:
                     self.sesh_count += 1
+                    print(f'All good. Detected {detected_keyframes} keyframes.')
                 else:
                     os.remove(os.path.join('datalogs', fname))
                     print(f"{fname} deleted from directory due to erroneous save.") 
