@@ -732,7 +732,7 @@ class SensorsSubscriber(Node):
                     total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                     last_orientation = self.odometry_msg_orientation
                     print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.20)
+                    time.sleep(0.05)
 
                 self.stall(0.5)
 
@@ -762,7 +762,7 @@ class SensorsSubscriber(Node):
                     total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                     last_orientation = self.odometry_msg_orientation
                     print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.20)
+                    time.sleep(0.05)
 
                 self.stall(0.5)
 
