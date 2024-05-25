@@ -167,6 +167,7 @@ class SensorsSubscriber(Node):
 
         # threads
         self.super_json = None
+        self.json_frame_number = 0
         self.is_collecting_data = False
         self.imu_timesamp = None
 
@@ -361,6 +362,7 @@ class SensorsSubscriber(Node):
 
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
+                self.json_frame_number = 0
                 self.starting_odometry_set = False
                 time.sleep(0.2)
                 self.transmit_current_frame = True # capture new latest frame
@@ -506,23 +508,23 @@ class SensorsSubscriber(Node):
                 
                 # as of this iteration, will only send essential camera frames to make sure that file size stays low
 
-                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64)
+                success, encoded_image = cv2.imencode('.jpg',self.camera_frame_base64, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
                 if not success:
                     print('WARNING: Failed to encode image.')
                     continue
         
                 data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
+                self.super_json = json.dumps({"id":self.json_frame_number, "laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
             else:
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
+                self.super_json = json.dumps({"id":self.json_frame_number,"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
 
             time.sleep(self.sampling_delay)
-    
+            self.json_frame_number += 1
         print('Super BSON compilation thread closed successfully.')
 
     def movement_server(self):
@@ -687,9 +689,10 @@ class SensorsSubscriber(Node):
                     max_angular_z = 1.2
 
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
-                    if slow_start < 50:
+                    if slow_start < 25:
                         slow_start += 1
-                    data.linear.x = self.linear_x_speed * slow_start / 50
+
+                    data.linear.x = self.linear_x_speed * slow_start / 25
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
                     if args.softbarrier:
@@ -731,7 +734,7 @@ class SensorsSubscriber(Node):
                     total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                     last_orientation = self.odometry_msg_orientation
                     print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.20)
+                    time.sleep(0.05)
 
                 self.stall(0.5)
 
@@ -761,7 +764,7 @@ class SensorsSubscriber(Node):
                     total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                     last_orientation = self.odometry_msg_orientation
                     print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.20)
+                    time.sleep(0.05)
 
                 self.stall(0.5)
 
