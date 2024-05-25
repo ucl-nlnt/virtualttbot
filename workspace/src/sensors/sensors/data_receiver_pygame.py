@@ -104,6 +104,7 @@ class turtlebot_controller:
         self.exempt_increment = False
 
         self.most_recent_webcam_frame = None
+        self.most_recent_webcam_frame_base64 = None
 
         # socket programming stuff
         self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
