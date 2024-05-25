@@ -660,24 +660,24 @@ class turtlebot_controller:
                             states_with_images.append(i)
                             detected_keyframes += 1
 
-                print(states_with_images)
+                #print(states_with_images)
 
                 # compare images to detect same image errors
                 comparisons = []
                 for i in states_with_images:
-                    print(f"i: {i}")
+                    #print(f"i: {i}")
                     for j in states_with_images:
-                        print(f"j: {j}")
+                        #print(f"j: {j}")
                         if i == j:
-                            print(f"({i},{j}): equal iterations")
+                            #print(f"({i},{j}): equal iterations")
                             continue
                         comparison_instance = sorted([i,j])
-                        print(f"comparison instance: {comparison_instance}")
-                        print(f"comparisons: {comparisons}")
+                        #print(f"comparison instance: {comparison_instance}")
+                        #print(f"comparisons: {comparisons}")
                         if comparison_instance not in comparisons:
                             comparisons.append(comparison_instance)
                 
-                print (comparisons)
+                #print (comparisons)
                 
                 for l in comparisons:
                     
