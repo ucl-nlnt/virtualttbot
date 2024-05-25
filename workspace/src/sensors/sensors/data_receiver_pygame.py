@@ -658,8 +658,9 @@ class turtlebot_controller:
                         if comparison_instance not in comparisons:
                             comparisons.append(comparison_instance)
                 
-                for i1, i2 in comparisons:
-
+                for l in comparisons:
+                    
+                    i1, i2 = l
                     frame_data1 = base64.b64decode(states[i1]['frame_data'])
                     frame_data_arr1 = cv2.imdecode(np.frombuffer(frame_data1, dtype=np.uint8), cv2.IMREAD_COLOR)
                     frame_data2 = base64.b64decode(states[i2]['frame_data'])
