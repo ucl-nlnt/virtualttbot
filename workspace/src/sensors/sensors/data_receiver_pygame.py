@@ -130,6 +130,9 @@ class turtlebot_controller:
             self.webcam_object = cv2.VideoCapture(cam_index)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
+            #self.webcam_object.set(cv2.CAP_PROP_AUTOFOCUS, 1) # enable autofocus if it supports it
+            self.webcam_object.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # enable auto exposure
+
             self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
             self.usb_webcam_thread.start()
 
@@ -177,16 +180,24 @@ class turtlebot_controller:
             self.new_frame_impulse = False
             cv2.waitKey(1)
 
+    def calculate_sharpness(self, cv2_image):
+
+        gray = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2GRAY)
+        laplacian = cv2.laplacian(gray, cv2.CV_64F)
+        sharpness = laplacian.var()
+        return sharpness
+
     def usb_webcam(self):
 
         # initialize camera here.
-
         while True:
             
             ret, frame = self.webcam_object.read()
 
             if not ret:
                 continue
+
+            #sharpness = self.calculate_sharpness(frame)
 
             success, encoded_image = cv2.imencode('.jpg',frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
             if not success:
