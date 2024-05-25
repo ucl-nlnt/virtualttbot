@@ -261,7 +261,7 @@ class SensorsSubscriber(Node):
 
             degrees_blocked = 0
     
-            #print('------------------------------------------')
+            if debug: print('------------------------------------------')
             for i, val in enumerate(scans):
 
                 if (i > 30 and i < 329): 
@@ -271,7 +271,8 @@ class SensorsSubscriber(Node):
 
                     degrees_blocked += 1
 
-                    #print(i, val)
+                    if debug: 
+                        print(i, val)
                     if degrees_blocked >= args.deg_blocked:
 
                         self.front_is_blocked = True
