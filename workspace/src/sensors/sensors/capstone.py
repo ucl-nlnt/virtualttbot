@@ -167,6 +167,7 @@ class SensorsSubscriber(Node):
 
         # threads
         self.super_json = None
+        self.json_frame_number = 0
         self.is_collecting_data = False
         self.imu_timesamp = None
 
@@ -362,6 +363,7 @@ class SensorsSubscriber(Node):
 
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
+                self.json_frame_number = 0
                 self.starting_odometry_set = False
                 time.sleep(0.2)
                 self.transmit_current_frame = True # capture new latest frame
@@ -514,16 +516,16 @@ class SensorsSubscriber(Node):
         
                 data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
+                self.super_json = json.dumps({"id":self.json_frame_number, "laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
             else:
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
+                self.super_json = json.dumps({"id":self.json_frame_number,"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
 
             time.sleep(self.sampling_delay)
-    
+            self.json_frame_number += 1
         print('Super BSON compilation thread closed successfully.')
 
     def movement_server(self):

@@ -104,6 +104,7 @@ class turtlebot_controller:
         self.exempt_increment = False
 
         self.most_recent_webcam_frame = None
+        self.most_recent_webcam_frame_base64 = None
 
         # socket programming stuff
         self.server_data_receiver = DataBridgeServer_TCP(port_number=50000)
@@ -130,6 +131,9 @@ class turtlebot_controller:
             self.webcam_object = cv2.VideoCapture(cam_index)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
+            #self.webcam_object.set(cv2.CAP_PROP_AUTOFOCUS, 1) # enable autofocus if it supports it
+            #self.webcam_object.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # enable auto exposure
+
             self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
             self.usb_webcam_thread.start()
 
@@ -177,16 +181,24 @@ class turtlebot_controller:
             self.new_frame_impulse = False
             cv2.waitKey(1)
 
+    def calculate_sharpness(self, cv2_image):
+
+        gray = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2GRAY)
+        laplacian = cv2.laplacian(gray, cv2.CV_64F)
+        sharpness = laplacian.var()
+        return sharpness
+
     def usb_webcam(self):
 
         # initialize camera here.
-
         while True:
             
             ret, frame = self.webcam_object.read()
 
             if not ret:
                 continue
+
+            #sharpness = self.calculate_sharpness(frame)
 
             success, encoded_image = cv2.imencode('.jpg',frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
             if not success:
@@ -367,7 +379,7 @@ class turtlebot_controller:
 
                 # append webcam data to 'data' frame
                 
-                if data['frame_data'] != None:
+                if (data['frame_data'] != None) and (self.most_recent_webcam_frame_base64 != None):
 
                     self.new_frame_impulse = True
                     print("Webcam capture:",type(self.most_recent_webcam_frame_base64), len(self.most_recent_webcam_frame_base64))
@@ -612,12 +624,13 @@ class turtlebot_controller:
 
                 is_good = True
                 detected_keyframes = 0
+                states_with_images = []
                 with open(os.path.join('datalogs',fname),'rb') as f:
 
                     data_file = json.loads(lzma.decompress(f.read()))
                     states = data_file['states']
 
-                    for state in states:
+                    for i, state in enumerate(states):
 
                         if 'webcam_data' in state.keys():
                             if state['frame_data'] == None:
@@ -644,8 +657,51 @@ class turtlebot_controller:
                                 print('Raspi data is all zeros.')
                                 break
 
+                            states_with_images.append(i)
                             detected_keyframes += 1
 
+                #print(states_with_images)
+
+                # compare images to detect same image errors
+                comparisons = []
+                for i in states_with_images:
+                    #print(f"i: {i}")
+                    for j in states_with_images:
+                        #print(f"j: {j}")
+                        if i == j:
+                            #print(f"({i},{j}): equal iterations")
+                            continue
+                        comparison_instance = sorted([i,j])
+                        #print(f"comparison instance: {comparison_instance}")
+                        #print(f"comparisons: {comparisons}")
+                        if comparison_instance not in comparisons:
+                            comparisons.append(comparison_instance)
+                
+                #print (comparisons)
+                
+                for l in comparisons:
+                    
+                    i1, i2 = l
+                    frame_data1 = base64.b64decode(states[i1]['frame_data'])
+                    frame_data_arr1 = cv2.imdecode(np.frombuffer(frame_data1, dtype=np.uint8), cv2.IMREAD_COLOR)
+                    frame_data2 = base64.b64decode(states[i2]['frame_data'])
+                    frame_data_arr2 = cv2.imdecode(np.frombuffer(frame_data2, dtype=np.uint8), cv2.IMREAD_COLOR)
+
+                    if np.array_equal(frame_data_arr1, frame_data_arr2):
+                        is_good = False
+                        print('Error: Identical webcam frames detected.')
+                        break
+                
+                    webcam_data1 = base64.b64decode(states[i1]['webcam_data'])
+                    webcam_data_arr1 = cv2.imdecode(np.frombuffer(webcam_data1, dtype=np.uint8), cv2.IMREAD_COLOR)
+                    webcam_data2 = base64.b64decode(states[i2]['webcam_data'])
+                    webcam_data_arr2 = cv2.imdecode(np.frombuffer(webcam_data2, dtype=np.uint8), cv2.IMREAD_COLOR)
+
+                    if np.array_equal(webcam_data_arr1, webcam_data_arr2):
+                        is_good = False
+                        print('Error: Identical raspi frames detected.')
+                        break
+                        
                 if is_good:
                     self.sesh_count += 1
                     print(f'All good. Detected {detected_keyframes} keyframes.')
