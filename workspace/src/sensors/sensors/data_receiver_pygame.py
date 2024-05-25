@@ -132,7 +132,7 @@ class turtlebot_controller:
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
             #self.webcam_object.set(cv2.CAP_PROP_AUTOFOCUS, 1) # enable autofocus if it supports it
-            self.webcam_object.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # enable auto exposure
+            #self.webcam_object.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # enable auto exposure
 
             self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
             self.usb_webcam_thread.start()
@@ -379,7 +379,7 @@ class turtlebot_controller:
 
                 # append webcam data to 'data' frame
                 
-                if data['frame_data'] != None:
+                if (data['frame_data'] != None) and (self.most_recent_webcam_frame_base64 != None):
 
                     self.new_frame_impulse = True
                     print("Webcam capture:",type(self.most_recent_webcam_frame_base64), len(self.most_recent_webcam_frame_base64))
@@ -660,15 +660,24 @@ class turtlebot_controller:
                             states_with_images.append(i)
                             detected_keyframes += 1
 
+                print(states_with_images)
+
                 # compare images to detect same image errors
                 comparisons = []
                 for i in states_with_images:
+                    print(f"i: {i}")
                     for j in states_with_images:
+                        print(f"j: {j}")
                         if i == j:
+                            print(f"({i},{j}): equal iterations")
                             continue
-                        comparison_instance = [i,j].sort()
+                        comparison_instance = sorted([i,j])
+                        print(f"comparison instance: {comparison_instance}")
+                        print(f"comparisons: {comparisons}")
                         if comparison_instance not in comparisons:
                             comparisons.append(comparison_instance)
+                
+                print (comparisons)
                 
                 for l in comparisons:
                     
