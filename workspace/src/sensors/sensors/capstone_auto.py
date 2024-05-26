@@ -135,6 +135,7 @@ class SensorsSubscriber(Node):
         # for automatic data gathering
         self.current_distance_traveled = 0.0
         self.current_angular_distance_traveled = 0.0
+        self.current_frame_id = 0
 
         # imu
         self.imu_msg = None
@@ -362,20 +363,47 @@ class SensorsSubscriber(Node):
             elif inst == b'@NTWS': self.twist_direction = 'forward-left'
             elif inst == b'@NTES': self.twist_direction = 'forward-right'
             elif inst == b'@ADAG':
-                
-                q = input("enter debug distance angular:")
-                d = input('enter debug direction:')
 
+                q = -1
+                while q < 0.0:
+                    q = input("enter distance (radians):")
+                    try:
+                        q = float(q)
+                    except Exception as e:
+                        print(e)
+                        continue
+                        
+                d = None
+                
+                while d not in ['left','l','r','right', 'cancel']:
+                    d = input('enter direction (left/right/cancel):')
+
+                if d == 'cancel':
+                    continue
+                    
+                if d == 'l': d = 'left'
+                if d == 'r': r = 'right'
+                    
                 self.rotate_z_radians(float(q), d)
 
             elif inst == b'@OBST': self.stop_counting_total = True
             
             elif inst == b'@ADGB': 
-                q = input("enter debug distance:")
+                
+                q = -1
+                while q < 0.0:
+                    q = input("enter distance (meters):")
+                    try:
+                        q = float(q)
+                    except Exception as e:
+                        print(e)
+                        continue
+                
                 self.move_x_meters(float(q))
 
             elif inst == b'@STRT': 
 
+                self.current_frame_id = 0
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
                 self.starting_odometry_set = False
@@ -529,15 +557,16 @@ class SensorsSubscriber(Node):
         
                 data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data, 'id':self.current_frame_id})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
             else:
 
-                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None, 'id':self.current_frame_id})
 
             time.sleep(self.sampling_delay)
+            self.current_frame_id += 1
     
         print('Super BSON compilation thread closed successfully.')
 
@@ -563,7 +592,7 @@ class SensorsSubscriber(Node):
             distance_in_meters -= 0.06 # correctional
 
         self.twist_direction = 'forward'
-        while self.current_distance_traveled < distance_in_meters:
+        while self.current_distance_traveled < distance_in_meters and not self.front_is_blocked:
             pass
 
         self.twist_direction = 'stop'
