@@ -357,22 +357,45 @@ class SensorsSubscriber(Node):
                 break
 
             elif inst == b'@0000': self.twist_direction = None
-            elif inst == b'@FRWD': self.twist_direction = 'forward'
-            elif inst == b'@LEFT': self.twist_direction = 'left'
-            elif inst == b'@RGHT': self.twist_direction = 'right'
+            elif inst == b'@FRWD': 
+                self.current_distance_traveled = 0.0
+                self.twist_direction = 'forward'
+            
+            elif inst == b'@LEFT': 
+                self.current_angular_distance_traveled = 0.0
+                self.twist_direction = 'left'
+            
+            elif inst == b'@RGHT': 
+                self.current_angular_distance_traveled = 0.0
+                self.twist_direction = 'right'
+            
             elif inst == b'@NTWS': self.twist_direction = 'forward-left'
             elif inst == b'@NTES': self.twist_direction = 'forward-right'
-            elif inst == b'@ADAG':
+            
+            elif inst == b'@ADAG' or inst == b'@ADDG':
 
                 q = -1
+                self.current_angular_distance_traveled = 0.0
                 while q < 0.0:
-                    q = input("enter distance (radians):")
+                    
+                    if inst == b'@ADAG':
+                        q = input("enter distance (radians):")
+                    if inst == b'@ADDG':
+                        q = input("enter distance (degrees):")
+
                     try:
+
                         q = float(q)
+
                     except Exception as e:
+                        q = -1
                         print(e)
                         continue
-                        
+                
+                if inst == b'@ADDG':
+                    
+                    q *= math.pi / 180.0
+
                 d = None
                 
                 while d not in ['left','l','r','right', 'cancel']:
@@ -381,15 +404,19 @@ class SensorsSubscriber(Node):
                 if d == 'cancel':
                     continue
                     
-                if d == 'l': d = 'left'
-                if d == 'r': r = 'right'
+                if d == 'l': 
+                    d = 'left'
+
+                if d == 'r': 
+                    d = 'right'
                     
-                self.rotate_z_radians(float(q), d)
+                self.rotate_z_radians(float(q), d, enable_correction=True)
 
             elif inst == b'@OBST': self.stop_counting_total = True
             
             elif inst == b'@ADGB': 
-                
+
+                self.current_distance_traveled = 0.0
                 q = -1
                 while q < 0.0:
                     q = input("enter distance (meters):")
@@ -403,10 +430,10 @@ class SensorsSubscriber(Node):
 
             elif inst == b'@STRT': 
 
-                self.current_frame_id = 0
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
                 self.starting_odometry_set = False
+                self.current_frame_id = 0
                 time.sleep(0.2)
                 self.transmit_current_frame = True # capture new latest frame
                 time.sleep(0.2)
@@ -572,24 +599,26 @@ class SensorsSubscriber(Node):
 
     def move_x_meters(self,distance_in_meters: float):
 
-        if distance_in_meters <= 0.03:
-            self.twist_direction = 'stop'
-            return
         
-        if distance_in_meters < 0.2:
+        if distance_in_meters <= 0.0:
+            self.twist_direction = 'stop'
+            self.linear_x_speed = args.linear_x_ms
+            return
 
-            if distance_in_meters < 0.1:
+        if distance_in_meters <= 0.2:
+
+            if distance_in_meters <= 0.1:
                 
                 self.linear_x_speed = 0.05
-                distance_in_meters -= 0.015
+                distance_in_meters -= 0.01
 
             else:
 
                 self.linear_x_speed = 0.1
-                distance_in_meters -= 0.03
+                distance_in_meters -= 0.02
 
         else:
-            distance_in_meters -= 0.06 # correctional
+            distance_in_meters -= 0.04 # correctional
 
         self.twist_direction = 'forward'
         while self.current_distance_traveled < distance_in_meters and not self.front_is_blocked:
@@ -598,8 +627,15 @@ class SensorsSubscriber(Node):
         self.twist_direction = 'stop'
         self.linear_x_speed = args.linear_x_ms
 
-    def rotate_z_radians(self, angular_dist_in_rads: float, direction: str):
+        time.sleep(0.5)
+        print('internal error:', round(distance_in_meters - self.current_distance_traveled, 4), round(self.current_distance_traveled, 4))
+        if (distance_in_meters - self.current_distance_traveled) > 0.0 and not self.front_is_blocked:
 
+            self.move_x_meters(distance_in_meters=distance_in_meters - self.current_distance_traveled)
+
+    def rotate_z_radians(self, angular_dist_in_rads: float, direction: str, enable_correction: bool = True):
+
+        print('rotation order received:', angular_dist_in_rads, direction)
         if angular_dist_in_rads < 0.03375:
             self.twist_direction = 'stop'
             return
@@ -616,17 +652,18 @@ class SensorsSubscriber(Node):
                 if angular_dist_in_rads <= 0.125:
 
                     self.angular_z_speed /= 2.0
-                    angular_dist_in_rads -= 0.025
+                    if enable_correction: angular_dist_in_rads -= 0.025
 
                 else:
 
-                    angular_dist_in_rads -= 0.05
+                    if enable_correction: angular_dist_in_rads -= 0.05
 
             else:
 
-                angular_dist_in_rads -= 0.1
+                if enable_correction: angular_dist_in_rads -= 0.1
         else:
-            angular_dist_in_rads -= 0.2
+            
+            if enable_correction: angular_dist_in_rads -= 0.2
 
         print(self.angular_z_speed)
         self.twist_direction = direction
@@ -821,8 +858,6 @@ class SensorsSubscriber(Node):
                 self.current_distance_traveled += get_point_distance(self.odometry_msg_pos, last_position)
                 print('[frwd] Final travel distance:', round(self.current_distance_traveled,3))
                 print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
-                self.current_distance_traveled = 0.0
-
 
             elif self.twist_direction == 'left':
 
@@ -852,7 +887,6 @@ class SensorsSubscriber(Node):
 
                 self.current_angular_distance_traveled += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                 print(f'[left] Final total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')
-                self.current_angular_distance_traveled = 0.0
 
             elif self.twist_direction == 'right':
 
@@ -875,14 +909,12 @@ class SensorsSubscriber(Node):
                         last_orientation = self.odometry_msg_orientation
 
                     print(f'[right] Total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')    
+                    time.sleep(0.001)
 
                 self.stall(0.5)
 
                 self.current_angular_distance_traveled += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
                 print(f'[right] Final total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')
-                self.current_angular_distance_traveled = 0.0
-
-                
 
         print('Movement thread closed successfully.')
 
