@@ -1,5 +1,6 @@
 import cv2
 import sys
+import time
 
 def retrieve_camera_indexes():
 
@@ -21,23 +22,43 @@ def retrieve_camera_indexes():
 print("Available Cameras:", retrieve_camera_indexes())
 
 cap = cv2.VideoCapture(2)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
+# cap.set(cv2.CAP_PROP_AUTOFOCUS,1)
 
-cap2 = cv2.VideoCapture(0)
+#cap2 = cv2.VideoCapture(0)
 
-while True:
-    
-    ret, frame = cap.read()
-    if not ret:
-        continue
+import threading
 
-    ret, frame2 = cap2.read()
+def camera_thread():
 
-    cv2.imshow('Webcam', frame)
-    cv2.imshow('Webcam main', frame2)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    while True:
+        
+        ret, frame = cap.read()
+        if not ret:
+            continue
 
-cap.release()
-cv2.destroyAllWindows()
+        #ret, frame2 = cap2.read()
+
+        cv2.imshow('Webcam', frame)
+        #cv2.imshow('Webcam main', frame2)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+        time.sleep(0.1)
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+ct = threading.Thread(target=camera_thread)
+
+def change_zoom():
+    ct.start()
+
+    for i in range(0,500,10):
+
+        print("zoom:",i)
+        cap.set(cv2.CAP_PROP_ZOOM,i)
+        time.sleep(3)
+
+change_zoom()

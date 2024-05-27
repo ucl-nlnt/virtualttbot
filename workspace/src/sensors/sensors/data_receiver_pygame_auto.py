@@ -257,6 +257,10 @@ class turtlebot_controller:
 
                         self.keyboard_input = 'kp7'
 
+                    elif keys[pygame.K_KP4]:
+
+                        self.keyboard_input = 'kp4'
+
                     elif keys[pygame.K_w]:
 
                         self.keyboard_input = "w"
@@ -555,6 +559,11 @@ class turtlebot_controller:
                     self.movement_data_sender.send_data(b'@ADAG')
                     self.keyboard_impulse = False
 
+                elif self.keyboard_input == 'kp4' and not self.exempt_increment:
+
+                    self.movement_data_sender.send_data(b'@ADDG')
+                    self.keyboard_impulse = False
+
                 elif self.keyboard_input == 'wd' and not self.exempt_increment:
 
                     self.movement_data_sender.send_data(b'@NTES') # north-east
@@ -684,7 +693,8 @@ class turtlebot_controller:
                     for j in states_with_images:
                         if i == j:
                             continue
-                        comparison_instance = [i,j].sort()
+
+                        comparison_instance = sorted([i,j])
                         if comparison_instance not in comparisons:
                             comparisons.append(comparison_instance)
                 
