@@ -131,6 +131,11 @@ class SensorsSubscriber(Node):
         # twist
         self.twist_msg = None
         self.twist_timestamp = None
+        
+        # for automatic data gathering
+        self.current_distance_traveled = 0.0
+        self.current_angular_distance_traveled = 0.0
+        self.current_frame_id = 0
 
         # imu
         self.imu_msg = None
@@ -167,7 +172,6 @@ class SensorsSubscriber(Node):
 
         # threads
         self.super_json = None
-        self.json_frame_number = 0
         self.is_collecting_data = False
         self.imu_timesamp = None
 
@@ -198,7 +202,6 @@ class SensorsSubscriber(Node):
         self.compilation_thread = threading.Thread(target = self.compile_to_json)
         self.compilation_thread.start()
 
-        
         # Data sending to server
         self.transfer_thread_run = True
         self.transfer_thread = threading.Thread(target=self.send_to_server)
@@ -237,6 +240,7 @@ class SensorsSubscriber(Node):
         max_value = self.laserscan_msg.range_max
         min_value = self.laserscan_msg.range_min
 
+        debug = False
         while self.barrier_thread_run:
 
             scans = deepcopy(self.laserscan_msg.ranges) # prevent race conditions
@@ -353,18 +357,83 @@ class SensorsSubscriber(Node):
                 break
 
             elif inst == b'@0000': self.twist_direction = None
-            elif inst == b'@FRWD': self.twist_direction = 'forward'
-            elif inst == b'@LEFT': self.twist_direction = 'left'
-            elif inst == b'@RGHT': self.twist_direction = 'right'
+            elif inst == b'@FRWD': 
+                self.current_distance_traveled = 0.0
+                self.twist_direction = 'forward'
+            
+            elif inst == b'@LEFT': 
+                self.current_angular_distance_traveled = 0.0
+                self.twist_direction = 'left'
+            
+            elif inst == b'@RGHT': 
+                self.current_angular_distance_traveled = 0.0
+                self.twist_direction = 'right'
+            
             elif inst == b'@NTWS': self.twist_direction = 'forward-left'
             elif inst == b'@NTES': self.twist_direction = 'forward-right'
+            
+            elif inst == b'@ADAG' or inst == b'@ADDG':
+
+                q = -1
+                self.current_angular_distance_traveled = 0.0
+                while q < 0.0:
+                    
+                    if inst == b'@ADAG':
+                        q = input("enter distance (radians):")
+                    if inst == b'@ADDG':
+                        q = input("enter distance (degrees):")
+
+                    try:
+
+                        q = float(q)
+
+                    except Exception as e:
+                        q = -1
+                        print(e)
+                        continue
+                
+                if inst == b'@ADDG':
+                    
+                    q *= math.pi / 180.0
+
+                d = None
+                
+                while d not in ['left','l','r','right', 'cancel']:
+                    d = input('enter direction (left/right/cancel):')
+
+                if d == 'cancel':
+                    continue
+                    
+                if d == 'l': 
+                    d = 'left'
+
+                if d == 'r': 
+                    d = 'right'
+                    
+                self.rotate_z_radians(float(q), d, enable_correction=True)
+
             elif inst == b'@OBST': self.stop_counting_total = True
+            
+            elif inst == b'@ADGB': 
+
+                self.current_distance_traveled = 0.0
+                q = -1
+                while q < 0.0:
+                    q = input("enter distance (meters):")
+                    try:
+                        q = float(q)
+                    except Exception as e:
+                        print(e)
+                        continue
+                
+                self.move_x_meters(float(q))
+
             elif inst == b'@STRT': 
 
                 self.is_collecting_data = True
                 print("is_collecting_data = True")
-                self.json_frame_number = 0
                 self.starting_odometry_set = False
+                self.current_frame_id = 0
                 time.sleep(0.2)
                 self.transmit_current_frame = True # capture new latest frame
                 time.sleep(0.2)
@@ -418,7 +487,6 @@ class SensorsSubscriber(Node):
         position = msg.pose.pose.position
         self.odometry_msg_orientation = (orientation.x, orientation.y, orientation.z, orientation.w)
         self.odometry_msg_pos = (position.x, position.y, position.z)
-
 
     def battery_state_callback(self,msg):
 
@@ -516,17 +584,94 @@ class SensorsSubscriber(Node):
         
                 data = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
-                self.super_json = json.dumps({"id":self.json_frame_number, "laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data})
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":data, 'id':self.current_frame_id})
                 self.transmit_current_frame = False
                 print('Sent current camera image.')
             
             else:
 
-                self.super_json = json.dumps({"id":self.json_frame_number,"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None})
+                self.super_json = json.dumps({"laser_scan":laserscan_msg_jsonized, "twist":twist_msg_jsonized, "imu":imu_msg_jsonized, "odometry":odometry_msg_jsonized, "battery":battery_state_msg_jsonized, "frame_data":None, 'id':self.current_frame_id})
 
             time.sleep(self.sampling_delay)
-            self.json_frame_number += 1
+            self.current_frame_id += 1
+    
         print('Super BSON compilation thread closed successfully.')
+
+    def move_x_meters(self,distance_in_meters: float):
+
+        
+        if distance_in_meters <= 0.0:
+            self.twist_direction = 'stop'
+            self.linear_x_speed = args.linear_x_ms
+            return
+
+        if distance_in_meters <= 0.2:
+
+            if distance_in_meters <= 0.1:
+                
+                self.linear_x_speed = 0.05
+                distance_in_meters -= 0.01
+
+            else:
+
+                self.linear_x_speed = 0.1
+                distance_in_meters -= 0.02
+
+        else:
+            distance_in_meters -= 0.04 # correctional
+
+        self.twist_direction = 'forward'
+        while self.current_distance_traveled < distance_in_meters and not self.front_is_blocked:
+            pass
+
+        self.twist_direction = 'stop'
+        self.linear_x_speed = args.linear_x_ms
+
+        time.sleep(0.5)
+        print('internal error:', round(distance_in_meters - self.current_distance_traveled, 4), round(self.current_distance_traveled, 4))
+        if (distance_in_meters - self.current_distance_traveled) > 0.0 and not self.front_is_blocked:
+
+            self.move_x_meters(distance_in_meters=distance_in_meters - self.current_distance_traveled)
+
+    def rotate_z_radians(self, angular_dist_in_rads: float, direction: str, enable_correction: bool = True):
+
+        print('rotation order received:', angular_dist_in_rads, direction)
+        if angular_dist_in_rads < 0.03375:
+            self.twist_direction = 'stop'
+            return
+
+        # correctional
+        if angular_dist_in_rads <= 0.50:
+
+            self.angular_z_speed /= 2.0 # 0.27
+
+            if angular_dist_in_rads <= 0.25:
+
+                self.angular_z_speed /= 2.0 # 0.135
+            
+                if angular_dist_in_rads <= 0.125:
+
+                    self.angular_z_speed /= 2.0
+                    if enable_correction: angular_dist_in_rads -= 0.025
+
+                else:
+
+                    if enable_correction: angular_dist_in_rads -= 0.05
+
+            else:
+
+                if enable_correction: angular_dist_in_rads -= 0.1
+        else:
+            
+            if enable_correction: angular_dist_in_rads -= 0.2
+
+        print(self.angular_z_speed)
+        self.twist_direction = direction
+        while abs(self.current_angular_distance_traveled) < angular_dist_in_rads:
+            pass
+
+        self.twist_direction = 'stop'
+        self.angular_z_speed = args.angular_z_rads
 
     def movement_server(self):
 
@@ -661,6 +806,7 @@ class SensorsSubscriber(Node):
                 print("[frwd] Final Distance:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
 
             elif self.twist_direction == 'forward':
+
                 if args.softbarrier:
                     if self.front_is_blocked:
                         print("Cannot move forward! Front is blocked.")
@@ -669,13 +815,11 @@ class SensorsSubscriber(Node):
 
                 # correctional mechanism to keep Turtlebot 3 moving straight
                 starting_odometry = self.odometry_msg_orientation
-                starting_position = self.odometry_msg_pos
+                last_position = self.odometry_msg_pos
                 total_distance_traveled = 0.0
                 self.twist_timestamp = time.time()
             
-                # slow start is used to avoid jittery movements
-                slow_start = 1
-                P_gain = 0.1  # Proportional gain for correction; adjust as needed
+                P_gain = 0.25  # Proportional gain for correction; adjust as needed
                 distance_lock = 0
 
                 while self.twist_direction == 'forward':
@@ -685,31 +829,34 @@ class SensorsSubscriber(Node):
                     
                     if yaw_diff == 0.0:
                         print('WARN: yaw diff is zero.')
+
                     correctionary_angular_z = -yaw_diff / P_gain
                     # Clamp the correction to maximum limits to avoid too sharp turns
                     max_angular_z = 1.2
 
                     correctionary_angular_z = max(-max_angular_z, min(max_angular_z, correctionary_angular_z))
-                    if slow_start < 25:
-                        slow_start += 1
 
-                    data.linear.x = self.linear_x_speed * slow_start / 25
+                    data.linear.x = self.linear_x_speed
                     data.angular.z = correctionary_angular_z
                     self.movement_publisher.publish(data)
+
                     if args.softbarrier:
                         if self.front_is_blocked:  
                             print("Cannot move forward! Front is blocked.")
                             break
 
-                    if distance_lock == args.iter_lock:
-                        distance_lock = 0
-                        print("[frwd] Distance from start of instruction:",round(get_point_distance(self.odometry_msg_pos, starting_position), 3))
-                    
-                    distance_lock += 1
-                    time.sleep(0.01)
+                    if last_position != self.odometry_msg_pos:
+
+                        self.current_distance_traveled += get_point_distance(self.odometry_msg_pos, last_position)
+                        last_position = self.odometry_msg_pos
+
+                        print("[frwd] Distance from start of instruction:", round(self.current_distance_traveled, 3))
                 
+                    time.sleep(0.001)
+
                 self.stall(0.5)
-                print('[frwd] Final travel distance:', round(get_point_distance(self.odometry_msg_pos, starting_position),3))
+                self.current_distance_traveled += get_point_distance(self.odometry_msg_pos, last_position)
+                print('[frwd] Final travel distance:', round(self.current_distance_traveled,3))
                 print('[frwd] Final yaw deviation:', round(yaw_diff * 180 / math.pi,3), 'degrees')
 
             elif self.twist_direction == 'left':
@@ -724,23 +871,22 @@ class SensorsSubscriber(Node):
 
                 while self.twist_direction == 'left':
                 
-                    if slow_start != 5:
-                        slow_start += 1
-
-                    angular_z = slow_start/5 * self.angular_z_speed
-                    data.angular.z = angular_z
+                    data.angular.z = self.angular_z_speed
                     
                     self.movement_publisher.publish(data)
                     
-                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                    last_orientation = self.odometry_msg_orientation
-                    print(f'[left] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.05)
+                    if last_orientation != self.odometry_msg_orientation:
+                        self.current_angular_distance_traveled += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                        last_orientation = self.odometry_msg_orientation
+
+                    print(f'[left] Total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')    
+
+                    time.sleep(0.001)
 
                 self.stall(0.5)
 
-                total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                print(f'[left] Final total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
+                self.current_angular_distance_traveled += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                print(f'[left] Final total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')
 
             elif self.twist_direction == 'right':
 
@@ -754,25 +900,21 @@ class SensorsSubscriber(Node):
 
                 while self.twist_direction == 'right':
 
-                    if slow_start != 5:
-                        slow_start += 1
-
-                    angular_z = -slow_start/5 * self.angular_z_speed
-                    data.angular.z = angular_z
+                    data.angular.z = -self.angular_z_speed
                     
                     self.movement_publisher.publish(data)
-                    
-                    total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                    last_orientation = self.odometry_msg_orientation
-                    print(f'[right] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')    
-                    time.sleep(0.05)
+
+                    if last_orientation != self.odometry_msg_orientation:
+                        self.current_angular_distance_traveled += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                        last_orientation = self.odometry_msg_orientation
+
+                    print(f'[right] Total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')    
+                    time.sleep(0.001)
 
                 self.stall(0.5)
 
-                total_rotation += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
-                print(f'[rght] Total angular displacement: {round(total_rotation * 180 / math.pi,3)} degrees | {round(total_rotation,3)} rads')
-
-                
+                self.current_angular_distance_traveled += yaw_difference(quaternion1=last_orientation,quaternion2=self.odometry_msg_orientation)
+                print(f'[right] Final total angular displacement: {round(self.current_angular_distance_traveled * 180 / math.pi,3)} degrees | {round(self.current_angular_distance_traveled,3)} rads')
 
         print('Movement thread closed successfully.')
 

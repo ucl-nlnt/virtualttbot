@@ -132,7 +132,7 @@ class turtlebot_controller:
             self.webcam_object.set(cv2.CAP_PROP_FRAME_WIDTH, args.webcam_w)
             self.webcam_object.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_h)
             #self.webcam_object.set(cv2.CAP_PROP_AUTOFOCUS, 1) # enable autofocus if it supports it
-            #self.webcam_object.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # enable auto exposure
+            self.webcam_object.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # enable auto exposure
 
             self.usb_webcam_thread = threading.Thread(target=self.usb_webcam)
             self.usb_webcam_thread.start()
@@ -248,6 +248,18 @@ class turtlebot_controller:
                     elif keys[pygame.K_w] and keys[pygame.K_a]:
 
                         self.keyboard_input = "wa"
+
+                    elif keys[pygame.K_KP8]:
+
+                        self.keyboard_input = 'kp8'
+
+                    elif keys[pygame.K_KP7]:
+
+                        self.keyboard_input = 'kp7'
+
+                    elif keys[pygame.K_KP4]:
+
+                        self.keyboard_input = 'kp4'
 
                     elif keys[pygame.K_w]:
 
@@ -379,7 +391,7 @@ class turtlebot_controller:
 
                 # append webcam data to 'data' frame
                 
-                if (data['frame_data'] != None) and (self.most_recent_webcam_frame_base64 != None):
+                if data['frame_data'] != None:
 
                     self.new_frame_impulse = True
                     print("Webcam capture:",type(self.most_recent_webcam_frame_base64), len(self.most_recent_webcam_frame_base64))
@@ -537,6 +549,21 @@ class turtlebot_controller:
                     self.movement_data_sender.send_data(b'@NTWS') # north-west
                     self.keyboard_impulse = False
 
+                elif self.keyboard_input == 'kp8' and not self.exempt_increment:
+
+                    self.movement_data_sender.send_data(b'@ADGB')
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == 'kp7' and not self.exempt_increment:
+
+                    self.movement_data_sender.send_data(b'@ADAG')
+                    self.keyboard_impulse = False
+
+                elif self.keyboard_input == 'kp4' and not self.exempt_increment:
+
+                    self.movement_data_sender.send_data(b'@ADDG')
+                    self.keyboard_impulse = False
+
                 elif self.keyboard_input == 'wd' and not self.exempt_increment:
 
                     self.movement_data_sender.send_data(b'@NTES') # north-east
@@ -660,24 +687,16 @@ class turtlebot_controller:
                             states_with_images.append(i)
                             detected_keyframes += 1
 
-                #print(states_with_images)
-
                 # compare images to detect same image errors
                 comparisons = []
                 for i in states_with_images:
-                    #print(f"i: {i}")
                     for j in states_with_images:
-                        #print(f"j: {j}")
                         if i == j:
-                            #print(f"({i},{j}): equal iterations")
                             continue
+
                         comparison_instance = sorted([i,j])
-                        #print(f"comparison instance: {comparison_instance}")
-                        #print(f"comparisons: {comparisons}")
                         if comparison_instance not in comparisons:
                             comparisons.append(comparison_instance)
-                
-                #print (comparisons)
                 
                 for l in comparisons:
                     
