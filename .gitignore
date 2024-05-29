@@ -16,4 +16,3 @@ workspace/src/sensors/sensors/serverconf.py
 workspace/src/sensors/sensors/datalogs_auto
 workspace/src/sensors/sensors/old_datalogs
 datalogs/**
-workspace/src/sensors/sensors/old_datalogs
