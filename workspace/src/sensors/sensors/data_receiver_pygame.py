@@ -45,6 +45,8 @@ parser.add_argument("--l3_ffw", type=int, default=0, help="Off by default, set t
 parser.add_argument("--l3_all", type=int, default=0, help="Off by default, set to one to use l3_following.csv.")
 parser.add_argument("--l12", type=int, default=0, help="Off by default, set to one to use l3_following.csv.")
 
+parser.add_argument("--prompt_level", type=int, default=0, help="Off by default")
+
 args = parser.parse_args()
 print(args)
 
@@ -493,7 +495,12 @@ class turtlebot_controller:
 
                 prompt = input("Enter prompt << ")
                 print(f'Prompt is: "{prompt}"')
-                prompt_level_set = False
+
+                if args.prompt_level in [1, 2, 3]:
+                    prompt_level = args.prompt_level
+                    prompt_level_set = True
+                else:
+                    prompt_level_set = False
                 while not prompt_level_set and prompt != '$CONTROL' and not args.devmode:
                     
                     try:
