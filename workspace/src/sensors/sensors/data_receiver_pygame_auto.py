@@ -436,6 +436,59 @@ class turtlebot_controller:
     
         return prompt
 
+    def read_present_objects_txt(self):
+
+        return_list = []
+
+        data = []
+        with open('current_list_of_objects.txt','r') as f:
+
+            for i in f.readlines():
+
+                temp = i.strip()
+                if temp[:2] == '//':
+                    continue # ignore comments
+
+                data.append(temp)
+
+        base_classes = []
+        with open('list_of_objects.txt','r') as f:
+            
+            for i in f.readlines():
+                temp = i.strip()
+                base_classes.append(temp)
+            
+        for i in data:
+
+            base_c, descriptors = i.split(':') # assumes that there is only one instance of ':'
+            base_c = base_c.strip()
+            descriptors = descriptors.strip()
+
+            if base_c in base_classes:
+                for q in ast.literal_eval(descriptors):
+                    return_list.append(base_c + ' ' + q)
+                continue
+
+            agree = None
+            while agree != 'y' or agree != 'n':
+                agree = input(f"WARNING | {base_c} not in list_of_objects.txt. Add to the list? (y/n): ")
+            
+            if agree != 'y':
+                return return_list
+
+            base_classes.append(base_c)
+            with open('list_of_objects.txt','w') as f:
+
+                for c in base_classes:
+                    f.write(c + '\n')
+
+            print(f'Added {base_c} to base classes.')
+
+            for q in ast.literal_eval(descriptors):
+                return_list.append(base_c + ' ' + q)
+
+        return return_list
+    
     def kb_listener(self):  # do Turtlebot controller stuff here
 
         """
@@ -518,6 +571,15 @@ class turtlebot_controller:
                     except Exception as e:
                         print(e)
                         print('Please input a valid entry number.')
+
+                    try:
+
+                        x = None
+                        while x != 'y' and x != 'n':
+                            x = input("Please confirm that 'current_list_of_objects.txt' is valid (y/n):")
+
+                    except Exception as e:
+                        print(e)
                 
             else:
                 prompt = "$CONTROL"
@@ -634,7 +696,7 @@ class turtlebot_controller:
                 json_file = {
                             "username":self.current_user, "natural_language_prompt": prompt,
                             "timestamp_s":time.ctime(), "timestamp_float":time.time(),
-                            "states":self.data_buffer, "prompt_level" : prompt_level
+                            "states":self.data_buffer, "prompt_level" : prompt_level, "present_objects" : self.read_present_objects_txt()
                             }
 
                 fname = self.generate_random_filename()
