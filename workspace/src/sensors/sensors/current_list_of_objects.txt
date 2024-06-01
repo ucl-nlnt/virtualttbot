@@ -1,0 +1,4 @@
+// you can add the objects in the image as seen below:
+// base_class : ['descriptor1', 'descriptor2']
+// bottle : ['red', 'yellow c2']
+// this will add 'red bottle' and 'yellow c2 bottle' in the 'present_objects' field of the lzma file.
