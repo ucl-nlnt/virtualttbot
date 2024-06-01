@@ -1,0 +1,28 @@
+bottle
+footwear
+bag
+box
+marker
+cup
+shuttlecock
+monitor
+keyboard
+keys
+book
+chair
+hair clip
+battery
+tissue
+jar
+remote controller
+umbrella
+pencil case
+hanger
+computer
+banana
+fire extinguisher
+tape dispenser
+badminton racket
+water jug
+turtlebot
+shape
